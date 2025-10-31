@@ -42,6 +42,7 @@ target_sources(
     widgets/OBSBasic_Updater.cpp
     widgets/OBSBasic_VirtualCam.cpp
     widgets/OBSBasic_VolControl.cpp
+    widgets/OBSBasic_WebSocketStream.cpp
     widgets/OBSBasic_YouTube.cpp
     widgets/OBSBasicControls.cpp
     widgets/OBSBasicControls.hpp

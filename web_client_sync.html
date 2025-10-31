@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音视频同步WebSocket客户端</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        input[type="text"], input[type="number"] {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(81, 207, 102, 0.3);
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #videoCanvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .sync-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .sync-info h3 {
+            margin: 0 0 10px 0;
+            color: #0d47a1;
+        }
+        
+        .sync-status {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .sync-good { color: #2e7d32; }
+        .sync-warning { color: #f57c00; }
+        .sync-bad { color: #c62828; }
+        
+        .audio-controls {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+        
+        .audio-controls h3 {
+            margin: 0 0 15px 0;
+            color: #5f6368;
+        }
+        
+        .volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .volume-slider {
+            width: 200px;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 音视频同步WebSocket客户端</h1>
+            <p>实时接收和同步音视频流，支持低延迟播放</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>服务器地址:</label>
+                <input type="text" id="serverUrl" value="ws://localhost:8765" style="width: 200px;">
+                <button class="btn-primary" onclick="connect()">连接</button>
+                <button class="btn-danger" onclick="disconnect()">断开</button>
+            </div>
+            
+            <div class="control-group">
+                <label>音频捕获:</label>
+                <button class="btn-success" onclick="startAudioCapture()">启动音频</button>
+                <button class="btn-danger" onclick="stopAudioCapture()">停止音频</button>
+                <span id="audioStatus" style="margin-left: 10px; color: #666;">未启动</span>
+            </div>
+            
+                    <div id="connectionStatus" class="status disconnected">未连接</div>
+    </div>
+    
+    <!-- 应用程序列表部分 -->
+    <div class="applications-section" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+        <h3>💻 远程应用程序控制</h3>
+        <div class="control-group">
+            <button class="btn-primary" onclick="refreshApplications()">🔄 刷新应用程序列表</button>
+            <button class="btn-success" onclick="searchApplications()">🔍 搜索应用程序</button>
+            <input type="text" id="appSearchInput" placeholder="输入应用程序名称搜索..." style="width: 250px;">
+        </div>
+        
+        <div class="applications-container" style="margin-top: 15px;">
+            <div class="applications-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: bold; color: #495057;">应用程序列表 (<span id="appCount">0</span>)</span>
+                <span id="lastUpdateTime" style="font-size: 0.9em; color: #6c757d;">未更新</span>
+            </div>
+            
+            <div class="applications-list" id="applicationsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; background: white;">
+                <div style="padding: 20px; text-align: center; color: #6c757d;">
+                    等待连接服务器获取应用程序列表...
+                </div>
+            </div>
+            
+            <div class="launch-status" id="launchStatus" style="margin-top: 10px; padding: 10px; border-radius: 5px; display: none;"></div>
+        </div>
+    </div>
+    
+    <div class="video-container">
+            <canvas id="videoCanvas" width="1280" height="720"></canvas>
+            <div class="overlay">
+                <div>分辨率: <span id="resolution">1280x720</span></div>
+                <div>帧率: <span id="fps">0</span> FPS</div>
+                <div>延迟: <span id="latency">0</span> ms</div>
+            </div>
+        </div>
+        
+        <div class="sync-info">
+            <h3>🔄 音视频同步状态</h3>
+            <div class="sync-status" id="syncStatus">等待连接...</div>
+            <p>音视频同步质量将根据网络延迟和帧率自动调整</p>
+        </div>
+        
+        <div class="audio-controls">
+            <h3>🔊 音频控制</h3>
+            <div class="volume-control">
+                <label>音量:</label>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumeValue">50%</span>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="btn-success" onclick="playTestTone()" style="margin-right: 10px;">🎵 测试音调</button>
+                <button class="btn-primary" onclick="playTestSweep()" style="margin-right: 10px;">📈 扫频音</button>
+                <button class="btn-primary" onclick="playWhiteNoise()" style="margin-right: 10px;">🌊 白噪声</button>
+                <button class="btn-danger" onclick="stopTestAudio()">⏹️ 停止</button>
+                <button class="btn-primary" onclick="diagnoseAudio()" style="margin-left: 10px;">🔍 音频诊断</button>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
+                <div style="font-weight: bold; margin-bottom: 5px;">🎛️ 音频质量优化:</div>
+                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                    <label>
+                        <input type="checkbox" id="enableResampling" checked> 启用重采样
+                    </label>
+                    <label>
+                        <input type="checkbox" id="enableSmoothing" checked> 启用平滑滤波
+                    </label>
+                    <label>
+                        <input type="checkbox" id="enableCompression" checked> 启用动态压缩
+                    </label>
+                    <label>
+                        滤波强度: <input type="range" id="filterStrength" min="1" max="5" value="3" style="width: 80px;">
+                        <span id="filterStrengthValue">3</span>
+                    </label>
+                </div>
+                <div style="font-size: 0.85em; color: #856404; margin-top: 5px;">
+                    💡 这些设置可以帮助减少音频刺啦声和改善音质
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button class="btn-primary" id="recordButton" onclick="toggleRecording()" style="margin-right: 10px;">🎙️ 开始录制</button>
+                <span id="recordingStatus" style="color: #666;">未录制</span>
+                <span id="recordingInfo" style="margin-left: 15px; font-size: 0.9em; color: #666;"></span>
+                <button class="btn-primary" id="savePcmButton" onclick="saveCurrentAudioToPcm()" style="margin-left: 10px;">💾 保存PCM</button>
+                <span id="pcmStatus" style="margin-left: 10px; color: #666;">未保存</span>
+                <button class="btn-primary" id="continuousPcmButton" onclick="toggleContinuousPcmSave()" style="margin-left: 10px;">🔄 连续保存</button>
+                <span id="continuousPcmStatus" style="margin-left: 10px; color: #666;">已关闭</span>
+            </div>
+            <div style="margin-top: 15px;">
+                <span id="audioInfo">音频: 未接收</span> | 
+                <span id="videoInfo">视频: 未接收</span>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                💡 测试音频功能可帮助验证音频系统是否正常工作
+            </div>
+            <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                <div style="font-weight: bold; margin-bottom: 5px;">🎵 测试音频说明:</div>
+                <div style="font-size: 0.85em; line-height: 1.4;">
+                    <strong>测试音调:</strong> 440Hz A4音调，持续3秒，用于测试基本音频播放<br>
+                    <strong>扫频音:</strong> 20Hz-20kHz对数扫频，持续5秒，用于测试频率响应<br>
+                    <strong>白噪声:</strong> 随机噪声，持续2秒，用于测试音频系统动态范围
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalFrames">0</div>
+                <div class="stat-label">总帧数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="currentFps">0.0</div>
+                <div class="stat-label">当前帧率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="dataSize">0 KB</div>
+                <div class="stat-label">数据大小</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgLatency">0 ms</div>
+                <div class="stat-label">平均延迟</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="syncOffset">0 ms</div>
+                <div class="stat-label">同步偏移</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bufferHealth">100%</div>
+                <div class="stat-label">缓冲区健康度</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let websocket = null;
+        let canvas = null;
+        let ctx = null;
+        let audioContext = null;
+        let audioQueue = [];
+        let videoQueue = [];
+        let isConnected = false;
+        let audioEnabled = false;
+        
+        // 统计变量
+        let totalFrames = 0;
+        let frameCount = 0;
+        let lastFpsTime = Date.now();
+        let totalDataSize = 0;
+        let latencySum = 0;
+        let latencyCount = 0;
+        let syncOffsets = [];
+        
+        // 音视频同步相关
+        let lastVideoTimestamp = 0;
+        let lastAudioTimestamp = 0;
+        let videoBuffer = [];
+        let audioBuffer = [];
+        let syncThreshold = 100; // 同步阈值（毫秒）
+        
+        // 音频录制相关
+        let isRecording = false;
+        let recordedChunks = [];
+        
+        // PCM保存相关
+        let currentAudioData = null;
+        let pcmSaveEnabled = false;
+        let continuousPcmSave = false;
+        let continuousPcmChunks = [];
+        let continuousPcmStartTime = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('videoCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设置音量控制
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            volumeSlider.addEventListener('input', function() {
+                const volume = this.value / 100;
+                volumeValue.textContent = this.value + '%';
+                if (audioContext && audioContext.gain) {
+                    audioContext.gain.gain.value = volume;
+                }
+            });
+            
+            // 设置滤波强度控制
+            const filterStrengthSlider = document.getElementById('filterStrength');
+            const filterStrengthValue = document.getElementById('filterStrengthValue');
+            if (filterStrengthSlider && filterStrengthValue) {
+                filterStrengthSlider.addEventListener('input', function() {
+                    filterStrengthValue.textContent = this.value;
+                    console.log(`滤波强度已调整为: ${this.value}`);
+                });
+            }
+            
+            // 启动心跳检测
+            startHeartbeat();
+            
+            // 启动FPS计数器
+            startFpsCounter();
+        });
+        
+        // 连接WebSocket
+        function connect() {
+            if (isConnected) return;
+            
+            const serverUrl = document.getElementById('serverUrl').value;
+            updateConnectionStatus('connecting', '连接中...');
+            
+            try {
+                websocket = new WebSocket(serverUrl);
+                
+                websocket.onopen = function(event) {
+                    isConnected = true;
+                    updateConnectionStatus('connected', '已连接');
+                    console.log('WebSocket连接已建立');
+                    
+                    // 请求启动音频捕获
+                    websocket.send(JSON.stringify({
+                        type: 'request_audio',
+                        message: '请求启动音频捕获'
+                    }));
+                };
+                
+                websocket.onmessage = function(event) {
+                    handleMessage(event.data);
+                };
+                
+                websocket.onclose = function(event) {
+                    isConnected = false;
+                    updateConnectionStatus('disconnected', '连接已断开');
+                    console.log('WebSocket连接已关闭');
+                    resetStats();
+                };
+                
+                websocket.onerror = function(error) {
+                    updateConnectionStatus('disconnected', '连接错误');
+                    console.error('WebSocket错误:', error);
+                };
+                
+            } catch (error) {
+                updateConnectionStatus('disconnected', '连接失败: ' + error.message);
+                console.error('连接失败:', error);
+            }
+        }
+        
+        // 断开连接
+        function disconnect() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            isConnected = false;
+            updateConnectionStatus('disconnected', '已断开');
+        }
+        
+        // 启动音频捕获
+        function startAudioCapture() {
+            if (!isConnected) {
+                alert('请先连接到服务器');
+                return;
+            }
+            
+            websocket.send(JSON.stringify({
+                type: 'start_audio',
+                message: '启动音频捕获'
+            }));
+            
+            document.getElementById('audioStatus').textContent = '已请求';
+        }
+        
+        // 停止音频捕获
+        function stopAudioCapture() {
+            if (!isConnected) return;
+            
+            websocket.send(JSON.stringify({
+                type: 'stop_audio',
+                message: '停止音频捕获'
+            }));
+            
+            document.getElementById('audioStatus').textContent = '已请求停止';
+        }
+        
+        // 处理WebSocket消息
+        function handleMessage(data) {
+            try {
+                const message = JSON.parse(data);
+                const messageType = message.type;
+                
+                switch (messageType) {
+                    case 'connection':
+                        console.log('连接确认:', message.message);
+                        break;
+                        
+                    case 'frame':
+                        handleVideoFrame(message);
+                        break;
+                        
+                    case 'audio':
+                        handleAudioData(message);
+                        break;
+                        
+                    case 'audio_started':
+                        audioEnabled = true;
+                        document.getElementById('audioStatus').textContent = '运行中';
+                        console.log('音频捕获已启动');
+                        break;
+                        
+                    case 'audio_stopped':
+                        audioEnabled = false;
+                        document.getElementById('audioStatus').textContent = '已停止';
+                        console.log('音频捕获已停止');
+                        break;
+                        
+                    case 'applications_list':
+                        handleApplicationsList(message);
+                        break;
+                        
+                    case 'launch_result':
+                        handleLaunchResult(message);
+                        break;
+                        
+                    default:
+                        console.log('未知消息类型:', messageType);
+                }
+                
+            } catch (error) {
+                console.error('解析消息失败:', error);
+            }
+        }
+        
+        // 处理视频帧
+        function handleVideoFrame(frameData) {
+            const startTime = Date.now();
+            
+            try {
+                // 创建图像对象
+                const img = new Image();
+                img.onload = function() {
+                    // 绘制图像到画布
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // 更新统计信息
+                    totalFrames++;
+                    frameCount++;
+                    totalDataSize += frameData.size || 0;
+                    
+                    // 计算延迟
+                    const latency = Date.now() - startTime;
+                    latencySum += latency;
+                    latencyCount++;
+                    
+                    // 更新分辨率显示
+                    document.getElementById('resolution').textContent = `${img.width}x${img.height}`;
+                    
+                    // 处理音视频同步
+                    if (frameData.sync_timestamp && frameData.frame_index !== undefined) {
+                        processVideoSync(frameData);
+                    }
+                };
+                
+                img.src = 'data:image/jpeg;base64,' + frameData.data;
+                
+            } catch (error) {
+                console.error('处理视频帧失败:', error);
+            }
+        }
+        
+        // 处理音频数据
+        function handleAudioData(audioData) {
+            try {
+                // console.log('=== 开始处理音频数据 ===');
+                // console.log('原始音频数据:', audioData);
+                
+                // 验证音频数据格式
+                if (!audioData || !audioData.data || !audioData.format) {
+                    console.error('音频数据格式无效:', audioData);
+                    return;
+                }
+                
+                // 检查音频格式是否支持
+                if (audioData.format !== 'pcm') {
+                    console.warn(`不支持的音频格式: ${audioData.format}`);
+                    return;
+                }
+                
+                // 初始化音频上下文（如果还没有）
+                if (!audioContext) {
+                    console.log('音频上下文未初始化，正在初始化...');
+                    initAudioContext();
+                }
+                
+                // 解码base64音频数据
+                // console.log('开始解码base64音频数据...');
+                const audioBuffer = base64ToArrayBuffer(audioData.data);
+                
+                // 验证解码后的数据
+                if (!audioBuffer || audioBuffer.byteLength === 0) {
+                    console.error('音频数据解码失败');
+                    return;
+                }
+                
+                // console.log('音频数据解码成功:', {
+                //     byteLength: audioBuffer.byteLength,
+                //     chunk: audioData.chunk,
+                //     channels: audioData.channels,
+                //     rate: audioData.rate
+                // });
+                
+                // 验证数据大小
+                const expectedSize = audioData.chunk * audioData.channels * 2; // 16位 = 2字节
+                if (audioBuffer.byteLength !== expectedSize) {
+                    console.warn(`音频数据大小不匹配: 期望 ${expectedSize} 字节, 实际 ${audioBuffer.byteLength} 字节`);
+                }
+                
+                // 处理音视频同步
+                if (audioData.sync_timestamp) {
+                    processAudioSync(audioData);
+                }
+                
+                // 如果正在录制，添加到录制缓冲区
+                if (isRecording) {
+                    // 计算实际的样本数（基于数据大小和声道数）
+                    const actualChannels = audioData.channels || 2;
+                    const bytesPerSample = 2; // 16位
+                    const actualSamples = audioBuffer.byteLength / (actualChannels * bytesPerSample);
+                    
+                    recordedChunks.push({
+                        data: audioBuffer,
+                        timestamp: audioData.sync_timestamp || Date.now() / 1000,
+                        channels: actualChannels,
+                        rate: audioData.rate || 48000,
+                        chunk: actualSamples
+                    });
+                    
+                    // 更新录制信息显示
+                    const recordingInfo = document.getElementById('recordingInfo');
+                    if (recordingInfo) {
+                        recordingInfo.textContent = `${audioData.rate || 48000}Hz, ${actualChannels}声道, ${recordedChunks.length}块`;
+                    }
+                    
+                    console.log(`音频数据已添加到录制缓冲区: ${audioBuffer.byteLength} 字节, ${actualSamples} 样本, ${actualChannels} 声道, ${audioData.rate || 48000}Hz`);
+                }
+                
+                // 如果正在连续保存PCM，添加到连续保存缓冲区
+                if (continuousPcmSave) {
+                    continuousPcmChunks.push({
+                        data: audioBuffer,
+                        timestamp: audioData.sync_timestamp || Date.now() / 1000,
+                        channels: audioData.channels || 2,
+                        rate: audioData.rate || 48000,
+                        chunk: audioData.chunk || 0,
+                        size: audioBuffer.byteLength
+                    });
+                    
+                    // 更新连续保存状态显示
+                    const continuousPcmInfo = document.getElementById('continuousPcmStatus');
+                    if (continuousPcmInfo) {
+                        const totalBytes = continuousPcmChunks.reduce((sum, chunk) => sum + chunk.size, 0);
+                        const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+                        continuousPcmInfo.textContent = `已保存 ${continuousPcmChunks.length} 块 (${totalMB} MB)`;
+                        continuousPcmInfo.style.color = '#28a745';
+                    }
+                    
+                    console.log(`音频数据已添加到连续PCM保存缓冲区: ${audioBuffer.byteLength} 字节, ${audioData.channels}声道, ${audioData.rate}Hz`);
+                }
+                
+                // 播放音频
+                // console.log('开始播放音频...');
+                playAudio(audioBuffer);
+                
+                // 保存当前音频数据用于PCM保存
+                currentAudioData = {
+                    data: audioBuffer,
+                    format: audioData.format,
+                    channels: audioData.channels,
+                    rate: audioData.rate,
+                    chunk: audioData.chunk,
+                    size: audioData.size,
+                    timestamp: audioData.timestamp,
+                    sync_timestamp: audioData.sync_timestamp
+                };
+                
+                // 更新音频信息
+                document.getElementById('audioInfo').textContent = `音频: ${(audioData.size / 1024).toFixed(1)} KB`;
+                
+                // console.log(`音频数据处理成功: ${audioData.format}, ${audioData.channels}声道, ${audioData.rate}Hz, ${audioData.chunk}样本`);
+                // console.log('=== 音频数据处理完成 ===');
+                
+            } catch (error) {
+                console.error('处理音频数据失败:', error);
+            }
+        }
+        
+        // 初始化音频上下文
+        function initAudioContext() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext.gain = audioContext.createGain();
+                audioContext.gain.connect(audioContext.destination);
+                audioContext.gain.gain.value = document.getElementById('volumeSlider').value / 100;
+                
+                // 检查音频上下文状态
+                console.log('音频上下文已初始化');
+                console.log('音频上下文状态:', audioContext.state);
+                console.log('采样率:', audioContext.sampleRate);
+                console.log('当前音量:', audioContext.gain.gain.value);
+                
+                // 如果音频上下文被暂停，尝试恢复
+                if (audioContext.state === 'suspended') {
+                    console.log('音频上下文被暂停，尝试恢复...');
+                    audioContext.resume().then(() => {
+                        console.log('音频上下文已恢复，状态:', audioContext.state);
+                    }).catch(err => {
+                        console.error('恢复音频上下文失败:', err);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('初始化音频上下文失败:', error);
+            }
+        }
+        
+        // 播放音频
+        function playAudio(audioBuffer) {
+            if (!audioContext) {
+                console.warn('音频上下文未初始化，尝试初始化...');
+                initAudioContext();
+                if (!audioContext) {
+                    console.error('无法初始化音频上下文');
+                    return;
+                }
+            }
+            
+            try {
+                // 检查音频上下文状态
+                if (audioContext.state === 'suspended') {
+                    console.log('音频上下文被暂停，尝试恢复...');
+                    audioContext.resume().then(() => {
+                        console.log('音频上下文已恢复，重新播放音频');
+                        playAudio(audioBuffer); // 递归调用
+                    }).catch(err => {
+                        console.error('恢复音频上下文失败:', err);
+                    });
+                    return;
+                }
+                
+                // 验证音频数据
+                if (!audioBuffer || audioBuffer.byteLength === 0) {
+                    console.warn('音频数据为空，跳过播放');
+                    return;
+                }
+                
+                // 获取音频参数
+                const sourceSampleRate = 48000; // 源音频采样率（从C++应用获取）
+                const targetSampleRate = audioContext.sampleRate; // 目标采样率（浏览器音频上下文）
+                const channels = 2; // 立体声
+                const bytesPerSample = 2; // 16位
+                const samplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
+                
+                // 检查数据完整性
+                if (samplesPerChannel <= 0 || !Number.isInteger(samplesPerChannel)) {
+                    console.error('音频数据格式错误:', audioBuffer.byteLength, '字节');
+                    return;
+                }
+                
+                // 检查是否需要重采样
+                const needsResampling = Math.abs(sourceSampleRate - targetSampleRate) > 1;
+                const enableResampling = document.getElementById('enableResampling')?.checked !== false;
+                
+                if (needsResampling && enableResampling) {
+                    console.log(`需要重采样: ${sourceSampleRate}Hz → ${targetSampleRate}Hz`);
+                    // 使用重采样播放
+                    playAudioWithResampling(audioBuffer, sourceSampleRate, targetSampleRate, channels);
+                    return;
+                } else if (needsResampling && !enableResampling) {
+                    console.log(`采样率不匹配但重采样已禁用: ${sourceSampleRate}Hz vs ${targetSampleRate}Hz`);
+                    console.log('⚠️ 这可能导致音频质量问题');
+                }
+                
+                // 直接播放（采样率匹配）
+                const audioBufferSource = audioContext.createBuffer(channels, samplesPerChannel, targetSampleRate);
+                
+                // 从ArrayBuffer创建Int16Array视图
+                const int16View = new Int16Array(audioBuffer);
+                
+                // 填充音频数据
+                for (let channel = 0; channel < channels; channel++) {
+                    const channelData = audioBufferSource.getChannelData(channel);
+                    
+                    for (let i = 0; i < samplesPerChannel; i++) {
+                        // 计算在Int16Array中的索引（交错格式：L,R,L,R...）
+                        const sampleIndex = i * channels + channel;
+                        
+                        if (sampleIndex < int16View.length) {
+                            // 将16位有符号整数转换为-1到1范围的浮点数
+                            // 添加轻微的平滑处理，减少刺啦声
+                            const rawSample = int16View[sampleIndex];
+                            const normalizedSample = rawSample / 32768.0;
+                            
+                            // 应用轻微的平滑滤波
+                            channelData[i] = applySmoothingFilter(normalizedSample, i, channel);
+                        } else {
+                            // 数据不足时用0填充
+                            channelData[i] = 0;
+                        }
+                    }
+                }
+                
+                // 播放音频
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBufferSource;
+                source.connect(audioContext.gain);
+                
+                // 添加错误处理
+                source.onerror = function(e) {
+                    console.error('音频播放错误:', e);
+                };
+                
+                source.start();
+                
+                // console.log(`音频播放成功: ${samplesPerChannel} 样本, ${channels} 声道, ${targetSampleRate}Hz`);
+                // console.log('音频上下文状态:', audioContext.state);
+                // console.log('当前音量:', audioContext.gain.gain.value);
+                // console.log('音频数据范围:', Math.min(...int16View), '到', Math.max(...int16View));
+                
+            } catch (error) {
+                console.error('播放音频失败:', error);
+            }
+        }
+        
+        // 重采样播放音频
+        function playAudioWithResampling(audioBuffer, sourceSampleRate, targetSampleRate, channels) {
+            try {
+                const bytesPerSample = 2;
+                const sourceSamplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
+                
+                // 计算重采样后的样本数
+                const resampleRatio = targetSampleRate / sourceSampleRate;
+                const targetSamplesPerChannel = Math.round(sourceSamplesPerChannel * resampleRatio);
+                
+                console.log(`重采样: ${sourceSamplesPerChannel} → ${targetSamplesPerChannel} 样本`);
+                
+                // 创建目标音频缓冲区
+                const audioBufferSource = audioContext.createBuffer(channels, targetSamplesPerChannel, targetSampleRate);
+                
+                // 从ArrayBuffer创建Int16Array视图
+                const int16View = new Int16Array(audioBuffer);
+                
+                // 执行重采样
+                for (let channel = 0; channel < channels; channel++) {
+                    const channelData = audioBufferSource.getChannelData(channel);
+                    
+                    for (let i = 0; i < targetSamplesPerChannel; i++) {
+                        // 计算源音频中的对应位置
+                        const sourceIndex = i / resampleRatio;
+                        const sourceIndexFloor = Math.floor(sourceIndex);
+                        const sourceIndexCeil = Math.min(sourceIndexFloor + 1, sourceSamplesPerChannel - 1);
+                        const fraction = sourceIndex - sourceIndexFloor;
+                        
+                        // 获取源音频样本
+                        let sample1 = 0, sample2 = 0;
+                        
+                        if (sourceIndexFloor < sourceSamplesPerChannel) {
+                            const index1 = sourceIndexFloor * channels + channel;
+                            if (index1 < int16View.length) {
+                                sample1 = int16View[index1] / 32768.0;
+                            }
+                        }
+                        
+                        if (sourceIndexCeil < sourceSamplesPerChannel) {
+                            const index2 = sourceIndexCeil * channels + channel;
+                            if (index2 < int16View.length) {
+                                sample2 = int16View[index2] / 32768.0;
+                            }
+                        }
+                        
+                        // 线性插值重采样
+                        const interpolatedSample = sample1 * (1 - fraction) + sample2 * fraction;
+                        
+                        // 应用平滑滤波
+                        channelData[i] = applySmoothingFilter(interpolatedSample, i, channel);
+                    }
+                }
+                
+                // 播放音频
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBufferSource;
+                source.connect(audioContext.gain);
+                
+                source.onerror = function(e) {
+                    console.error('重采样音频播放错误:', e);
+                };
+                
+                source.start();
+                
+                console.log(`重采样音频播放成功: ${targetSamplesPerChannel} 样本, ${channels} 声道, ${targetSampleRate}Hz`);
+                
+            } catch (error) {
+                console.error('重采样播放音频失败:', error);
+                // 如果重采样失败，尝试直接播放
+                console.log('重采样失败，尝试直接播放...');
+                playAudioDirect(audioBuffer);
+            }
+        }
+        
+        // 直接播放音频（备用方案）
+        function playAudioDirect(audioBuffer) {
+            try {
+                const channels = 2;
+                const bytesPerSample = 2;
+                const samplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
+                
+                const audioBufferSource = audioContext.createBuffer(channels, samplesPerChannel, audioContext.sampleRate);
+                const int16View = new Int16Array(audioBuffer);
+                
+                for (let channel = 0; channel < channels; channel++) {
+                    const channelData = audioBufferSource.getChannelData(channel);
+                    
+                    for (let i = 0; i < samplesPerChannel; i++) {
+                        const sampleIndex = i * channels + channel;
+                        
+                        if (sampleIndex < int16View.length) {
+                            channelData[i] = int16View[sampleIndex] / 32768.0;
+                        } else {
+                            channelData[i] = 0;
+                        }
+                    }
+                }
+                
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBufferSource;
+                source.connect(audioContext.gain);
+                source.start();
+                
+                console.log(`直接播放音频成功: ${samplesPerChannel} 样本`);
+                
+            } catch (error) {
+                console.error('直接播放音频失败:', error);
+            }
+        }
+        
+        // 应用平滑滤波，减少刺啦声
+        function applySmoothingFilter(sample, index, channel) {
+            // 检查是否启用平滑滤波
+            const enableSmoothing = document.getElementById('enableSmoothing')?.checked !== false;
+            if (!enableSmoothing) {
+                return sample; // 直接返回原始样本
+            }
+            
+            // 获取滤波强度设置
+            const filterStrength = parseInt(document.getElementById('filterStrength')?.value || '3');
+            const bufferSize = Math.max(2, Math.min(8, filterStrength + 2)); // 2-8之间的缓冲区大小
+            
+            // 简单的移动平均滤波
+            if (!window.audioFilterBuffer) {
+                window.audioFilterBuffer = {};
+            }
+            
+            const key = `${channel}_${index % bufferSize}`; // 动态缓冲区大小
+            if (!window.audioFilterBuffer[key]) {
+                window.audioFilterBuffer[key] = [];
+            }
+            
+            const buffer = window.audioFilterBuffer[key];
+            buffer.push(sample);
+            
+            // 保持缓冲区大小
+            if (buffer.length > bufferSize) {
+                buffer.shift();
+            }
+            
+            // 计算平均值
+            const avgSample = buffer.reduce((sum, val) => sum + val, 0) / buffer.length;
+            
+            // 检查是否启用动态压缩
+            const enableCompression = document.getElementById('enableCompression')?.checked !== false;
+            
+            if (enableCompression) {
+                // 应用动态压缩，减少过大的振幅
+                const compressionRatio = 0.8 - (filterStrength * 0.1); // 根据滤波强度调整压缩
+                const compressedSample = Math.tanh(avgSample * compressionRatio) * (0.9 - filterStrength * 0.05);
+                return compressedSample;
+            } else {
+                // 只应用平滑滤波，不压缩
+                return avgSample;
+            }
+        }
+        
+        // 处理视频同步
+        function processVideoSync(frameData) {
+            const currentTime = Date.now();
+            const syncTimestamp = frameData.sync_timestamp * 1000; // 转换为毫秒
+            const frameIndex = frameData.frame_index;
+            
+            // 计算同步偏移
+            const syncOffset = Math.abs(currentTime - syncTimestamp);
+            syncOffsets.push(syncOffset);
+            
+            // 保持最近100个偏移值
+            if (syncOffsets.length > 100) {
+                syncOffsets.shift();
+            }
+            
+            // 更新同步状态
+            updateSyncStatus(syncOffset);
+            
+            // 更新同步偏移显示
+            document.getElementById('syncOffset').textContent = `${syncOffset.toFixed(1)} ms`;
+        }
+        
+        // 处理音频同步
+        function processAudioSync(audioData) {
+            const currentTime = Date.now();
+            const syncTimestamp = audioData.sync_timestamp * 1000; // 转换为毫秒
+            
+            // 计算音频同步偏移
+            const audioSyncOffset = Math.abs(currentTime - syncTimestamp);
+            
+            // 更新同步状态（取视频和音频偏移的平均值）
+            const avgOffset = (audioSyncOffset + (syncOffsets[syncOffsets.length - 1] || 0)) / 2;
+            updateSyncStatus(avgOffset);
+        }
+        
+        // 更新同步状态
+        function updateSyncStatus(syncOffset) {
+            const syncStatus = document.getElementById('syncStatus');
+            
+            if (syncOffset < syncThreshold) {
+                syncStatus.textContent = '✅ 同步良好';
+                syncStatus.className = 'sync-status sync-good';
+            } else if (syncOffset < syncThreshold * 2) {
+                syncStatus.textContent = '⚠️ 同步一般';
+                syncStatus.className = 'sync-status sync-warning';
+            } else {
+                syncStatus.textContent = '❌ 同步较差';
+                syncStatus.className = 'sync-status sync-bad';
+            }
+        }
+        
+        // 更新连接状态
+        function updateConnectionStatus(status, message) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = `status ${status}`;
+            statusElement.textContent = message;
+        }
+        
+        // 重置统计信息
+        function resetStats() {
+            totalFrames = 0;
+            frameCount = 0;
+            totalDataSize = 0;
+            latencySum = 0;
+            latencyCount = 0;
+            syncOffsets = [];
+            
+            // 重置显示
+            document.getElementById('totalFrames').textContent = '0';
+            document.getElementById('currentFps').textContent = '0.0';
+            document.getElementById('dataSize').textContent = '0 KB';
+            document.getElementById('avgLatency').textContent = '0 ms';
+            document.getElementById('syncOffset').textContent = '0 ms';
+            document.getElementById('bufferHealth').textContent = '100%';
+            
+            document.getElementById('audioInfo').textContent = '音频: 未接收';
+            document.getElementById('videoInfo').textContent = '视频: 未接收';
+        }
+        
+        // 启动心跳检测
+        function startHeartbeat() {
+            setInterval(function() {
+                if (isConnected && websocket) {
+                    websocket.send(JSON.stringify({
+                        type: 'ping',
+                        timestamp: Date.now()
+                    }));
+                }
+            }, 30000); // 每30秒发送一次心跳
+        }
+        
+        // 启动FPS计数器
+        function startFpsCounter() {
+            setInterval(function() {
+                const currentTime = Date.now();
+                const timeDiff = (currentTime - lastFpsTime) / 1000;
+                
+                if (timeDiff > 0) {
+                    const fps = frameCount / timeDiff;
+                    document.getElementById('currentFps').textContent = fps.toFixed(1);
+                    document.getElementById('fps').textContent = fps.toFixed(1);
+                    
+                    // 计算平均延迟
+                    if (latencyCount > 0) {
+                        const avgLatency = latencySum / latencyCount;
+                        document.getElementById('avgLatency').textContent = `${avgLatency.toFixed(1)} ms`;
+                        document.getElementById('latency').textContent = `${avgLatency.toFixed(1)} ms`;
+                    }
+                    
+                    // 计算数据大小
+                    const dataSizeKB = totalDataSize / 1024;
+                    if (dataSizeKB > 1024) {
+                        document.getElementById('dataSize').textContent = `${(dataSizeKB / 1024).toFixed(1)} MB`;
+                    } else {
+                        document.getElementById('dataSize').textContent = `${dataSizeKB.toFixed(1)} KB`;
+                    }
+                    
+                    // 计算缓冲区健康度
+                    const bufferHealth = Math.max(0, 100 - (syncOffsets.length > 0 ? Math.max(...syncOffsets) / 10 : 0));
+                    document.getElementById('bufferHealth').textContent = `${Math.min(100, bufferHealth).toFixed(0)}%`;
+                    
+                    // 更新视频信息
+                    document.getElementById('videoInfo').textContent = `视频: ${frameCount} 帧`;
+                }
+                
+                // 重置计数器
+                frameCount = 0;
+                lastFpsTime = currentTime;
+                latencySum = 0;
+                latencyCount = 0;
+                
+            }, 1000); // 每秒更新一次
+        }
+        
+        // 工具函数：base64转ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        // 测试音频相关变量
+        let testAudioSource = null;
+        let testAudioInterval = null;
+        
+        // 播放测试音调
+        function playTestTone() {
+            if (!audioContext) {
+                initAudioContext();
+            }
+            
+            try {
+                stopTestAudio(); // 停止之前的测试音频
+                
+                const frequency = 440; // A4音调 (440Hz)
+                const duration = 3; // 3秒
+                const sampleRate = audioContext.sampleRate;
+                const samples = Math.floor(sampleRate * duration);
+                
+                // 创建音频缓冲区
+                const buffer = audioContext.createBuffer(2, samples, sampleRate);
+                
+                // 生成正弦波
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = buffer.getChannelData(channel);
+                    for (let i = 0; i < samples; i++) {
+                        // 生成正弦波，添加淡入淡出效果
+                        const fadeIn = Math.min(1, i / (sampleRate * 0.1)); // 0.1秒淡入
+                        const fadeOut = Math.min(1, (samples - i) / (sampleRate * 0.1)); // 0.1秒淡出
+                        const fade = Math.min(fadeIn, fadeOut);
+                        
+                        channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3 * fade;
+                    }
+                }
+                
+                // 播放音频
+                testAudioSource = audioContext.createBufferSource();
+                testAudioSource.buffer = buffer;
+                testAudioSource.connect(audioContext.gain);
+                testAudioSource.start();
+                
+                console.log(`测试音调播放成功: ${frequency}Hz, ${duration}秒`);
+                
+                // 自动停止
+                setTimeout(() => {
+                    if (testAudioSource) {
+                        testAudioSource.stop();
+                        testAudioSource = null;
+                    }
+                }, duration * 1000);
+                
+            } catch (error) {
+                console.error('播放测试音调失败:', error);
+            }
+        }
+        
+        // 播放扫频音
+        function playTestSweep() {
+            if (!audioContext) {
+                initAudioContext();
+            }
+            
+            try {
+                stopTestAudio(); // 停止之前的测试音频
+                
+                const startFreq = 20; // 起始频率 20Hz
+                const endFreq = 20000; // 结束频率 20kHz
+                const duration = 5; // 5秒
+                const sampleRate = audioContext.sampleRate;
+                const samples = Math.floor(sampleRate * duration);
+                
+                // 创建音频缓冲区
+                const buffer = audioContext.createBuffer(2, samples, sampleRate);
+                
+                // 生成扫频音
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = buffer.getChannelData(channel);
+                    for (let i = 0; i < samples; i++) {
+                        // 计算当前频率（对数扫频）
+                        const progress = i / samples;
+                        const currentFreq = startFreq * Math.pow(endFreq / startFreq, progress);
+                        
+                        // 生成正弦波
+                        const phase = 2 * Math.PI * currentFreq * i / sampleRate;
+                        channelData[i] = Math.sin(phase) * 0.2;
+                    }
+                }
+                
+                // 播放音频
+                testAudioSource = audioContext.createBufferSource();
+                testAudioSource.buffer = buffer;
+                testAudioSource.connect(audioContext.gain);
+                testAudioSource.start();
+                
+                console.log(`扫频音播放成功: ${startFreq}Hz → ${endFreq}Hz, ${duration}秒`);
+                
+                // 自动停止
+                setTimeout(() => {
+                    if (testAudioSource) {
+                        testAudioSource.stop();
+                        testAudioSource = null;
+                    }
+                }, duration * 1000);
+                
+            } catch (error) {
+                console.error('播放扫频音失败:', error);
+            }
+        }
+        
+        // 停止测试音频
+        function stopTestAudio() {
+            try {
+                if (testAudioSource) {
+                    testAudioSource.stop();
+                    testAudioSource = null;
+                }
+                
+                if (testAudioInterval) {
+                    clearInterval(testAudioInterval);
+                    testAudioInterval = null;
+                }
+                
+                console.log('测试音频已停止');
+                
+            } catch (error) {
+                console.error('停止测试音频失败:', error);
+            }
+        }
+        
+        // 播放白噪声（用于测试音频系统）
+        function playWhiteNoise() {
+            if (!audioContext) {
+                initAudioContext();
+            }
+            
+            try {
+                stopTestAudio();
+                
+                const duration = 2; // 2秒
+                const sampleRate = audioContext.sampleRate;
+                const samples = Math.floor(sampleRate * duration);
+                
+                // 创建音频缓冲区
+                const buffer = audioContext.createBuffer(2, samples, sampleRate);
+                
+                // 生成白噪声
+                for (let channel = 0; channel < 2; channel++) {
+                    const channelData = buffer.getChannelData(channel);
+                    for (let i = 0; i < samples; i++) {
+                        // 生成-0.1到0.1之间的随机值
+                        channelData[i] = (Math.random() - 0.5) * 0.2;
+                    }
+                }
+                
+                // 播放音频
+                testAudioSource = audioContext.createBufferSource();
+                testAudioSource.buffer = buffer;
+                testAudioSource.connect(audioContext.gain);
+                testAudioSource.start();
+                
+                console.log(`白噪声播放成功: ${duration}秒`);
+                
+                // 自动停止
+                setTimeout(() => {
+                    if (testAudioSource) {
+                        testAudioSource.stop();
+                        testAudioSource = null;
+                    }
+                }, duration * 1000);
+                
+            } catch (error) {
+                console.error('播放白噪声失败:', error);
+            }
+        }
+        
+        // 音频诊断功能
+        function diagnoseAudio() {
+            console.log('=== 音频系统诊断 ===');
+            
+            // 检查Web Audio API支持
+            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                console.log('✅ Web Audio API 支持正常');
+            } else {
+                console.error('❌ Web Audio API 不支持');
+                return;
+            }
+            
+            // 检查音频上下文
+            if (audioContext) {
+                console.log('✅ 音频上下文已创建');
+                console.log('   - 状态:', audioContext.state);
+                console.log('   - 采样率:', audioContext.sampleRate);
+                console.log('   - 当前时间:', audioContext.currentTime);
+                
+                // 检查音量设置
+                if (audioContext.gain) {
+                    console.log('   - 音量增益:', audioContext.gain.gain.value);
+                }
+                
+                // 检查连接状态
+                if (audioContext.destination) {
+                    console.log('   - 音频输出目标:', audioContext.destination);
+                }
+            } else {
+                console.log('⚠️ 音频上下文未创建');
+            }
+            
+            // 检查浏览器音频权限
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'microphone' }).then(result => {
+                    console.log('   - 麦克风权限:', result.state);
+                });
+            }
+            
+            // 检查用户交互状态
+            console.log('   - 页面可见性:', document.visibilityState);
+            console.log('   - 页面焦点:', document.hasFocus());
+            
+            // 尝试恢复音频上下文
+            if (audioContext && audioContext.state === 'suspended') {
+                console.log('🔄 尝试恢复音频上下文...');
+                audioContext.resume().then(() => {
+                    console.log('✅ 音频上下文已恢复，状态:', audioContext.state);
+                }).catch(err => {
+                    console.error('❌ 恢复音频上下文失败:', err);
+                });
+            }
+            
+            // 检查音量滑块
+            const volumeSlider = document.getElementById('volumeSlider');
+            if (volumeSlider) {
+                console.log('   - 音量滑块值:', volumeSlider.value + '%');
+            }
+            
+            // 检查当前音频数据
+            if (currentAudioData) {
+                console.log('📊 当前音频数据分析:');
+                console.log('   - 格式:', currentAudioData.format);
+                console.log('   - 采样率:', currentAudioData.rate, 'Hz');
+                console.log('   - 声道数:', currentAudioData.channels);
+                console.log('   - 数据大小:', currentAudioData.size, '字节');
+                console.log('   - 样本数:', currentAudioData.chunk);
+                
+                // 分析音频数据质量
+                analyzeAudioQuality(currentAudioData);
+            } else {
+                console.log('⚠️ 没有可分析的音频数据');
+            }
+            
+            // 检查采样率匹配
+            if (audioContext) {
+                const sourceRate = 48000; // C++应用的采样率
+                const targetRate = audioContext.sampleRate;
+                const rateDiff = Math.abs(sourceRate - targetRate);
+                
+                console.log('🎵 采样率分析:');
+                console.log('   - 源音频采样率:', sourceRate, 'Hz');
+                console.log('   - 目标采样率:', targetRate, 'Hz');
+                console.log('   - 差异:', rateDiff, 'Hz');
+                
+                if (rateDiff > 1) {
+                    console.log('⚠️ 采样率不匹配，可能导致音频质量问题');
+                    console.log('💡 建议: 启用重采样功能');
+                } else {
+                    console.log('✅ 采样率匹配良好');
+                }
+            }
+            
+            console.log('=== 诊断完成 ===');
+        }
+        
+        // 分析音频数据质量
+        function analyzeAudioQuality(audioData) {
+            try {
+                if (!audioData.data) {
+                    console.log('❌ 无法分析音频数据质量：数据为空');
+                    return;
+                }
+                
+                const audioBuffer = audioData.data;
+                const int16View = new Int16Array(audioBuffer);
+                
+                // 计算统计信息
+                const minValue = Math.min(...int16View);
+                const maxValue = Math.max(...int16View);
+                const avgValue = int16View.reduce((sum, val) => sum + Math.abs(val), 0) / int16View.length;
+                
+                console.log('📈 音频数据质量分析:');
+                console.log('   - 数据范围:', minValue, '到', maxValue);
+                console.log('   - 平均绝对值:', avgValue.toFixed(2));
+                console.log('   - 动态范围:', (maxValue - minValue));
+                
+                // 检测潜在的音频问题
+                const zeroCount = int16View.filter(val => val === 0).length;
+                const zeroRatio = (zeroCount / int16View.length) * 100;
+                
+                console.log('   - 零值样本比例:', zeroRatio.toFixed(2) + '%');
+                
+                if (zeroRatio > 50) {
+                    console.log('⚠️ 警告: 零值样本过多，可能导致音频静音或失真');
+                }
+                
+                // 检测削波
+                const clippingThreshold = 32000; // 接近16位最大值
+                const clippingCount = int16View.filter(val => Math.abs(val) > clippingThreshold).length;
+                const clippingRatio = (clippingCount / int16View.length) * 100;
+                
+                console.log('   - 削波样本比例:', clippingRatio.toFixed(2) + '%');
+                
+                if (clippingRatio > 5) {
+                    console.log('⚠️ 警告: 削波样本过多，可能导致音频失真');
+                }
+                
+                // 检测噪声
+                const noiseThreshold = 100;
+                const noiseCount = int16View.filter(val => Math.abs(val) < noiseThreshold && val !== 0).length;
+                const noiseRatio = (noiseCount / int16View.length) * 100;
+                
+                console.log('   - 低电平噪声比例:', noiseRatio.toFixed(2) + '%');
+                
+                if (noiseRatio > 30) {
+                    console.log('⚠️ 警告: 低电平噪声过多，可能影响音频质量');
+                }
+                
+                // 总体质量评估
+                let qualityScore = 100;
+                if (zeroRatio > 50) qualityScore -= 30;
+                if (clippingRatio > 5) qualityScore -= 25;
+                if (noiseRatio > 30) qualityScore -= 20;
+                if (Math.abs(audioData.rate - 48000) > 1) qualityScore -= 15;
+                
+                qualityScore = Math.max(0, qualityScore);
+                
+                console.log('🏆 音频质量评分:', qualityScore + '/100');
+                
+                if (qualityScore >= 80) {
+                    console.log('✅ 音频质量良好');
+                } else if (qualityScore >= 60) {
+                    console.log('⚠️ 音频质量一般，建议检查');
+                } else {
+                    console.log('❌ 音频质量较差，需要优化');
+                }
+                
+            } catch (error) {
+                console.error('分析音频质量失败:', error);
+            }
+        }
+        
+        // 音频录制功能
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+        
+        function startRecording() {
+            if (!audioEnabled) {
+                alert('请先启动音频捕获');
+                return;
+            }
+            
+            isRecording = true;
+            recordedChunks = [];
+            
+            document.getElementById('recordButton').textContent = '⏹️ 停止录制';
+            document.getElementById('recordButton').className = 'btn-danger';
+            document.getElementById('recordingStatus').textContent = '录制中...';
+            document.getElementById('recordingStatus').style.color = '#dc3545';
+            document.getElementById('recordingInfo').textContent = '';
+            
+            console.log('音频录制已开始');
+        }
+        
+        function stopRecording() {
+            if (!isRecording) return;
+            
+            isRecording = false;
+            
+            document.getElementById('recordButton').textContent = '🎙️ 开始录制';
+            document.getElementById('recordButton').className = 'btn-primary';
+            document.getElementById('recordingStatus').textContent = '录制完成';
+            document.getElementById('recordingStatus').style.color = '#28a745';
+            
+            if (recordedChunks.length > 0) {
+                downloadWAV();
+            } else {
+                alert('没有录制到音频数据');
+            }
+            
+            console.log('音频录制已停止');
+        }
+        
+        function downloadWAV() {
+            try {
+                if (recordedChunks.length === 0) {
+                    throw new Error('没有音频数据');
+                }
+                
+                // 获取第一个音频块的参数
+                const firstChunk = recordedChunks[0];
+                const sampleRate = firstChunk.rate || 48000;
+                const channels = firstChunk.channels || 2;
+                const bytesPerSample = 2; // 16位
+                
+                // 验证所有音频块的参数一致性
+                let totalSamples = 0;
+                let totalBytes = 0;
+                let isConsistent = true;
+                
+                recordedChunks.forEach((chunk, index) => {
+                    if (chunk.rate !== sampleRate || chunk.channels !== channels) {
+                        console.warn(`音频块 ${index} 参数不一致: 采样率 ${chunk.rate}Hz vs ${sampleRate}Hz, 声道数 ${chunk.channels} vs ${channels}`);
+                        isConsistent = false;
+                    }
+                    
+                    totalSamples += chunk.chunk || 0;
+                    totalBytes += chunk.data.byteLength;
+                });
+                
+                if (!isConsistent) {
+                    console.warn('检测到音频参数不一致，使用第一个音频块的参数');
+                }
+                
+                // 验证样本数计算
+                const expectedBytes = totalSamples * channels * bytesPerSample;
+                if (Math.abs(totalBytes - expectedBytes) > 100) { // 允许100字节的误差
+                    console.warn(`音频数据大小不匹配: 期望 ${expectedBytes} 字节, 实际 ${totalBytes} 字节`);
+                }
+                
+                console.log(`WAV文件参数: ${sampleRate}Hz, ${channels}声道, ${totalSamples}样本, ${totalBytes}字节`);
+                
+                // 创建WAV文件头
+                const wavHeader = createWAVHeader(totalSamples, channels, sampleRate, bytesPerSample);
+                
+                // 合并音频数据
+                const wavData = new ArrayBuffer(wavHeader.byteLength + totalBytes);
+                const wavView = new Uint8Array(wavData);
+                
+                // 写入WAV头
+                wavView.set(new Uint8Array(wavHeader), 0);
+                
+                // 写入音频数据
+                let dataOffset = wavHeader.byteLength;
+                recordedChunks.forEach(chunk => {
+                    const chunkView = new Uint8Array(chunk.data);
+                    wavView.set(chunkView, dataOffset);
+                    dataOffset += chunkView.byteLength;
+                });
+                
+                // 下载文件
+                const blob = new Blob([wavData], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                
+                const now = new Date();
+                const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const filename = `audio_recording_${timestamp}.wav`;
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(url);
+                
+                console.log(`WAV文件已下载: ${filename}`);
+                alert(`音频录制已保存为: ${filename}`);
+                
+            } catch (error) {
+                console.error('生成WAV文件失败:', error);
+                alert('生成WAV文件失败: ' + error.message);
+            }
+        }
+        
+        function createWAVHeader(samples, channels, sampleRate, bytesPerSample) {
+            const dataSize = samples * channels * bytesPerSample;
+            const headerSize = 44;
+            const totalSize = headerSize + dataSize - 8;
+            
+            const header = new ArrayBuffer(headerSize);
+            const view = new DataView(header);
+            
+            // RIFF标识
+            view.setUint32(0, 0x52494646, false); // "RIFF"
+            view.setUint32(4, totalSize, true);    // 文件大小
+            view.setUint32(8, 0x57415645, false);  // "WAVE"
+            
+            // fmt子块
+            view.setUint32(12, 0x666D7420, false); // "fmt "
+            view.setUint32(16, 16, true);           // fmt子块大小
+            view.setUint16(20, 1, true);            // 音频格式 (PCM)
+            view.setUint16(22, channels, true);     // 声道数
+            view.setUint32(24, sampleRate, true);   // 采样率
+            view.setUint32(28, sampleRate * channels * bytesPerSample, true); // 字节率
+            view.setUint16(32, channels * bytesPerSample, true);             // 块对齐
+            view.setUint16(34, bytesPerSample * 8, true);                    // 位深度
+            
+            // data子块
+            view.setUint32(36, 0x64617461, false); // "data"
+            view.setUint32(40, dataSize, true);     // 音频数据大小
+            
+            return header;
+        }
+        
+        // PCM文件保存功能
+        function saveCurrentAudioToPcm() {
+            try {
+                if (!currentAudioData || !currentAudioData.data) {
+                    alert('没有可保存的音频数据，请先接收一些音频数据');
+                    return;
+                }
+                
+                console.log('开始保存PCM文件...');
+                console.log('音频数据信息:', {
+                    format: currentAudioData.format,
+                    channels: currentAudioData.channels,
+                    rate: currentAudioData.rate,
+                    chunk: currentAudioData.chunk,
+                    size: currentAudioData.size,
+                    timestamp: currentAudioData.timestamp
+                });
+                
+                // 验证音频数据
+                if (currentAudioData.format !== 'pcm') {
+                    alert('只支持保存PCM格式的音频数据');
+                    return;
+                }
+                
+                // 获取音频参数
+                const audioBuffer = currentAudioData.data;
+                const channels = currentAudioData.channels || 2;
+                const sampleRate = currentAudioData.rate || 48000;
+                const bytesPerSample = 2; // 16位
+                
+                // 计算实际的样本数
+                const actualSamples = audioBuffer.byteLength / (channels * bytesPerSample);
+                
+                console.log(`PCM文件参数: ${sampleRate}Hz, ${channels}声道, ${actualSamples}样本, ${audioBuffer.byteLength}字节`);
+                
+                // 创建PCM文件（纯音频数据，无文件头）
+                const pcmData = new Uint8Array(audioBuffer);
+                
+                // 下载PCM文件
+                const blob = new Blob([pcmData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                
+                const now = new Date();
+                const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const filename = `audio_pcm_${sampleRate}Hz_${channels}ch_${timestamp}.pcm`;
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(url);
+                
+                // 更新状态
+                document.getElementById('pcmStatus').textContent = '已保存';
+                document.getElementById('pcmStatus').style.color = '#28a745';
+                
+                console.log(`PCM文件已保存: ${filename}`);
+                alert(`PCM文件已保存为: ${filename}\n\n文件信息:\n采样率: ${sampleRate}Hz\n声道数: ${channels}\n样本数: ${actualSamples}\n数据大小: ${(audioBuffer.byteLength / 1024).toFixed(1)} KB`);
+                
+                // 3秒后重置状态
+                setTimeout(() => {
+                    document.getElementById('pcmStatus').textContent = '未保存';
+                    document.getElementById('pcmStatus').style.color = '#666';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('保存PCM文件失败:', error);
+                alert('保存PCM文件失败: ' + error.message);
+                
+                // 更新状态
+                document.getElementById('pcmStatus').textContent = '保存失败';
+                document.getElementById('pcmStatus').style.color = '#dc3545';
+                
+                // 3秒后重置状态
+                setTimeout(() => {
+                    document.getElementById('pcmStatus').textContent = '未保存';
+                    document.getElementById('pcmStatus').style.color = '#666';
+                }, 3000);
+            }
+        }
+        
+        // 连续PCM保存功能
+        function toggleContinuousPcmSave() {
+            if (continuousPcmSave) {
+                stopContinuousPcmSave();
+            } else {
+                startContinuousPcmSave();
+            }
+        }
+        
+        function startContinuousPcmSave() {
+            if (!audioEnabled) {
+                alert('请先启动音频捕获');
+                return;
+            }
+            
+            continuousPcmSave = true;
+            continuousPcmChunks = [];
+            continuousPcmStartTime = Date.now();
+            
+            document.getElementById('continuousPcmButton').textContent = '⏹️ 停止连续保存';
+            document.getElementById('continuousPcmButton').className = 'btn-danger';
+            document.getElementById('continuousPcmStatus').textContent = '已启动';
+            document.getElementById('continuousPcmStatus').style.color = '#28a745';
+            
+            console.log('连续PCM保存已启动');
+        }
+        
+        function stopContinuousPcmSave() {
+            if (!continuousPcmSave) return;
+            
+            continuousPcmSave = false;
+            
+            document.getElementById('continuousPcmButton').textContent = '🔄 连续保存';
+            document.getElementById('continuousPcmButton').className = 'btn-primary';
+            
+            if (continuousPcmChunks.length > 0) {
+                saveContinuousPcmFile();
+            } else {
+                document.getElementById('continuousPcmStatus').textContent = '已关闭';
+                document.getElementById('continuousPcmStatus').style.color = '#666';
+                alert('没有保存到音频数据');
+            }
+            
+            console.log('连续PCM保存已停止');
+        }
+        
+        function saveContinuousPcmFile() {
+            try {
+                if (continuousPcmChunks.length === 0) {
+                    throw new Error('没有音频数据');
+                }
+                
+                console.log('开始保存连续PCM文件...');
+                console.log(`音频块数量: ${continuousPcmChunks.length}`);
+                
+                // 获取第一个音频块的参数
+                const firstChunk = continuousPcmChunks[0];
+                const sampleRate = firstChunk.rate || 48000;
+                const channels = firstChunk.channels || 2;
+                const bytesPerSample = 2; // 16位
+                
+                // 验证所有音频块的参数一致性
+                let totalBytes = 0;
+                let isConsistent = true;
+                
+                continuousPcmChunks.forEach((chunk, index) => {
+                    if (chunk.rate !== sampleRate || chunk.channels !== channels) {
+                        console.warn(`音频块 ${index} 参数不一致: 采样率 ${chunk.rate}Hz vs ${sampleRate}Hz, 声道数 ${chunk.channels} vs ${channels}`);
+                        isConsistent = false;
+                    }
+                    totalBytes += chunk.size;
+                });
+                
+                if (!isConsistent) {
+                    console.warn('检测到音频参数不一致，使用第一个音频块的参数');
+                }
+                
+                console.log(`连续PCM文件参数: ${sampleRate}Hz, ${channels}声道, ${totalBytes}字节`);
+                
+                // 合并所有音频数据
+                const pcmData = new Uint8Array(totalBytes);
+                let dataOffset = 0;
+                
+                continuousPcmChunks.forEach(chunk => {
+                    const chunkView = new Uint8Array(chunk.data);
+                    pcmData.set(chunkView, dataOffset);
+                    dataOffset += chunkView.byteLength;
+                });
+                
+                // 下载PCM文件
+                const blob = new Blob([pcmData], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                
+                const now = new Date();
+                const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const duration = continuousPcmStartTime ? ((Date.now() - continuousPcmStartTime) / 1000).toFixed(1) : '0';
+                const filename = `continuous_pcm_${sampleRate}Hz_${channels}ch_${duration}s_${timestamp}.pcm`;
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(url);
+                
+                // 更新状态
+                document.getElementById('continuousPcmStatus').textContent = '已保存';
+                document.getElementById('continuousPcmStatus').style.color = '#28a745';
+                
+                console.log(`连续PCM文件已保存: ${filename}`);
+                alert(`连续PCM文件已保存为: ${filename}\n\n文件信息:\n采样率: ${sampleRate}Hz\n声道数: ${channels}\n音频块数: ${continuousPcmChunks.length}\n总时长: ${duration}秒\n数据大小: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`);
+                
+                // 清理缓冲区
+                continuousPcmChunks = [];
+                continuousPcmStartTime = null;
+                
+                // 3秒后重置状态
+                setTimeout(() => {
+                    document.getElementById('continuousPcmStatus').textContent = '已关闭';
+                    document.getElementById('continuousPcmStatus').style.color = '#666';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('保存连续PCM文件失败:', error);
+                alert('保存连续PCM文件失败: ' + error.message);
+                
+                // 更新状态
+                document.getElementById('continuousPcmStatus').textContent = '保存失败';
+                document.getElementById('continuousPcmStatus').style.color = '#dc3545';
+                
+                // 3秒后重置状态
+                setTimeout(() => {
+                    document.getElementById('continuousPcmStatus').textContent = '已关闭';
+                    document.getElementById('continuousPcmStatus').style.color = '#666';
+                }, 3000);
+            }
+        }
+        
+        // ==================== 应用程序控制功能 ====================
+        
+        // 应用程序列表数据
+        let applicationsList = [];
+        let filteredApplications = [];
+        
+        // 处理应用程序列表消息
+        function handleApplicationsList(message) {
+            try {
+                applicationsList = message.data || [];
+                filteredApplications = [...applicationsList];
+                
+                updateApplicationsDisplay();
+                updateLastUpdateTime(message.timestamp);
+                
+                console.log(`收到应用程序列表: ${applicationsList.length} 个应用程序`);
+            } catch (error) {
+                console.error('处理应用程序列表失败:', error);
+            }
+        }
+        
+        // 处理启动结果消息
+        function handleLaunchResult(message) {
+            const launchStatus = document.getElementById('launchStatus');
+            launchStatus.style.display = 'block';
+            
+            if (message.success) {
+                launchStatus.style.background = '#d4edda';
+                launchStatus.style.color = '#155724';
+                launchStatus.style.border = '1px solid #c3e6cb';
+                launchStatus.textContent = `✅ ${message.message}`;
+            } else {
+                launchStatus.style.background = '#f8d7da';
+                launchStatus.style.color = '#721c24';
+                launchStatus.style.border = '1px solid #f5c6cb';
+                launchStatus.textContent = `❌ ${message.message}`;
+            }
+            
+            // 3秒后隐藏状态
+            setTimeout(() => {
+                launchStatus.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 更新应用程序显示
+        function updateApplicationsDisplay() {
+            const container = document.getElementById('applicationsList');
+            const countElement = document.getElementById('appCount');
+            
+            countElement.textContent = filteredApplications.length;
+            
+            if (filteredApplications.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #6c757d;">没有找到应用程序</div>';
+                return;
+            }
+            
+            let html = '';
+            filteredApplications.forEach((app, index) => {
+                const appName = app.name || '未知应用程序';
+                const exePath = app.exe_path || '';
+                const fileName = app.filename || '';
+                
+                html += `
+                    <div class="app-item" style="padding: 15px; border-bottom: 1px solid #f1f3f4; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="app-info" style="flex: 1;">
+                            <div class="app-name" style="font-weight: bold; color: #495057; margin-bottom: 5px;">${appName}</div>
+                            <div class="app-path" style="font-size: 0.85em; color: #6c757d; word-break: break-all;">${exePath}</div>
+                            <div class="app-filename" style="font-size: 0.8em; color: #adb5bd;">${fileName}</div>
+                        </div>
+                        <div class="app-actions">
+                            <button class="btn-success" data-exe-path="${exePath}" onclick="launchApplicationFromButton(this)" style="padding: 8px 15px; font-size: 0.9em;">
+                                🚀 启动
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 更新最后更新时间
+        function updateLastUpdateTime(timestamp) {
+            const timeElement = document.getElementById('lastUpdateTime');
+            if (timestamp) {
+                const date = new Date(timestamp * 1000);
+                timeElement.textContent = `最后更新: ${date.toLocaleString()}`;
+            } else {
+                timeElement.textContent = '未更新';
+            }
+        }
+        
+        // 从按钮获取路径并启动应用程序
+        function launchApplicationFromButton(button) {
+            const exePath = button.getAttribute('data-exe-path');
+            if (exePath) {
+                launchApplication(exePath);
+            } else {
+                alert('无法获取应用程序路径');
+            }
+        }
+        
+        // 启动应用程序
+        function launchApplication(exePath) {
+            if (!isConnected) {
+                alert('请先连接到服务器');
+                return;
+            }
+            
+            if (!exePath) {
+                alert('应用程序路径无效');
+                return;
+            }
+            
+            // 确保路径中的反斜杠被正确处理
+            const normalizedPath = exePath.replace(/\\\\/g, '\\').replace(/\\/g, '\\');
+            
+            console.log('请求启动应用程序:', exePath);
+            console.log('标准化后的路径:', normalizedPath);
+            
+            websocket.send(JSON.stringify({
+                type: 'launch_app',
+                exe_path: normalizedPath
+            }));
+        }
+        
+        // 刷新应用程序列表
+        function refreshApplications() {
+            if (!isConnected) {
+                alert('请先连接到服务器');
+                return;
+            }
+            
+            console.log('请求刷新应用程序列表');
+            // 服务器会每5秒自动发送一次，这里可以显示提示
+            document.getElementById('lastUpdateTime').textContent = '正在刷新...';
+        }
+        
+        // 搜索应用程序
+        function searchApplications() {
+            const searchTerm = document.getElementById('appSearchInput').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                filteredApplications = [...applicationsList];
+            } else {
+                filteredApplications = applicationsList.filter(app => {
+                    const name = (app.name || '').toLowerCase();
+                    const filename = (app.filename || '').toLowerCase();
+                    const path = (app.exe_path || '').toLowerCase();
+                    
+                    return name.includes(searchTerm) || 
+                           filename.includes(searchTerm) || 
+                           path.includes(searchTerm);
+                });
+            }
+            
+            updateApplicationsDisplay();
+        }
+        
+        // 监听搜索输入框的回车键
+        document.getElementById('appSearchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchApplications();
+            }
+        });
+        
+        // ==================== 应用程序控制功能结束 ====================
+        
+        // 页面卸载时清理资源
+        window.addEventListener('beforeunload', function() {
+            if (websocket) {
+                websocket.close();
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            // 停止测试音频
+            stopTestAudio();
+            
+            // 停止录制
+            if (isRecording) {
+                stopRecording();
+            }
+            
+            // 停止连续PCM保存
+            if (continuousPcmSave) {
+                stopContinuousPcmSave();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -24,6 +24,7 @@
 #include "OBSBasicStats.hpp"
 #include "plugin-manager/PluginManager.hpp"
 #include "VolControl.hpp"
+#include <utility/WebSocketStreamServer.hpp>
 
 #include <obs-module.h>
 
@@ -1368,10 +1369,19 @@ void OBSBasic::OnFirstLoad()
 
 	if (showLogViewerOnStartup)
 		on_actionViewCurrentLog_triggered();
+	
+	// 启动 WebSocket Stream Server
+	StartWebSocketStreamServer(8765);
 }
 
 OBSBasic::~OBSBasic()
 {
+	// 停止 WebSocket 服务器
+	if (wsStreamServer) {
+		wsStreamServer->stop();
+		wsStreamServer.reset();
+	}
+	
 	if (!handledShutdown) {
 		applicationShutdown();
 	}

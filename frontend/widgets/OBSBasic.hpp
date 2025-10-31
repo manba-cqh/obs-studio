@@ -43,6 +43,9 @@
 
 extern volatile bool recording_paused;
 
+// 前向声明
+class WebSocketStreamServer;
+
 class ColorSelect;
 class OBSAbout;
 class OBSBasicAdvAudio;
@@ -1697,6 +1700,18 @@ private:
 
 	void BroadcastButtonClicked();
 	void SetBroadcastFlowEnabled(bool enabled);
+	
+	/* -------------------------------------
+	 * MARK: - WebSocket Stream Server
+	 * -------------------------------------
+	 */
+private:
+	std::unique_ptr<WebSocketStreamServer> wsStreamServer;
+	
+public:
+	void StartWebSocketStreamServer(quint16 port = 8765);
+	void StopWebSocketStreamServer();
+	bool IsWebSocketStreamServerRunning() const;
 
 public:
 #ifdef YOUTUBE_ENABLED

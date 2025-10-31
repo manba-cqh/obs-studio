@@ -40,6 +40,7 @@ target_link_libraries(
     OBS::frontend-api
     OBS::json11
     OBS::bpm
+    "${CMAKE_SOURCE_DIR}/.deps/obs-deps-2025-08-23-x64/lib/turbojpeg"
 )
 
 include(cmake/ui-components.cmake)

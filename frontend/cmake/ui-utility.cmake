@@ -47,6 +47,8 @@ target_sources(
     utility/platform.hpp
     utility/QuickTransition.cpp
     utility/QuickTransition.hpp
+    utility/WebSocketStreamServer.cpp
+    utility/WebSocketStreamServer.hpp
     utility/RemoteTextThread.cpp
     utility/RemoteTextThread.hpp
     utility/RemuxEntryPathItemDelegate.cpp
