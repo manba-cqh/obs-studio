@@ -49,6 +49,10 @@ private slots:
 	void EnableReplayBufferButtons(bool enabled);
 	void EnableVirtualCamButtons();
 
+public slots:
+	void WebSocketServerStarted();
+	void WebSocketServerStopped();
+
 public:
 	OBSBasicControls(OBSBasic *main);
 	inline ~OBSBasicControls() {}
@@ -64,6 +68,7 @@ signals:
 	void VirtualCamConfigButtonClicked();
 	void StudioModeButtonClicked();
 	void SettingsButtonClicked();
+	void WebSocketButtonClicked();
 
 	void StartStreamMenuActionClicked();
 	void StopStreamMenuActionClicked();

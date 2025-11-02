@@ -308,6 +308,8 @@ OBSBasic::OBSBasic(QWidget *parent) : OBSMainWindow(parent), undo_s(ui), ui(new 
 	connect(controls, &OBSBasicControls::StudioModeButtonClicked, this, &OBSBasic::TogglePreviewProgramMode);
 
 	connect(controls, &OBSBasicControls::SettingsButtonClicked, this, &OBSBasic::on_action_Settings_triggered);
+	
+	connect(controls, &OBSBasicControls::WebSocketButtonClicked, this, &OBSBasic::WebSocketButtonClicked);
 
 	/* Set up transitions combobox connections */
 	connect(this, &OBSBasic::TransitionAdded, this, [this](const QString &name, const QString &uuid) {
@@ -1369,9 +1371,6 @@ void OBSBasic::OnFirstLoad()
 
 	if (showLogViewerOnStartup)
 		on_actionViewCurrentLog_triggered();
-	
-	// 启动 WebSocket Stream Server
-	StartWebSocketStreamServer(8765);
 }
 
 OBSBasic::~OBSBasic()

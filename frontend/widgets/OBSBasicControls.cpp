@@ -45,6 +45,9 @@ OBSBasicControls::OBSBasicControls(OBSBasic *main) : QFrame(nullptr), ui(new Ui:
 	connect(
 		ui->settingsButton, &QPushButton::clicked, this, [this]() { emit this->SettingsButtonClicked(); },
 		Qt::DirectConnection);
+	connect(
+		ui->webSocketButton, &QPushButton::clicked, this, [this]() { emit this->WebSocketButtonClicked(); },
+		Qt::DirectConnection);
 
 	/* Transfer menu actions signals as OBSBasicControls signals */
 	connect(
@@ -280,4 +283,16 @@ void OBSBasicControls::EnableVirtualCamButtons()
 {
 	ui->virtualCamButton->setVisible(true);
 	ui->virtualCamConfigButton->setVisible(true);
+}
+
+void OBSBasicControls::WebSocketServerStarted()
+{
+	setClasses(ui->webSocketButton, "state-active");
+	ui->webSocketButton->setText(QTStr("Basic.Main.StopWebSocket"));
+}
+
+void OBSBasicControls::WebSocketServerStopped()
+{
+	setClasses(ui->webSocketButton, "");
+	ui->webSocketButton->setText(QTStr("Basic.Main.StartWebSocket"));
 }

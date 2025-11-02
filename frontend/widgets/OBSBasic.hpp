@@ -1712,6 +1712,9 @@ public:
 	void StartWebSocketStreamServer(quint16 port = 8765);
 	void StopWebSocketStreamServer();
 	bool IsWebSocketStreamServerRunning() const;
+	
+private slots:
+	void WebSocketButtonClicked();
 
 public:
 #ifdef YOUTUBE_ENABLED
