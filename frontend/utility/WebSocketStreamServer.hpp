@@ -6,6 +6,7 @@
 #include <QList>
 #include <QMutex>
 #include <QByteArray>
+#include <QTimer>
 #include <obs.h>
 #include <turbojpeg.h>
 
@@ -37,6 +38,7 @@ private slots:
 	void onTextMessageReceived(QString message);
 	void onBinaryMessageReceived(QByteArray data);
 	void onClientDisconnected();
+	void sendApplicationsListPeriodically();
 
 private:
 	// 音视频回调
@@ -52,6 +54,10 @@ private:
 	
 	// Base64 编码
 	QString encodeAudioToBase64(const struct audio_data *frames);
+	
+	// 应用程序管理
+	void getInstalledApplications(QJsonArray &applications);
+	bool launchApplication(const QString &exePath, QString &errorMsg);
 	
 	QWebSocketServer *server;
 	QList<QWebSocket *> clients;
@@ -77,5 +83,8 @@ private:
 	// JPEG 编码
 	tjhandle jpegCompressor = nullptr;
 	QByteArray jpegBuffer;
+	
+	// 应用程序列表定时器
+	QTimer *appListTimer = nullptr;
 };
 

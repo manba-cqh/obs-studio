@@ -1,16 +1,26 @@
 #include "WebSocketStreamServer.hpp"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QDateTime>
 #include <QThread>
 #include <QElapsedTimer>
 #include <QMutexLocker>
 #include <QByteArray>
+#include <QProcess>
+#include <QDir>
+#include <QSettings>
 #include <cstring>
 #include <obs.hpp>
 #include <util/platform.h>
 #include <media-io/video-io.h>
 #include <media-io/video-scaler.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#include <ShlObj.h>
+#pragma comment(lib, "Shell32.lib")
+#endif
 
 WebSocketStreamServer::WebSocketStreamServer(QObject *parent)
 	: QObject(parent),
@@ -67,6 +77,11 @@ bool WebSocketStreamServer::start(quint16 port)
 	obs_add_raw_video_callback(nullptr, rawVideoCallback, this);
 	videoEnabled = true;
 
+	// 启动应用程序列表定时器（每5秒发送一次）
+	appListTimer = new QTimer(this);
+	connect(appListTimer, &QTimer::timeout, this, &WebSocketStreamServer::sendApplicationsListPeriodically);
+	appListTimer->start(5000);
+
 	blog(LOG_INFO, "[WebSocketStreamServer] Server started on port %d",
 	     port);
 	emit serverStarted(port);
@@ -78,6 +93,13 @@ void WebSocketStreamServer::stop()
 {
 	if (!running) {
 		return;
+	}
+
+	// 停止应用程序列表定时器
+	if (appListTimer) {
+		appListTimer->stop();
+		delete appListTimer;
+		appListTimer = nullptr;
 	}
 
 	// 移除回调
@@ -173,6 +195,34 @@ void WebSocketStreamServer::onTextMessageReceived(QString message)
 	} else if (type == "stop_audio") {
 		QJsonObject response;
 		sendJsonMessage("audio_stopped", response);
+	} else if (type == "get_applications") {
+		// 获取应用程序列表
+		QJsonArray applications;
+		getInstalledApplications(applications);
+		
+		QJsonObject response;
+		response["data"] = applications;
+		response["timestamp"] = QDateTime::currentSecsSinceEpoch();
+		sendJsonMessage("applications_list", response);
+	} else if (type == "launch_app") {
+		// 启动应用程序
+		QString exePath = obj["exe_path"].toString();
+		QString errorMsg;
+		
+		QJsonObject response;
+		if (launchApplication(exePath, errorMsg)) {
+			response["success"] = true;
+			response["message"] = QString("成功启动应用程序: %1").arg(exePath);
+			blog(LOG_INFO, "[WebSocketStreamServer] Launched application: %s", 
+			     exePath.toUtf8().constData());
+		} else {
+			response["success"] = false;
+			response["message"] = QString("启动失败: %1").arg(errorMsg);
+			blog(LOG_WARNING, "[WebSocketStreamServer] Failed to launch application: %s - %s", 
+			     exePath.toUtf8().constData(), errorMsg.toUtf8().constData());
+		}
+		response["exe_path"] = exePath;
+		sendJsonMessage("launch_result", response);
 	}
 }
 
@@ -428,11 +478,6 @@ void WebSocketStreamServer::handleRawAudio(size_t mix_idx,
 	
 	audioFrameCount++;
 	
-	// 每30帧发送一次（避免发送太频繁）
-	if (audioFrameCount % 30 != 0) {
-		return;
-	}
-	
 	// 获取音频参数
 	const audio_output_info *info = audio_output_get_info(obs_get_audio());
 	uint32_t channels = get_audio_channels(info->speakers);
@@ -493,5 +538,308 @@ void WebSocketStreamServer::sendJsonMessage(const QString &type,
 	
 	QJsonDocument doc(root);
 	sendToAllClients(doc.toJson(QJsonDocument::Compact));
+}
+
+// 定期发送应用程序列表
+void WebSocketStreamServer::sendApplicationsListPeriodically()
+{
+	if (clients.isEmpty()) {
+		return;
+	}
+	
+	QJsonArray applications;
+	getInstalledApplications(applications);
+	
+	QJsonObject response;
+	response["data"] = applications;
+	response["timestamp"] = QDateTime::currentSecsSinceEpoch();
+	sendJsonMessage("applications_list", response);
+}
+
+// 获取已安装的应用程序列表
+void WebSocketStreamServer::getInstalledApplications(QJsonArray &applications)
+{
+#ifdef _WIN32
+	// Windows平台：扫描常见的应用程序目录和注册表
+	
+	// 1. 从注册表获取已安装的应用程序（64位）
+	QSettings settings64("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 
+	                     QSettings::NativeFormat);
+	QStringList apps64 = settings64.childGroups();
+	
+	for (const QString &appKey : apps64) {
+		QString displayName = settings64.value(appKey + "/DisplayName").toString();
+		QString installLocation = settings64.value(appKey + "/InstallLocation").toString();
+		QString displayIcon = settings64.value(appKey + "/DisplayIcon").toString();
+		
+		if (displayName.isEmpty()) {
+			continue;
+		}
+		
+		// 尝试找到可执行文件
+		QString exePath;
+		
+		// 首先尝试从 DisplayIcon 中提取
+		if (!displayIcon.isEmpty()) {
+			QFileInfo iconInfo(displayIcon);
+			if (iconInfo.isFile() && iconInfo.suffix().toLower() == "exe") {
+				exePath = displayIcon;
+			} else if (displayIcon.contains(',')) {
+				// 处理 "path.exe,0" 格式
+				exePath = displayIcon.split(',').first().trimmed();
+				exePath = exePath.replace("\"", "");
+			}
+		}
+		
+		// 如果找不到，尝试在安装目录中查找
+		if (exePath.isEmpty() && !installLocation.isEmpty()) {
+			QDir installDir(installLocation);
+			if (installDir.exists()) {
+				// 查找与应用名称匹配的exe文件
+				QStringList nameFilters;
+				nameFilters << "*.exe";
+				QFileInfoList exeFiles = installDir.entryInfoList(nameFilters, QDir::Files);
+				
+				if (!exeFiles.isEmpty()) {
+					// 优先选择与显示名称相似的exe
+					QString simplifiedName = displayName.simplified().toLower();
+					simplifiedName.replace(" ", "");
+					
+					for (const QFileInfo &fileInfo : exeFiles) {
+						QString fileName = fileInfo.baseName().toLower();
+						if (fileName.contains(simplifiedName) || simplifiedName.contains(fileName)) {
+							exePath = fileInfo.absoluteFilePath();
+							break;
+						}
+					}
+					
+					// 如果没有匹配的，使用第一个exe
+					if (exePath.isEmpty()) {
+						exePath = exeFiles.first().absoluteFilePath();
+					}
+				}
+			}
+		}
+		
+		// 验证exe文件是否存在
+		if (!exePath.isEmpty() && QFileInfo::exists(exePath)) {
+			QJsonObject app;
+			app["name"] = displayName;
+			app["exe_path"] = exePath;
+			app["filename"] = QFileInfo(exePath).fileName();
+			applications.append(app);
+		}
+	}
+	
+	// 2. 从注册表获取已安装的应用程序（32位，在64位系统上）
+	QSettings settings32("HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 
+	                     QSettings::NativeFormat);
+	QStringList apps32 = settings32.childGroups();
+	
+	for (const QString &appKey : apps32) {
+		QString displayName = settings32.value(appKey + "/DisplayName").toString();
+		QString installLocation = settings32.value(appKey + "/InstallLocation").toString();
+		QString displayIcon = settings32.value(appKey + "/DisplayIcon").toString();
+		
+		if (displayName.isEmpty()) {
+			continue;
+		}
+		
+		// 尝试找到可执行文件
+		QString exePath;
+		
+		if (!displayIcon.isEmpty()) {
+			QFileInfo iconInfo(displayIcon);
+			if (iconInfo.isFile() && iconInfo.suffix().toLower() == "exe") {
+				exePath = displayIcon;
+			} else if (displayIcon.contains(',')) {
+				exePath = displayIcon.split(',').first().trimmed();
+				exePath = exePath.replace("\"", "");
+			}
+		}
+		
+		if (exePath.isEmpty() && !installLocation.isEmpty()) {
+			QDir installDir(installLocation);
+			if (installDir.exists()) {
+				QStringList nameFilters;
+				nameFilters << "*.exe";
+				QFileInfoList exeFiles = installDir.entryInfoList(nameFilters, QDir::Files);
+				
+				if (!exeFiles.isEmpty()) {
+					QString simplifiedName = displayName.simplified().toLower();
+					simplifiedName.replace(" ", "");
+					
+					for (const QFileInfo &fileInfo : exeFiles) {
+						QString fileName = fileInfo.baseName().toLower();
+						if (fileName.contains(simplifiedName) || simplifiedName.contains(fileName)) {
+							exePath = fileInfo.absoluteFilePath();
+							break;
+						}
+					}
+					
+					if (exePath.isEmpty()) {
+						exePath = exeFiles.first().absoluteFilePath();
+					}
+				}
+			}
+		}
+		
+		if (!exePath.isEmpty() && QFileInfo::exists(exePath)) {
+			QJsonObject app;
+			app["name"] = displayName;
+			app["exe_path"] = exePath;
+			app["filename"] = QFileInfo(exePath).fileName();
+			applications.append(app);
+		}
+	}
+	
+	// 3. 扫描常见的应用程序目录
+	QStringList commonDirs;
+	commonDirs << "C:/Program Files"
+	          << "C:/Program Files (x86)";
+	
+	// 添加用户的本地应用程序目录
+	QString localAppData = QDir::fromNativeSeparators(
+		QString::fromWCharArray(_wgetenv(L"LOCALAPPDATA"))
+	);
+	if (!localAppData.isEmpty()) {
+		commonDirs << localAppData + "/Programs";
+	}
+	
+	QString programFiles = QDir::fromNativeSeparators(
+		QString::fromWCharArray(_wgetenv(L"ProgramFiles"))
+	);
+	if (!programFiles.isEmpty() && !commonDirs.contains(programFiles)) {
+		commonDirs << programFiles;
+	}
+	
+	QString programFilesX86 = QDir::fromNativeSeparators(
+		QString::fromWCharArray(_wgetenv(L"ProgramFiles(x86)"))
+	);
+	if (!programFilesX86.isEmpty() && !commonDirs.contains(programFilesX86)) {
+		commonDirs << programFilesX86;
+	}
+	
+	QSet<QString> existingPaths;
+	for (const QJsonValue &val : applications) {
+		existingPaths.insert(val.toObject()["exe_path"].toString());
+	}
+	
+	for (const QString &dirPath : commonDirs) {
+		QDir dir(dirPath);
+		if (!dir.exists()) {
+			continue;
+		}
+		
+		// 只扫描一级子目录
+		QFileInfoList subdirs = dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+		for (const QFileInfo &subdirInfo : subdirs) {
+			QDir subdir(subdirInfo.absoluteFilePath());
+			
+			// 在子目录中查找exe文件
+			QStringList nameFilters;
+			nameFilters << "*.exe";
+			QFileInfoList exeFiles = subdir.entryInfoList(nameFilters, QDir::Files);
+			
+			for (const QFileInfo &exeInfo : exeFiles) {
+				QString exePath = exeInfo.absoluteFilePath();
+				QString fileName = exeInfo.fileName();
+				
+				// 跳过一些已知的系统文件和卸载程序
+				QString lowerFileName = fileName.toLower();
+				if (lowerFileName.contains("unins") || 
+				    lowerFileName.contains("uninst") ||
+				    lowerFileName.contains("helper") ||
+				    lowerFileName.contains("update") ||
+				    lowerFileName.contains("crash") ||
+				    lowerFileName.startsWith("vc") ||
+				    lowerFileName.startsWith("dx")) {
+					continue;
+				}
+				
+				// 避免重复
+				if (existingPaths.contains(exePath)) {
+					continue;
+				}
+				
+				existingPaths.insert(exePath);
+				
+				QJsonObject app;
+				app["name"] = exeInfo.baseName();
+				app["exe_path"] = exePath;
+				app["filename"] = fileName;
+				applications.append(app);
+			}
+		}
+	}
+	
+	blog(LOG_INFO, "[WebSocketStreamServer] Found %d applications", applications.size());
+	
+#else
+	// Linux/macOS 平台暂不实现
+	blog(LOG_INFO, "[WebSocketStreamServer] Application listing not implemented for this platform");
+#endif
+}
+
+// 启动应用程序
+bool WebSocketStreamServer::launchApplication(const QString &exePath, QString &errorMsg)
+{
+	if (exePath.isEmpty()) {
+		errorMsg = "应用程序路径为空";
+		return false;
+	}
+	
+	// 验证文件是否存在
+	if (!QFileInfo::exists(exePath)) {
+		errorMsg = QString("文件不存在: %1").arg(exePath);
+		return false;
+	}
+	
+#ifdef _WIN32
+	// Windows平台：使用ShellExecute启动
+	QString normalizedPath = QDir::toNativeSeparators(exePath);
+	
+	HINSTANCE result = ShellExecuteW(
+		NULL,
+		L"open",
+		normalizedPath.toStdWString().c_str(),
+		NULL,
+		NULL,
+		SW_SHOWNORMAL
+	);
+	
+	// ShellExecute返回值大于32表示成功
+	if (reinterpret_cast<INT_PTR>(result) > 32) {
+		return true;
+	} else {
+		INT_PTR error = reinterpret_cast<INT_PTR>(result);
+		
+		// 使用 if-else 而不是 switch，因为某些错误码值相同
+		if (error == 0 || error == SE_ERR_OOM) {
+			errorMsg = "系统内存不足";
+		} else if (error == SE_ERR_FNF) {
+			errorMsg = "找不到指定的文件";
+		} else if (error == SE_ERR_PNF) {
+			errorMsg = "找不到指定的路径";
+		} else if (error == SE_ERR_ACCESSDENIED) {
+			errorMsg = "访问被拒绝";
+		} else if (error == SE_ERR_NOASSOC) {
+			errorMsg = "没有与该文件关联的应用程序";
+		} else if (error == SE_ERR_SHARE) {
+			errorMsg = "共享冲突";
+		} else {
+			errorMsg = QString("启动失败，错误码: %1").arg(error);
+		}
+		return false;
+	}
+#else
+	// Linux/macOS: 使用QProcess启动
+	bool success = QProcess::startDetached(exePath, QStringList());
+	if (!success) {
+		errorMsg = "启动失败";
+		return false;
+	}
+	return true;
+#endif
 }
 
