@@ -29,6 +29,8 @@ endif()
 add_executable(obs-studio)
 add_executable(OBS::studio ALIAS obs-studio)
 
+include_directories("D:/soft/libjpeg-turbo64/include")
+
 target_link_libraries(
   obs-studio
   PRIVATE
@@ -40,7 +42,7 @@ target_link_libraries(
     OBS::frontend-api
     OBS::json11
     OBS::bpm
-    "${CMAKE_SOURCE_DIR}/.deps/obs-deps-2025-08-23-x64/lib/turbojpeg"
+    "D:/soft/libjpeg-turbo64/lib/turbojpeg"
 )
 
 include(cmake/ui-components.cmake)
