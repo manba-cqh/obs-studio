@@ -134,7 +134,7 @@ void OBSBasic::SourceToolBarActionsSetEnabled()
 	else
 		ui->actionSourceProperties->setEnabled(enable);
 
-	ui->actionRemoveSource->setEnabled(enable);
+	ui->actionRemoveSource->setEnabled(enable && allowEditControls);
 	ui->actionSourceUp->setEnabled(enable);
 	ui->actionSourceDown->setEnabled(enable);
 

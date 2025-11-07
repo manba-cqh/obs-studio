@@ -1462,9 +1462,11 @@ private:
 	QPointer<QAction> sysTrayVirtualCam;
 	QPointer<QMenu> trayMenu;
 	bool trayForceClose = false;
+	bool allowEditControls = false;
 
 	bool sysTrayMinimizeToTray();
 	void updateSysTrayProjectorMenu();
+ 	void UpdateEditModeControls();
 
 private slots:
 	void IconActivated(QSystemTrayIcon::ActivationReason reason);

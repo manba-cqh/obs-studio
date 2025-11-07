@@ -28,6 +28,10 @@
 
 #include <obs-module.h>
 
+#include <QDir>
+#include <QFile>
+#include <QToolBar>
+
 #ifdef YOUTUBE_ENABLED
 #include <docks/YouTubeAppDock.hpp>
 #endif
@@ -244,6 +248,8 @@ OBSBasic::OBSBasic(QWidget *parent) : OBSMainWindow(parent), undo_s(ui), ui(new 
 	api = InitializeAPIInterface(this);
 
 	ui->setupUi(this);
+	allowEditControls = QFile::exists(QDir::current().filePath(QStringLiteral("edit_mode")));
+	UpdateEditModeControls();
 	ui->previewDisabledWidget->setVisible(false);
 
 	/* Set up streaming connections */
@@ -1382,6 +1388,25 @@ void OBSBasic::OnFirstLoad()
 		on_actionViewCurrentLog_triggered();
 }
 
+void OBSBasic::UpdateEditModeControls()
+{
+	auto adjustAction = [&](QToolBar *toolbar, QAction *action) {
+		if (!action)
+			return;
+		action->setVisible(allowEditControls);
+		action->setEnabled(allowEditControls);
+		if (toolbar) {
+			if (QWidget *widget = toolbar->widgetForAction(action))
+				widget->setVisible(allowEditControls);
+		}
+	};
+
+	adjustAction(ui->scenesToolbar, ui->actionAddScene);
+	adjustAction(ui->scenesToolbar, ui->actionRemoveScene);
+	adjustAction(ui->sourcesToolbar, ui->actionAddSource);
+	adjustAction(ui->sourcesToolbar, ui->actionRemoveSource);
+}
+
 OBSBasic::~OBSBasic()
 {
 	// 停止 WebSocket 服务器
@@ -1389,7 +1414,7 @@ OBSBasic::~OBSBasic()
 		wsStreamServer->stop();
 		wsStreamServer.reset();
 	}
-	
+
 	if (!handledShutdown) {
 		applicationShutdown();
 	}
