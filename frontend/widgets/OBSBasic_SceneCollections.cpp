@@ -42,7 +42,7 @@ using SceneCollection = OBS::SceneCollection;
 
 // MARK: Constant Expressions
 
-static constexpr std::string_view SceneCollectionPath = "/obs-studio/basic/scenes/";
+static constexpr std::string_view SceneCollectionFixedFile = "./Scenes.json";
 
 namespace DataKeys {
 static constexpr std::string_view AbsoluteCoordinates = "AbsoluteCoordinates";
@@ -247,41 +247,24 @@ SceneCollection &OBSBasic::CreateSceneCollection(const std::string &collectionNa
 		throw std::invalid_argument("Scene collection already exists: " + collectionName);
 	}
 
-	std::string fileName;
-	if (!GetFileSafeName(collectionName.c_str(), fileName)) {
-		throw std::invalid_argument("Failed to create safe directory for new scene collection: " +
-					    collectionName);
+	const std::filesystem::path collectionFilePath =
+		std::filesystem::u8path(std::string(SceneCollectionFixedFile));
+
+	auto [iterator, success] = collections.try_emplace(collectionName, collectionName, collectionFilePath);
+
+	if (!success) {
+		throw std::logic_error("Failed to register scene collection: " + collectionName);
 	}
-
-	std::string collectionFile;
-	collectionFile.reserve(App()->userScenesLocation.u8string().size() + SceneCollectionPath.size() +
-			       fileName.size());
-	collectionFile.append(App()->userScenesLocation.u8string()).append(SceneCollectionPath).append(fileName);
-
-	if (!GetClosestUnusedFileName(collectionFile, "json")) {
-		throw std::invalid_argument("Failed to get closest file name for new scene collection: " + fileName);
-	}
-
-	std::filesystem::path collectionFilePath = std::filesystem::u8path(collectionFile);
-
-	auto [iterator, success] =
-		collections.try_emplace(collectionName, collectionName, std::move(collectionFilePath));
 
 	return iterator->second;
 }
 
 void OBSBasic::RemoveSceneCollection(SceneCollection collection)
 {
-	try {
-		std::filesystem::remove(collection.getFilePath());
-	} catch (const std::filesystem::filesystem_error &error) {
-		blog(LOG_DEBUG, "%s", error.what());
-		throw std::logic_error("Failed to remove scene collection file: " + collection.getFileName());
-	}
-
-	blog(LOG_INFO, "Removed scene collection '%s' (%s)", collection.getName().c_str(),
-	     collection.getFileName().c_str());
-	blog(LOG_INFO, "------------------------------------------------");
+	UNUSED_PARAMETER(collection);
+	blog(LOG_WARNING,
+	     "RemoveSceneCollection called, but scene collections are fixed to '%s' and will not be deleted",
+	     std::string(SceneCollectionFixedFile).c_str());
 }
 
 // MARK: - Scene Collection UI Handling Functions
@@ -429,37 +412,30 @@ void OBSBasic::RefreshSceneCollectionCache()
 {
 	OBSSceneCollectionCache foundCollections{};
 
-	const std::filesystem::path collectionsPath =
-		App()->userScenesLocation / std::filesystem::u8path(SceneCollectionPath.substr(1));
+	const std::filesystem::path sceneFile =
+		std::filesystem::u8path(std::string(SceneCollectionFixedFile));
 
-	if (!std::filesystem::exists(collectionsPath)) {
-		blog(LOG_WARNING, "Failed to get scene collections config path");
+	if (!std::filesystem::exists(sceneFile)) {
+		blog(LOG_WARNING, "Scene collection file not found: %s", sceneFile.u8string().c_str());
+		collections.swap(foundCollections);
 		return;
 	}
 
-	for (const auto &entry : std::filesystem::directory_iterator(collectionsPath)) {
-		if (entry.is_directory()) {
-			continue;
-		}
+	OBSDataAutoRelease collectionData =
+		obs_data_create_from_json_file_safe(sceneFile.u8string().c_str(), "bak");
 
-		if (entry.path().extension().u8string() != ".json") {
-			continue;
-		}
-
-		OBSDataAutoRelease collectionData =
-			obs_data_create_from_json_file_safe(entry.path().u8string().c_str(), "bak");
-
-		std::string candidateName;
-		std::string collectionName = obs_data_get_string(collectionData, "name");
-
-		if (collectionName.empty()) {
-			candidateName = entry.path().stem().u8string();
-		} else {
-			candidateName = std::move(collectionName);
-		}
-
-		foundCollections.try_emplace(candidateName, candidateName, entry.path());
+	if (!collectionData) {
+		blog(LOG_WARNING, "Failed to load scene collection JSON: %s", sceneFile.u8string().c_str());
+		collections.swap(foundCollections);
+		return;
 	}
+
+	std::string collectionName = obs_data_get_string(collectionData, "name");
+	if (collectionName.empty()) {
+		collectionName = sceneFile.stem().u8string();
+	}
+
+	foundCollections.try_emplace(collectionName, collectionName, sceneFile);
 
 	collections.swap(foundCollections);
 }
