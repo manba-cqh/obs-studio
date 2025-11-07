@@ -299,6 +299,31 @@
                     <div id="connectionStatus" class="status disconnected">未连接</div>
     </div>
     
+    <!-- 窗口捕获控制 -->
+    <div style="padding: 20px; background: #e3f2fd; border-bottom: 1px solid #e9ecef;">
+        <h3>🪟 窗口捕获控制</h3>
+        <p style="color: #1976d2; margin: 10px 0;">自动控制第一个找到的 window_capture 源</p>
+        
+        <div class="control-group">
+            <button class="btn-primary" onclick="refreshWindows()">🔄 刷新可用窗口</button>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: bold; color: #495057;">可捕获窗口 (<span id="wcWindowCount">0</span>)</span>
+                <input type="text" id="wcSearchInput" placeholder="搜索窗口..." style="width: 250px; padding: 8px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+            </div>
+            
+            <div id="wcWindowsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; background: white;">
+                <div style="padding: 20px; text-align: center; color: #6c757d;">
+                    点击"刷新可用窗口"获取窗口列表...
+                </div>
+            </div>
+            
+            <div id="wcStatus" style="margin-top: 10px; padding: 10px; border-radius: 5px; display: none;"></div>
+        </div>
+    </div>
+    
     <!-- 应用程序列表部分 -->
     <div class="applications-section" style="padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
         <h3>💻 远程应用程序控制</h3>
@@ -620,6 +645,14 @@
                         
                     case 'launch_result':
                         handleLaunchResult(message);
+                        break;
+                    
+                    case 'windows_list':
+                        handleWindowsList(message);
+                        break;
+                    
+                    case 'set_window_result':
+                        handleSetWindowResult(message);
                         break;
                         
                     default:
@@ -2130,6 +2163,101 @@
         });
         
         // ==================== 应用程序控制功能结束 ====================
+        
+        // ==================== 窗口捕获控制 ====================
+        
+        let wcWindows = [];
+        let wcFiltered = [];
+        
+        function refreshWindows() {
+            if (!isConnected) { alert('请先连接服务器'); return; }
+            websocket.send(JSON.stringify({ type: 'get_windows' }));
+        }
+        
+        function handleWindowsList(msg) {
+            wcWindows = msg.data || [];
+            wcFiltered = [...wcWindows];
+            updateWCWindowsList();
+            console.log(`找到 ${wcWindows.length} 个窗口`);
+        }
+        
+        function updateWCWindowsList() {
+            const list = document.getElementById('wcWindowsList');
+            const cnt = document.getElementById('wcWindowCount');
+            
+            cnt.textContent = wcFiltered.length;
+            
+            if (wcFiltered.length === 0) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: #6c757d;">没有窗口</div>';
+                return;
+            }
+            
+            let html = '';
+            wcFiltered.forEach((w, i) => {
+                html += `
+                    <div style="padding: 15px; border-bottom: 1px solid #f1f3f4; display: flex; justify-content: space-between; align-items: center; background: ${i % 2 === 0 ? '#fff' : '#f8f9fa'};">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #495057; margin-bottom: 5px;">${w.title || '(无标题)'}</div>
+                            <div style="font-size: 0.9em; color: #28a745;">📦 ${w.executable || '未知'}</div>
+                            <div style="font-size: 0.8em; color: #6c757d;">🏷️ ${w.class || '未知'}</div>
+                        </div>
+                        <button class="btn-success" onclick="setWCWindow('${(w.encoded || '').replace(/'/g, "\\'")}')">
+                            🎯 捕获此窗口
+                        </button>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+        
+        function setWCWindow(encoded) {
+            if (!isConnected) { alert('请先连接服务器'); return; }
+            
+            // 直接设置第一个 window_capture 源
+            websocket.send(JSON.stringify({
+                type: 'set_window',
+                window: encoded
+            }));
+        }
+        
+        function handleSetWindowResult(msg) {
+            const st = document.getElementById('wcStatus');
+            st.style.display = 'block';
+            
+            if (msg.success) {
+                st.style.background = '#d4edda';
+                st.style.color = '#155724';
+                st.style.border = '1px solid #c3e6cb';
+                st.textContent = `✅ ${msg.message}`;
+            } else {
+                st.style.background = '#f8d7da';
+                st.style.color = '#721c24';
+                st.style.border = '1px solid #f5c6cb';
+                st.textContent = `❌ ${msg.message}`;
+            }
+            
+            setTimeout(() => { st.style.display = 'none'; }, 3000);
+        }
+        
+        function searchWC() {
+            const term = (document.getElementById('wcSearchInput').value || '').toLowerCase();
+            wcFiltered = term ? wcWindows.filter(w => 
+                (w.title || '').toLowerCase().includes(term) ||
+                (w.executable || '').toLowerCase().includes(term) ||
+                (w.class || '').toLowerCase().includes(term)
+            ) : [...wcWindows];
+            updateWCWindowsList();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const inp = document.getElementById('wcSearchInput');
+            if (inp) {
+                inp.addEventListener('input', searchWC);
+                inp.addEventListener('keypress', e => { if (e.key === 'Enter') searchWC(); });
+            }
+        });
+        
+        // ==================== 窗口捕获控制结束 ====================
         
         // 页面卸载时清理资源
         window.addEventListener('beforeunload', function() {

@@ -163,12 +163,17 @@ if(Libx264_FOUND)
     endif()
 
     libx264_set_soname()
+    
+    # 处理版本号，只使用第一部分（去掉git hash）
+    string(REPLACE ";" "" _libx264_version_clean "${Libx264_VERSION}")
+    list(GET Libx264_VERSION 0 _libx264_version_main)
+    
     set_target_properties(
       Libx264::Libx264
       PROPERTIES
         INTERFACE_COMPILE_OPTIONS "${PC_Libx264_CFLAGS_OTHER}"
         INTERFACE_INCLUDE_DIRECTORIES "${Libx264_INCLUDE_DIR}"
-        VERSION ${Libx264_VERSION}
+        VERSION "${_libx264_version_main}"
     )
   endif()
 endif()

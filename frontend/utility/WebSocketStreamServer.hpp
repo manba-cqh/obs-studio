@@ -59,6 +59,11 @@ private:
 	void getInstalledApplications(QJsonArray &applications);
 	bool launchApplication(const QString &exePath, QString &errorMsg);
 	
+	// 窗口捕获控制 (window_capture)
+	void getWindowCaptureSources(QJsonArray &sources);
+	void getAvailableWindows(QJsonArray &windows);
+	bool setWindowCapture(const QString &sourceName, const QString &windowString, QString &errorMsg);
+	
 	QWebSocketServer *server;
 	QList<QWebSocket *> clients;
 	QMutex clientsMutex;

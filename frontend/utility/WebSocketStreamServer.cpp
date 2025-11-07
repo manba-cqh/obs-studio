@@ -12,13 +12,16 @@
 #include <QSettings>
 #include <cstring>
 #include <obs.hpp>
+#include <obs-frontend-api.h>
 #include <util/platform.h>
+#include <util/dstr.h>
 #include <media-io/video-io.h>
 #include <media-io/video-scaler.h>
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <ShlObj.h>
+#include <util/windows/window-helpers.h>
 #pragma comment(lib, "Shell32.lib")
 #endif
 
@@ -223,6 +226,57 @@ void WebSocketStreamServer::onTextMessageReceived(QString message)
 		}
 		response["exe_path"] = exePath;
 		sendJsonMessage("launch_result", response);
+	} else if (type == "get_windows") {
+		// 获取可捕获的窗口列表
+		QJsonArray windows;
+		getAvailableWindows(windows);
+		
+		QJsonObject response;
+		response["data"] = windows;
+		sendJsonMessage("windows_list", response);
+	} else if (type == "set_window") {
+		// 设置第一个 window_capture 源捕获的窗口
+		QString windowString = obj["window"].toString();
+		QString errorMsg;
+		QString sourceName;
+		
+		// 查找第一个 window_capture 源
+		obs_source_t *scene_source = obs_frontend_get_current_scene();
+		if (scene_source) {
+			obs_scene_t *scene = obs_scene_from_source(scene_source);
+			if (scene) {
+				auto callback = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
+					QString *name = static_cast<QString *>(param);
+					obs_source_t *source = obs_sceneitem_get_source(item);
+					
+					if (source && strcmp(obs_source_get_id(source), "window_capture") == 0) {
+						*name = QString::fromUtf8(obs_source_get_name(source));
+						return false; // 找到第一个就停止
+					}
+					return true;
+				};
+				
+				obs_scene_enum_items(scene, callback, &sourceName);
+			}
+			obs_source_release(scene_source);
+		}
+		
+		QJsonObject response;
+		if (!sourceName.isEmpty()) {
+			if (setWindowCapture(sourceName, windowString, errorMsg)) {
+				response["success"] = true;
+				response["message"] = QString("已设置 %1 捕获该窗口").arg(sourceName);
+				response["source_name"] = sourceName;
+			} else {
+				response["success"] = false;
+				response["message"] = errorMsg;
+			}
+		} else {
+			response["success"] = false;
+			response["message"] = "场景中没有找到 window_capture 源";
+		}
+		
+		sendJsonMessage("set_window_result", response);
 	}
 }
 
@@ -841,5 +895,149 @@ bool WebSocketStreamServer::launchApplication(const QString &exePath, QString &e
 	}
 	return true;
 #endif
+}
+
+// ==================== 窗口捕获控制 ====================
+
+// 获取当前场景中的 window_capture 源
+void WebSocketStreamServer::getWindowCaptureSources(QJsonArray &sources)
+{
+	obs_source_t *scene_source = obs_frontend_get_current_scene();
+	if (!scene_source) {
+		blog(LOG_WARNING, "[WebSocketStreamServer] No current scene");
+		return;
+	}
+	
+	obs_scene_t *scene = obs_scene_from_source(scene_source);
+	if (!scene) {
+		obs_source_release(scene_source);
+		return;
+	}
+	
+	// 枚举场景中的源
+	auto callback = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
+		QJsonArray *sources = static_cast<QJsonArray *>(param);
+		obs_source_t *source = obs_sceneitem_get_source(item);
+		
+		if (source && strcmp(obs_source_get_id(source), "window_capture") == 0) {
+			obs_data_t *settings = obs_source_get_settings(source);
+			const char *window = obs_data_get_string(settings, "window");
+			
+			QJsonObject obj;
+			obj["name"] = QString::fromUtf8(obs_source_get_name(source));
+			obj["current_window"] = QString::fromUtf8(window ? window : "");
+			sources->append(obj);
+			
+			obs_data_release(settings);
+		}
+		return true;
+	};
+	
+	obs_scene_enum_items(scene, callback, &sources);
+	obs_source_release(scene_source);
+	
+	blog(LOG_INFO, "[WebSocketStreamServer] Found %d window_capture sources", sources.size());
+}
+
+// 获取系统中可捕获的窗口
+void WebSocketStreamServer::getAvailableWindows(QJsonArray &windows)
+{
+#ifdef _WIN32
+	HWND hwnd = GetTopWindow(GetDesktopWindow());
+	
+	while (hwnd) {
+		if (IsWindowVisible(hwnd)) {
+			DWORD styles = (DWORD)GetWindowLongPtr(hwnd, GWL_STYLE);
+			DWORD ex_styles = (DWORD)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+			
+			if (!(ex_styles & WS_EX_TOOLWINDOW) && !(styles & WS_CHILD)) {
+				struct dstr title = {0};
+				struct dstr cls = {0};
+				struct dstr exe = {0};
+				
+				if (ms_get_window_exe(&exe, hwnd)) {
+					ms_get_window_title(&title, hwnd);
+					ms_get_window_class(&cls, hwnd);
+					
+					// 编码窗口字符串
+					struct dstr title_enc = {0}, cls_enc = {0}, exe_enc = {0};
+					dstr_copy(&title_enc, title.array);
+					dstr_copy(&cls_enc, cls.array);
+					dstr_copy(&exe_enc, exe.array);
+					
+					dstr_replace(&title_enc, "#", "#22");
+					dstr_replace(&title_enc, ":", "#3A");
+					dstr_replace(&cls_enc, "#", "#22");
+					dstr_replace(&cls_enc, ":", "#3A");
+					dstr_replace(&exe_enc, "#", "#22");
+					dstr_replace(&exe_enc, ":", "#3A");
+					
+					struct dstr encoded = {0};
+					dstr_cat_dstr(&encoded, &title_enc);
+					dstr_cat(&encoded, ":");
+					dstr_cat_dstr(&encoded, &cls_enc);
+					dstr_cat(&encoded, ":");
+					dstr_cat_dstr(&encoded, &exe_enc);
+					
+					QJsonObject obj;
+					obj["title"] = QString::fromUtf8(title.array);
+					obj["class"] = QString::fromUtf8(cls.array);
+					obj["executable"] = QString::fromUtf8(exe.array);
+					obj["encoded"] = QString::fromUtf8(encoded.array);
+					obj["display_name"] = QString("[%1]: %2")
+						.arg(QString::fromUtf8(exe.array))
+						.arg(QString::fromUtf8(title.array));
+					windows.append(obj);
+					
+					dstr_free(&encoded);
+					dstr_free(&title_enc);
+					dstr_free(&cls_enc);
+					dstr_free(&exe_enc);
+				}
+				
+				dstr_free(&title);
+				dstr_free(&cls);
+				dstr_free(&exe);
+			}
+		}
+		hwnd = GetNextWindow(hwnd, GW_HWNDNEXT);
+	}
+	
+	blog(LOG_INFO, "[WebSocketStreamServer] Found %d windows", windows.size());
+#else
+	blog(LOG_WARNING, "[WebSocketStreamServer] Only Windows supported");
+#endif
+}
+
+// 设置 window_capture 源捕获的窗口
+bool WebSocketStreamServer::setWindowCapture(const QString &sourceName, const QString &windowString, QString &errorMsg)
+{
+	if (sourceName.isEmpty()) {
+		errorMsg = "源名称为空";
+		return false;
+	}
+	
+	obs_source_t *source = obs_get_source_by_name(sourceName.toUtf8().constData());
+	if (!source) {
+		errorMsg = QString("找不到源: %1").arg(sourceName);
+		return false;
+	}
+	
+	if (strcmp(obs_source_get_id(source), "window_capture") != 0) {
+		obs_source_release(source);
+		errorMsg = "源类型不是 window_capture";
+		return false;
+	}
+	
+	obs_data_t *settings = obs_data_create();
+	obs_data_set_string(settings, "window", windowString.toUtf8().constData());
+	obs_source_update(source, settings);
+	obs_data_release(settings);
+	obs_source_release(source);
+	
+	blog(LOG_INFO, "[WebSocketStreamServer] Set window_capture '%s' to '%s'",
+	     sourceName.toUtf8().constData(), windowString.toUtf8().constData());
+	
+	return true;
 }
 
