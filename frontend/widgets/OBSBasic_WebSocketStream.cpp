@@ -23,13 +23,6 @@ void OBSBasic::StartWebSocketStreamServer(quint16 port)
 				if (controls) {
 					controls->WebSocketServerStarted();
 				}
-				
-				QMessageBox::information(
-					this, "WebSocket Stream",
-					QString("WebSocket服务器已启动\n端口: %1\n\n"
-						"在web_client_sync.html中连接到:\n"
-						"ws://localhost:%1")
-						.arg(p));
 			});
 		
 		connect(wsStreamServer.get(), &WebSocketStreamServer::serverStopped,

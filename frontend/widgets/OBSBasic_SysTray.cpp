@@ -81,7 +81,7 @@ void OBSBasic::SystemTrayInit()
 	connect(sysTrayRecord, &QAction::triggered, this, &OBSBasic::RecordActionTriggered);
 	connect(sysTrayReplayBuffer.data(), &QAction::triggered, this, &OBSBasic::ReplayBufferActionTriggered);
 	connect(sysTrayVirtualCam.data(), &QAction::triggered, this, &OBSBasic::VirtualCamActionTriggered);
-	connect(exit, &QAction::triggered, this, &OBSBasic::close);
+    connect(exit, &QAction::triggered, this, &OBSBasic::TrayExitRequested);
 }
 
 void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -96,6 +96,12 @@ void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
 		ToggleShowHide();
 	}
 #endif
+}
+
+void OBSBasic::TrayExitRequested()
+{
+	trayForceClose = true;
+	close();
 }
 
 void OBSBasic::SysTrayNotify(const QString &text, QSystemTrayIcon::MessageIcon n)

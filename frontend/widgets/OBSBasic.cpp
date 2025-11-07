@@ -311,6 +311,11 @@ OBSBasic::OBSBasic(QWidget *parent) : OBSMainWindow(parent), undo_s(ui), ui(new 
 	
 	connect(controls, &OBSBasicControls::WebSocketButtonClicked, this, &OBSBasic::WebSocketButtonClicked);
 
+	// 延迟启用 WebSocket 服务，确保 OBS 初始化完成
+	QTimer::singleShot(0, this, [this]() {
+		StartWebSocketStreamServer(8765);
+	});
+
 	/* Set up transitions combobox connections */
 	connect(this, &OBSBasic::TransitionAdded, this, [this](const QString &name, const QString &uuid) {
 		QSignalBlocker sb(ui->transitions);
@@ -972,6 +977,10 @@ void OBSBasic::OBSInit()
 
 	if (!InitBasicConfig())
 		throw "Failed to load basic.ini";
+
+	config_set_bool(App()->GetUserConfig(), "BasicWindow", "SysTrayEnabled", true);
+	config_set_bool(App()->GetUserConfig(), "BasicWindow", "SysTrayWhenStarted", true);
+	config_set_bool(App()->GetUserConfig(), "BasicWindow", "SysTrayMinimizeToTray", true);
 	if (!ResetAudio())
 		throw "Failed to initialize audio";
 
@@ -1142,9 +1151,7 @@ void OBSBasic::OBSInit()
 	/* Show the main window, unless the tray icon isn't available
 	 * or neither the setting nor flag for starting minimized is set. */
 	bool sysTrayEnabled = config_get_bool(App()->GetUserConfig(), "BasicWindow", "SysTrayEnabled");
-	bool sysTrayWhenStarted = config_get_bool(App()->GetUserConfig(), "BasicWindow", "SysTrayWhenStarted");
-	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() && sysTrayEnabled &&
-				 (opt_minimize_tray || sysTrayWhenStarted);
+	bool hideWindowOnStart = QSystemTrayIcon::isSystemTrayAvailable() && sysTrayEnabled;
 
 #ifdef _WIN32
 	SetWin32DropStyle(this);
@@ -1238,6 +1245,8 @@ void OBSBasic::OBSInit()
 	ui->sideDocks->blockSignals(false);
 
 	SystemTray(true);
+	if (trayIcon && trayIcon->isVisible())
+		SetShowing(false);
 
 	TaskbarOverlayInit();
 
@@ -1699,6 +1708,12 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 		config_set_string(App()->GetUserConfig(), "BasicWindow", "geometry",
 				  saveGeometry().toBase64().constData());
 
+	if (!trayForceClose && trayIcon && trayIcon->isVisible()) {
+		event->ignore();
+		SetShowing(false);
+		return;
+	}
+
 	bool confirmOnExit = config_get_bool(App()->GetUserConfig(), "General", "ConfirmOnExit");
 
 	if (confirmOnExit && outputHandler && outputHandler->Active() && !clearingFailed) {
@@ -1721,8 +1736,12 @@ void OBSBasic::closeEvent(QCloseEvent *event)
 	}
 
 	QWidget::closeEvent(event);
-	if (!event->isAccepted())
+	if (!event->isAccepted()) {
+		trayForceClose = false;
 		return;
+	}
+
+	trayForceClose = false;
 
 	blog(LOG_INFO, SHUTDOWN_SEPARATOR);
 

@@ -1461,12 +1461,14 @@ private:
 	QPointer<QAction> sysTrayReplayBuffer;
 	QPointer<QAction> sysTrayVirtualCam;
 	QPointer<QMenu> trayMenu;
+	bool trayForceClose = false;
 
 	bool sysTrayMinimizeToTray();
 	void updateSysTrayProjectorMenu();
 
 private slots:
 	void IconActivated(QSystemTrayIcon::ActivationReason reason);
+	void TrayExitRequested();
 
 public:
 	void SysTrayNotify(const QString &text, QSystemTrayIcon::MessageIcon n);
