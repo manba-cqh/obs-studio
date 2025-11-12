@@ -468,6 +468,7 @@ void WebSocketStreamServer::handleRawVideo(struct video_data *frame)
 	obj["size"] = int(jpegBuffer.size());
 	obj["timestamp"] = double(frame->timestamp) / 1000000000.0;
 	obj["frame_index"] = static_cast<qint64>(videoFrameCount);
+	obj["sync_timestamp"] = double(frame->timestamp) / 1000000000.0;
 
 	sendJsonMessage("frame", obj);
 	logStep("send_json");

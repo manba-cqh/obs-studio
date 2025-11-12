@@ -461,27 +461,143 @@
         let canvas = null;
         let ctx = null;
         let audioContext = null;
-        let audioQueue = [];
-        let videoQueue = [];
         let isConnected = false;
         let audioEnabled = false;
         
         // 统计变量
         let totalFrames = 0;
         let frameCount = 0;
-        let lastFpsTime = Date.now();
+        let lastFpsTime = performance.now();
         let totalDataSize = 0;
         let latencySum = 0;
         let latencyCount = 0;
         let syncOffsets = [];
         
         // 音视频同步相关
-        let lastVideoTimestamp = 0;
-        let lastAudioTimestamp = 0;
-        let videoBuffer = [];
-        let audioBuffer = [];
+        const playbackBufferMs = 200;
+        const maxFrameDriftMs = 500;
+        let syncBaseServerTimeMs = null;
+        let syncBaseClientTimeMs = null;
+        let videoFrameQueue = [];
+        let videoRenderLoopHandle = null;
+        let audioContextStartTimeMs = null;
         let syncThreshold = 100; // 同步阈值（毫秒）
         
+        function getClientNowMs() {
+            return performance.now();
+        }
+
+        function ensureSyncBase(serverTimestampMs) {
+            if (serverTimestampMs == null) {
+                return;
+            }
+            if (syncBaseServerTimeMs === null) {
+                syncBaseServerTimeMs = serverTimestampMs;
+                syncBaseClientTimeMs = getClientNowMs();
+                console.log(`同步基准已建立: server=${syncBaseServerTimeMs.toFixed(3)} client=${syncBaseClientTimeMs.toFixed(3)}`);
+            }
+        }
+
+        function serverToClientTime(serverTimestampMs) {
+            if (serverTimestampMs == null) {
+                return getClientNowMs();
+            }
+            ensureSyncBase(serverTimestampMs);
+            return syncBaseClientTimeMs + (serverTimestampMs - syncBaseServerTimeMs);
+        }
+
+        function computePlaybackTime(serverTimestampMs) {
+            return serverToClientTime(serverTimestampMs) + playbackBufferMs;
+        }
+
+        function startVideoRenderLoop() {
+            if (videoRenderLoopHandle === null) {
+                videoRenderLoopHandle = requestAnimationFrame(processVideoQueue);
+            }
+        }
+
+        function processVideoQueue() {
+            const now = getClientNowMs();
+
+            while (videoFrameQueue.length > 0) {
+                const frame = videoFrameQueue[0];
+                if (frame.targetTimeMs > now) {
+                    break;
+                }
+
+                videoFrameQueue.shift();
+                ctx.drawImage(frame.image, 0, 0, canvas.width, canvas.height);
+
+                totalFrames++;
+                frameCount++;
+                totalDataSize += frame.dataSize;
+                document.getElementById('resolution').textContent = `${frame.width}x${frame.height}`;
+
+                const latency = Math.max(0, now - frame.expectedClientTimeMs);
+                latencySum += latency;
+                latencyCount++;
+
+                const syncError = Math.abs(now - frame.targetTimeMs);
+                recordSyncOffset(syncError);
+            }
+
+            if (videoFrameQueue.length > 0) {
+                videoRenderLoopHandle = requestAnimationFrame(processVideoQueue);
+            } else {
+                videoRenderLoopHandle = null;
+            }
+        }
+
+        function recordSyncOffset(offsetMs) {
+            if (!Number.isFinite(offsetMs)) {
+                return;
+            }
+            syncOffsets.push(offsetMs);
+            if (syncOffsets.length > 100) {
+                syncOffsets.shift();
+            }
+            updateSyncStatus(offsetMs);
+            const offsetElement = document.getElementById('syncOffset');
+            if (offsetElement) {
+                offsetElement.textContent = `${offsetMs.toFixed(1)} ms`;
+            }
+        }
+
+        function updateAudioContextBaseTime() {
+            if (!audioContext) {
+                return;
+            }
+            const contextNowMs = getClientNowMs();
+            audioContextStartTimeMs = contextNowMs - audioContext.currentTime * 1000;
+        }
+
+        function getAudioContextClientTimeMs() {
+            if (!audioContext) {
+                return getClientNowMs();
+            }
+            if (audioContextStartTimeMs === null) {
+                updateAudioContextBaseTime();
+            }
+            return audioContextStartTimeMs + audioContext.currentTime * 1000;
+        }
+
+        function scheduleAudioSource(source, targetPlaybackTimeMs) {
+            if (!audioContext) {
+                return getClientNowMs();
+            }
+            updateAudioContextBaseTime();
+            const audioClientNowMs = getAudioContextClientTimeMs();
+            const delayMs = Math.max(0, targetPlaybackTimeMs - audioClientNowMs);
+            const startTimeSec = audioContext.currentTime + delayMs / 1000;
+            source.start(startTimeSec);
+            return audioContextStartTimeMs + startTimeSec * 1000;
+        }
+
+        function updateAudioSyncMetrics(scheduledClientTimeMs, targetPlaybackTimeMs) {
+            const offset = Math.abs(scheduledClientTimeMs - targetPlaybackTimeMs);
+            recordSyncOffset(offset);
+        }
+
         // 音频录制相关
         let isRecording = false;
         let recordedChunks = [];
@@ -666,36 +782,52 @@
         
         // 处理视频帧
         function handleVideoFrame(frameData) {
-            const startTime = Date.now();
-            
             try {
-                // 创建图像对象
+                if (!canvas || !ctx) {
+                    console.warn('画布尚未初始化，跳过视频帧');
+                    return;
+                }
+
+                const serverTimestampMs =
+                    ((frameData.sync_timestamp ?? frameData.timestamp) || 0) * 1000;
+                ensureSyncBase(serverTimestampMs);
+
+                const targetPlaybackTimeMs = computePlaybackTime(serverTimestampMs);
+                const expectedClientTimeMs = serverToClientTime(serverTimestampMs);
+                const now = getClientNowMs();
+
+                if (targetPlaybackTimeMs + maxFrameDriftMs < now) {
+                    console.warn(`丢弃过期视频帧，落后 ${(now - targetPlaybackTimeMs).toFixed(1)} ms`);
+                    return;
+                }
+
                 const img = new Image();
                 img.onload = function() {
-                    // 绘制图像到画布
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // 更新统计信息
-                    totalFrames++;
-                    frameCount++;
-                    totalDataSize += frameData.size || 0;
-                    
-                    // 计算延迟
-                    const latency = Date.now() - startTime;
-                    latencySum += latency;
-                    latencyCount++;
-                    
-                    // 更新分辨率显示
-                    document.getElementById('resolution').textContent = `${img.width}x${img.height}`;
-                    
-                    // 处理音视频同步
-                    if (frameData.sync_timestamp && frameData.frame_index !== undefined) {
-                        processVideoSync(frameData);
+                    const frameEntry = {
+                        image: img,
+                        targetTimeMs: targetPlaybackTimeMs,
+                        expectedClientTimeMs,
+                        dataSize: frameData.size || 0,
+                        width: img.width,
+                        height: img.height
+                    };
+
+                    videoFrameQueue.push(frameEntry);
+                    if (
+                        videoFrameQueue.length > 1 &&
+                        videoFrameQueue[videoFrameQueue.length - 2].targetTimeMs >
+                            frameEntry.targetTimeMs
+                    ) {
+                        videoFrameQueue.sort((a, b) => a.targetTimeMs - b.targetTimeMs);
                     }
+
+                    startVideoRenderLoop();
                 };
-                
+                img.onerror = function(err) {
+                    console.error('视频帧解码失败:', err);
+                };
+
                 img.src = 'data:image/jpeg;base64,' + frameData.data;
-                
             } catch (error) {
                 console.error('处理视频帧失败:', error);
             }
@@ -748,11 +880,6 @@
                     console.warn(`音频数据大小不匹配: 期望 ${expectedSize} 字节, 实际 ${audioBuffer.byteLength} 字节`);
                 }
                 
-                // 处理音视频同步
-                if (audioData.sync_timestamp) {
-                    processAudioSync(audioData);
-                }
-                
                 // 如果正在录制，添加到录制缓冲区
                 if (isRecording) {
                     // 计算实际的样本数（基于数据大小和声道数）
@@ -802,7 +929,7 @@
                 
                 // 播放音频
                 // console.log('开始播放音频...');
-                playAudio(audioBuffer);
+                playAudio(audioBuffer, audioData);
                 
                 // 保存当前音频数据用于PCM保存
                 currentAudioData = {
@@ -834,6 +961,7 @@
                 audioContext.gain = audioContext.createGain();
                 audioContext.gain.connect(audioContext.destination);
                 audioContext.gain.gain.value = document.getElementById('volumeSlider').value / 100;
+                updateAudioContextBaseTime();
                 
                 // 检查音频上下文状态
                 console.log('音频上下文已初始化');
@@ -857,7 +985,7 @@
         }
         
         // 播放音频
-        function playAudio(audioBuffer) {
+        function playAudio(audioBuffer, audioMeta = {}) {
             if (!audioContext) {
                 console.warn('音频上下文未初始化，尝试初始化...');
                 initAudioContext();
@@ -873,7 +1001,7 @@
                     console.log('音频上下文被暂停，尝试恢复...');
                     audioContext.resume().then(() => {
                         console.log('音频上下文已恢复，重新播放音频');
-                        playAudio(audioBuffer); // 递归调用
+                        playAudio(audioBuffer, audioMeta); // 递归调用
                     }).catch(err => {
                         console.error('恢复音频上下文失败:', err);
                     });
@@ -887,15 +1015,27 @@
                 }
                 
                 // 获取音频参数
-                const sourceSampleRate = 48000; // 源音频采样率（从C++应用获取）
+                const sourceSampleRate = audioMeta.rate || 48000;
                 const targetSampleRate = audioContext.sampleRate; // 目标采样率（浏览器音频上下文）
-                const channels = 2; // 立体声
+                const channels = audioMeta.channels || 2; // 立体声
                 const bytesPerSample = 2; // 16位
                 const samplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
                 
                 // 检查数据完整性
                 if (samplesPerChannel <= 0 || !Number.isInteger(samplesPerChannel)) {
                     console.error('音频数据格式错误:', audioBuffer.byteLength, '字节');
+                    return;
+                }
+
+                const serverTimestampMs =
+                    ((audioMeta.sync_timestamp ?? audioMeta.timestamp) || getClientNowMs() / 1000) *
+                    1000;
+                ensureSyncBase(serverTimestampMs);
+                const targetPlaybackTimeMs = computePlaybackTime(serverTimestampMs);
+                const now = getClientNowMs();
+
+                if (targetPlaybackTimeMs + maxFrameDriftMs < now) {
+                    console.warn(`丢弃过期音频块，落后 ${(now - targetPlaybackTimeMs).toFixed(1)} ms`);
                     return;
                 }
                 
@@ -906,7 +1046,13 @@
                 if (needsResampling && enableResampling) {
                     console.log(`需要重采样: ${sourceSampleRate}Hz → ${targetSampleRate}Hz`);
                     // 使用重采样播放
-                    playAudioWithResampling(audioBuffer, sourceSampleRate, targetSampleRate, channels);
+                    playAudioWithResampling(
+                        audioBuffer,
+                        sourceSampleRate,
+                        targetSampleRate,
+                        channels,
+                        targetPlaybackTimeMs
+                    );
                     return;
                 } else if (needsResampling && !enableResampling) {
                     console.log(`采样率不匹配但重采样已禁用: ${sourceSampleRate}Hz vs ${targetSampleRate}Hz`);
@@ -952,7 +1098,8 @@
                     console.error('音频播放错误:', e);
                 };
                 
-                source.start();
+                const scheduledClientTimeMs = scheduleAudioSource(source, targetPlaybackTimeMs);
+                updateAudioSyncMetrics(scheduledClientTimeMs, targetPlaybackTimeMs);
                 
                 // console.log(`音频播放成功: ${samplesPerChannel} 样本, ${channels} 声道, ${targetSampleRate}Hz`);
                 // console.log('音频上下文状态:', audioContext.state);
@@ -965,7 +1112,7 @@
         }
         
         // 重采样播放音频
-        function playAudioWithResampling(audioBuffer, sourceSampleRate, targetSampleRate, channels) {
+        function playAudioWithResampling(audioBuffer, sourceSampleRate, targetSampleRate, channels, targetPlaybackTimeMs) {
             try {
                 const bytesPerSample = 2;
                 const sourceSamplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
@@ -1027,7 +1174,8 @@
                     console.error('重采样音频播放错误:', e);
                 };
                 
-                source.start();
+                const scheduledClientTimeMs = scheduleAudioSource(source, targetPlaybackTimeMs);
+                updateAudioSyncMetrics(scheduledClientTimeMs, targetPlaybackTimeMs);
                 
                 console.log(`重采样音频播放成功: ${targetSamplesPerChannel} 样本, ${channels} 声道, ${targetSampleRate}Hz`);
                 
@@ -1035,14 +1183,13 @@
                 console.error('重采样播放音频失败:', error);
                 // 如果重采样失败，尝试直接播放
                 console.log('重采样失败，尝试直接播放...');
-                playAudioDirect(audioBuffer);
+                playAudioDirect(audioBuffer, targetPlaybackTimeMs, channels);
             }
         }
         
         // 直接播放音频（备用方案）
-        function playAudioDirect(audioBuffer) {
+        function playAudioDirect(audioBuffer, targetPlaybackTimeMs, channels = 2) {
             try {
-                const channels = 2;
                 const bytesPerSample = 2;
                 const samplesPerChannel = audioBuffer.byteLength / (channels * bytesPerSample);
                 
@@ -1066,7 +1213,8 @@
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBufferSource;
                 source.connect(audioContext.gain);
-                source.start();
+                const scheduledClientTimeMs = scheduleAudioSource(source, targetPlaybackTimeMs);
+                updateAudioSyncMetrics(scheduledClientTimeMs, targetPlaybackTimeMs);
                 
                 console.log(`直接播放音频成功: ${samplesPerChannel} 样本`);
                 
@@ -1188,6 +1336,15 @@
             latencySum = 0;
             latencyCount = 0;
             syncOffsets = [];
+            lastFpsTime = getClientNowMs();
+            videoFrameQueue = [];
+            syncBaseServerTimeMs = null;
+            syncBaseClientTimeMs = null;
+            audioContextStartTimeMs = null;
+            if (videoRenderLoopHandle !== null) {
+                cancelAnimationFrame(videoRenderLoopHandle);
+                videoRenderLoopHandle = null;
+            }
             
             // 重置显示
             document.getElementById('totalFrames').textContent = '0';
@@ -1216,7 +1373,7 @@
         // 启动FPS计数器
         function startFpsCounter() {
             setInterval(function() {
-                const currentTime = Date.now();
+                const currentTime = getClientNowMs();
                 const timeDiff = (currentTime - lastFpsTime) / 1000;
                 
                 if (timeDiff > 0) {
