@@ -98,6 +98,9 @@ void WebSocketStreamServer::stop()
 		return;
 	}
 
+	// 先设置 running 为 false，防止回调继续发送数据
+	running = false;
+
 	// 停止应用程序列表定时器
 	if (appListTimer) {
 		appListTimer->stop();
@@ -105,7 +108,7 @@ void WebSocketStreamServer::stop()
 		appListTimer = nullptr;
 	}
 
-	// 移除回调
+	// 移除回调（必须在关闭连接之前，避免回调继续尝试发送数据）
 	if (audioEnabled) {
 		obs_remove_raw_audio_callback(0, rawAudioCallback, this);
 		audioEnabled = false;
@@ -116,14 +119,26 @@ void WebSocketStreamServer::stop()
 		videoEnabled = false;
 	}
 
+	// 等待一小段时间，确保回调线程完成当前操作
+	QThread::msleep(50);
+
 	// 关闭所有客户端连接
-	QMutexLocker locker(&clientsMutex);
-	for (QWebSocket *client : clients) {
-		client->close();
+	// 先断开信号连接，避免在关闭时触发回调
+	QList<QWebSocket *> clientsToClose;
+	{
+		QMutexLocker locker(&clientsMutex);
+		clientsToClose = clients;
+		clients.clear();
+	}
+	
+	// 在锁外关闭连接，避免阻塞
+	for (QWebSocket *client : clientsToClose) {
+		// 断开所有信号连接，避免触发回调
+		client->disconnect();
+		// 使用 abort() 立即关闭，而不是 close() 等待关闭完成
+		client->abort();
 		client->deleteLater();
 	}
-	clients.clear();
-	locker.unlock();
 
 	if (server) {
 		server->close();
@@ -142,7 +157,6 @@ void WebSocketStreamServer::stop()
 	videoSourceColorspace = VIDEO_CS_DEFAULT;
 	videoSourceRange = VIDEO_RANGE_DEFAULT;
 
-	running = false;
 	blog(LOG_INFO, "[WebSocketStreamServer] Server stopped");
 	emit serverStopped();
 }
@@ -327,6 +341,11 @@ void WebSocketStreamServer::rawAudioCallback(void *param, size_t mix_idx,
 
 void WebSocketStreamServer::handleRawVideo(struct video_data *frame)
 {
+	// 如果服务器已停止，不再处理视频数据
+	if (!running || !videoEnabled) {
+		return;
+	}
+
 	videoFrameCount++;
 
 	{
@@ -526,8 +545,16 @@ void WebSocketStreamServer::handleRawAudio(size_t mix_idx,
 {
 	Q_UNUSED(mix_idx);
 	
-	if (!audioEnabled || clients.isEmpty()) {
+	// 如果服务器已停止，不再处理音频数据
+	if (!running || !audioEnabled) {
 		return;
+	}
+	
+	{
+		QMutexLocker locker(&clientsMutex);
+		if (clients.isEmpty()) {
+			return;
+		}
 	}
 	
 	audioFrameCount++;
@@ -556,6 +583,11 @@ void WebSocketStreamServer::handleRawAudio(size_t mix_idx,
 
 void WebSocketStreamServer::sendToAllClients(const QByteArray &data)
 {
+	// 如果服务器已停止，不再发送数据
+	if (!running) {
+		return;
+	}
+
 	QMutexLocker locker(&clientsMutex);
 	for (QWebSocket *client : clients) {
 		if (client->isValid()) {
