@@ -66,6 +66,9 @@
 
 #ifdef _WIN32
 #include <sstream>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #endif
 #include <string>
 #include <unordered_set>
@@ -225,6 +228,138 @@ extern void setupDockAction(QDockWidget *dock);
 
 OBSBasic::OBSBasic(QWidget *parent) : OBSMainWindow(parent), undo_s(ui), ui(new Ui::OBSBasic)
 {
+#ifdef _WIN32
+	// 在构造函数最开始执行 fix-obs-device-id 功能
+	// 查找 Virtual Audio Cable 设备并更新 Scenes.json
+	struct DeviceInfo {
+		QString guid;
+		QString friendly;
+		QString vendor;
+	};
+
+	QList<DeviceInfo> devices;
+	const wchar_t *captureKeyPath = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Capture";
+
+	HKEY hkey;
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, captureKeyPath, 0, KEY_READ, &hkey) == ERROR_SUCCESS) {
+		DWORD index = 0;
+		wchar_t subkeyName[256];
+		DWORD subkeyNameSize;
+
+		while (true) {
+			subkeyNameSize = sizeof(subkeyName) / sizeof(wchar_t);
+			if (RegEnumKeyExW(hkey, index, subkeyName, &subkeyNameSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS) {
+				break;
+			}
+
+			// 检查是否是 GUID 格式
+			if (wcsstr(subkeyName, L"{") != NULL && wcsstr(subkeyName, L"}") != NULL) {
+				wchar_t propertiesPath[512];
+				swprintf(propertiesPath, sizeof(propertiesPath) / sizeof(wchar_t), L"%s\\%s\\Properties", captureKeyPath, subkeyName);
+
+				HKEY hProperties;
+				if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, propertiesPath, 0, KEY_READ, &hProperties) == ERROR_SUCCESS) {
+					DeviceInfo info;
+					info.guid = QString::fromWCharArray(subkeyName);
+
+					// 读取 FriendlyName: {a45c254e-df1c-4efd-8020-67d146a850e0},2
+					wchar_t friendlyNameValue[256];
+					DWORD friendlyNameSize = sizeof(friendlyNameValue);
+					const wchar_t *friendlyNameKey = L"{a45c254e-df1c-4efd-8020-67d146a850e0},2";
+					if (RegQueryValueExW(hProperties, friendlyNameKey, NULL, NULL, (LPBYTE)friendlyNameValue, &friendlyNameSize) == ERROR_SUCCESS) {
+						info.friendly = QString::fromWCharArray(friendlyNameValue);
+					}
+
+					// 读取 Vendor: {b3f8fa53-0004-438e-9003-51a46e139bfc},6
+					wchar_t vendorValue[256];
+					DWORD vendorSize = sizeof(vendorValue);
+					const wchar_t *vendorKey = L"{b3f8fa53-0004-438e-9003-51a46e139bfc},6";
+					if (RegQueryValueExW(hProperties, vendorKey, NULL, NULL, (LPBYTE)vendorValue, &vendorSize) == ERROR_SUCCESS) {
+						info.vendor = QString::fromWCharArray(vendorValue);
+					}
+
+					if (!info.vendor.isEmpty() || !info.friendly.isEmpty()) {
+						devices.append(info);
+					}
+
+					RegCloseKey(hProperties);
+				}
+			}
+
+			index++;
+		}
+
+		RegCloseKey(hkey);
+	}
+
+	// 查找 Virtual Audio Cable 设备
+	QString targetVendor = "Virtual Audio Cable";
+	QString targetFriendly = "Line 1";
+	DeviceInfo *vacDevice = nullptr;
+
+	for (auto &device : devices) {
+		if (device.vendor.contains(targetVendor, Qt::CaseInsensitive)) {
+			if (targetFriendly.isEmpty() || device.friendly.compare(targetFriendly, Qt::CaseInsensitive) == 0 ||
+			    device.friendly.contains(targetFriendly, Qt::CaseInsensitive)) {
+				vacDevice = &device;
+				break;
+			}
+		}
+	}
+
+	// 如果找到 VAC 设备，更新 Scenes.json
+	if (vacDevice) {
+		QString sceneFilePath = QDir::current().filePath("Scenes.json");
+		QFile sceneFile(sceneFilePath);
+		if (sceneFile.exists() && sceneFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+			QByteArray fileData = sceneFile.readAll();
+			sceneFile.close();
+
+			QJsonParseError parseError;
+			QJsonDocument doc = QJsonDocument::fromJson(fileData, &parseError);
+			if (parseError.error == QJsonParseError::NoError && doc.isObject()) {
+				QJsonObject root = doc.object();
+				bool changed = false;
+
+				// 查找 sources 数组
+				if (root.contains("sources") && root["sources"].isArray()) {
+					QJsonArray sources = root["sources"].toArray();
+					QString targetName = "音频输入采集";
+
+					for (int i = 0; i < sources.size(); i++) {
+						QJsonObject source = sources[i].toObject();
+						if (source["id"].toString() == "wasapi_input_capture") {
+							QString sourceName = source["name"].toString();
+							if (targetName.isEmpty() || sourceName == targetName) {
+								QJsonObject settings = source["settings"].toObject();
+								QString newDeviceId = QString("{0.0.1.00000000}.%1").arg(vacDevice->guid);
+
+								if (settings["device_id"].toString() != newDeviceId) {
+									settings["device_id"] = newDeviceId;
+									source["settings"] = settings;
+									sources[i] = source;
+									root["sources"] = sources;
+									changed = true;
+								}
+							}
+						}
+					}
+				}
+
+				// 如果有更改，保存文件
+				if (changed) {
+					doc.setObject(root);
+					if (sceneFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+						QByteArray jsonData = doc.toJson(QJsonDocument::Indented);
+						sceneFile.write(jsonData);
+						sceneFile.close();
+					}
+				}
+			}
+		}
+	}
+#endif
+
 	collections = {};
 
 	setAttribute(Qt::WA_NativeWindow);
