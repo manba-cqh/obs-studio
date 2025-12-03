@@ -868,6 +868,17 @@ OBSApp::OBSApp(int &argc, char **argv, profiler_name_store_t *store)
 	  profilerNameStore(store),
 	  appLaunchUUID_(QUuid::createUuid())
 {
+#ifdef _WIN32
+	// 设置当前工作目录为程序所在目录，解决开机自启动时路径问题
+	wchar_t exePath[MAX_PATH];
+	GetModuleFileNameW(NULL, exePath, MAX_PATH);
+	wchar_t *lastSlash = wcsrchr(exePath, L'\\');
+	if (lastSlash) {
+		*lastSlash = 0;
+		SetCurrentDirectoryW(exePath);
+	}
+#endif
+
 	/* fix float handling */
 #if defined(Q_OS_UNIX)
 	if (!setlocale(LC_NUMERIC, "C"))

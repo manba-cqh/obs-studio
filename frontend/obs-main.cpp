@@ -931,7 +931,7 @@ int main(int argc, char *argv[])
 			unfiltered_log = true;
 
 		} else if (arg_is(argv[i], "--startstreaming", nullptr)) {
-			opt_start_streaming = true;
+			// opt_start_streaming = true;
 
 		} else if (arg_is(argv[i], "--startrecording", nullptr)) {
 			opt_start_recording = true;
