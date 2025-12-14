@@ -30,6 +30,8 @@
 #include <QPointer>
 #include <QUuid>
 
+class CometMainWindow;
+
 #include <deque>
 #include <functional>
 #include <string>
@@ -71,6 +73,7 @@ private:
 	ConfigFile userConfig;
 	TextLookup textLookup;
 	QPointer<OBSMainWindow> mainWindow;
+	QPointer<CometMainWindow> cometMainWindow;
 	profiler_name_store_t *profilerNameStore = nullptr;
 	std::vector<UpdateBranch> updateBranches;
 	bool branches_loaded = false;

@@ -64,4 +64,6 @@ target_sources(
     widgets/VolumeAccessibleInterface.hpp
     widgets/VolumeMeter.cpp
     widgets/VolumeMeter.hpp
+    comet/CometMainWindow.cpp
+    comet/CometMainWindow.hpp
 )

@@ -27,6 +27,7 @@
 #include <utility/models/branches.hpp>
 #endif
 #include <widgets/OBSBasic.hpp>
+#include <comet/CometMainWindow.hpp>
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 #include <obs-nix-platform.h>
@@ -1232,6 +1233,15 @@ bool OBSApp::OBSInit()
 	connect(mainWindow, &OBSBasic::destroyed, this, &OBSApp::quit);
 
 	mainWindow->OBSInit();
+	
+	// 隐藏 OBSBasic 窗口
+	mainWindow->hide();
+	
+	// 创建并显示 CometMainWindow
+	cometMainWindow = new CometMainWindow();
+	cometMainWindow->setAttribute(Qt::WA_DeleteOnClose, true);
+	connect(cometMainWindow, &CometMainWindow::destroyed, this, &OBSApp::quit);
+	cometMainWindow->show();
 
 	connect(this, &QGuiApplication::applicationStateChanged,
 		[this](Qt::ApplicationState state) { ResetHotkeyState(state == Qt::ApplicationActive); });
