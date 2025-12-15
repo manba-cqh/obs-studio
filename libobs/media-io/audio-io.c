@@ -436,20 +436,20 @@ bool audio_output_active(const audio_t *audio)
 
 size_t audio_output_get_block_size(const audio_t *audio)
 {
-	return audio->block_size;
+	return audio ? audio->block_size : 0;
 }
 
 size_t audio_output_get_planes(const audio_t *audio)
 {
-	return audio->planes;
+	return audio ? audio->planes : 0;
 }
 
 size_t audio_output_get_channels(const audio_t *audio)
 {
-	return audio->channels;
+	return audio ? audio->channels : 0;
 }
 
 uint32_t audio_output_get_sample_rate(const audio_t *audio)
 {
-	return audio->info.samples_per_sec;
+	return audio ? audio->info.samples_per_sec : 0;
 }

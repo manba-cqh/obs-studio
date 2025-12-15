@@ -1506,6 +1506,9 @@ static inline bool source_muted(obs_source_t *source, uint64_t os_time)
 
 static void source_output_audio_data(obs_source_t *source, const struct audio_data *data)
 {
+	if (!obs->audio.audio)
+		return;
+
 	size_t sample_rate = audio_output_get_sample_rate(obs->audio.audio);
 	struct audio_data in = *data;
 	uint64_t diff;
@@ -3852,6 +3855,9 @@ static inline void reset_resampler(obs_source_t *source, const struct obs_source
 
 static void copy_audio_data(obs_source_t *source, const uint8_t *const data[], uint32_t frames, uint64_t ts)
 {
+	if (!obs->audio.audio)
+		return;
+
 	size_t planes = audio_output_get_planes(obs->audio.audio);
 	size_t blocksize = audio_output_get_block_size(obs->audio.audio);
 	size_t size = (size_t)frames * blocksize;
@@ -3877,6 +3883,9 @@ static void copy_audio_data(obs_source_t *source, const uint8_t *const data[], u
 /* TODO: SSE optimization */
 static void downmix_to_mono_planar(struct obs_source *source, uint32_t frames)
 {
+	if (!obs->audio.audio)
+		return;
+
 	size_t channels = audio_output_get_channels(obs->audio.audio);
 	const float channels_i = 1.0f / (float)channels;
 	float **data = (float **)source->audio_data.data;
@@ -3950,7 +3959,7 @@ static void process_audio(obs_source_t *source, const struct obs_source_audio *a
 		copy_audio_data(source, audio->data, audio->frames, audio->timestamp);
 	}
 
-	mono_output = audio_output_get_channels(obs->audio.audio) == 1;
+	mono_output = obs->audio.audio && audio_output_get_channels(obs->audio.audio) == 1;
 
 	if (!mono_output && source->sample_info.speakers == SPEAKERS_STEREO &&
 	    (source->balance > 0.51f || source->balance < 0.49f)) {
