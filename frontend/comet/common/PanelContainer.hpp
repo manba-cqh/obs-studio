@@ -21,6 +21,8 @@ public:
 
 	void setCollapsed(bool collapsed);
 	bool isCollapsed() const;
+protected:
+	virtual void paintEvent(QPaintEvent *event) override;
 
 private slots:
 	void onCollapseButtonClicked();

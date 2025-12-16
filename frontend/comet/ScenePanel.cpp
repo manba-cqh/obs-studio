@@ -24,7 +24,9 @@ void ScenePanel::createHeaderOperWidget()
     m_broadcastButton = new QPushButton();
     m_broadcastButton->setFixedSize(56, 24);
     m_broadcastButton->setText("导播");
-    // TODO 设置导播按钮样式
+    m_broadcastButton->setProperty("transparent_btn", true);
+    m_broadcastButton->setStyleSheet("QPushButton { font-size: 12px; }");
+    // TODO 设置导播按钮图标
     connect(m_broadcastButton, &QPushButton::clicked, this, &ScenePanel::onBroadcastButtonClicked);
     setHeaderOperWidget(m_broadcastButton);
 }
@@ -34,7 +36,7 @@ void ScenePanel::createContentWidget()
     QWidget *contentWidget = new QWidget(this);
     QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
     contentLayout->setContentsMargins(0, 0, 0, 0);
-    contentLayout->setSpacing(0);
+    contentLayout->setSpacing(5);
 
     // 创建场景按钮区域
     QWidget *sceneButtonsWidget = new QWidget(contentWidget);
@@ -56,6 +58,11 @@ void ScenePanel::createContentWidget()
     m_sceneGridLayout->addWidget(m_addSceneButton, 2, 1); // 添加"+"按钮到第二行第二列
     contentLayout->addWidget(sceneButtonsWidget);
 
+    QWidget *separator = new QWidget(contentWidget);
+    separator->setFixedHeight(1);
+    separator->setStyleSheet("QWidget { background-color: rgba(255, 255, 255, 125); }");
+    contentLayout->addWidget(separator);
+
     // 创建内容列表区域
     QWidget *listWidgetContainer = new QWidget(contentWidget);
     QVBoxLayout *listLayout = new QVBoxLayout(listWidgetContainer);
@@ -64,19 +71,25 @@ void ScenePanel::createContentWidget()
 
     m_currentContentList = new QListWidget(listWidgetContainer);
     listLayout->addWidget(m_currentContentList);
-    contentLayout->addWidget(listWidgetContainer, 1);
+    contentLayout->addWidget(listWidgetContainer);
 
     // 创建底部"添加直播素材"按钮
     QWidget *addSourceButtonContainer = new QWidget(contentWidget);
+    addSourceButtonContainer->setFixedHeight(30);
+    addSourceButtonContainer->setStyleSheet("QWidget { background: rgba(0, 0, 0, 0.2);; }");
     QHBoxLayout *addSourceButtonLayout = new QHBoxLayout(addSourceButtonContainer);
     addSourceButtonLayout->setContentsMargins(10, 0, 10, 0);
     addSourceButtonLayout->setSpacing(0);
     m_addSourceButton = new QPushButton("添加直播素材", contentWidget);
+    m_addSourceButton->setProperty("transparent_btn", true);
+    m_addSourceButton->setStyleSheet("QPushButton { font-size: 14px; }");
     m_addSourceButton->setFixedSize(120, 24);
     connect(m_addSourceButton, &QPushButton::clicked, this, &ScenePanel::onAddSourceButtonClicked);
     addSourceButtonLayout->addWidget(m_addSourceButton);
     addSourceButtonLayout->addStretch();
-    m_clearSourceButton = new QPushButton("清空直播素材", contentWidget);
+    m_clearSourceButton = new QPushButton("清空", contentWidget);
+    m_clearSourceButton->setProperty("transparent_btn", true);
+    m_clearSourceButton->setStyleSheet("QPushButton { font-size: 14px; }");
     m_clearSourceButton->setFixedSize(42, 24);
     connect(m_clearSourceButton, &QPushButton::clicked, this, &ScenePanel::onClearSourceButtonClicked);
     addSourceButtonLayout->addWidget(m_clearSourceButton);
@@ -87,7 +100,6 @@ void ScenePanel::createContentWidget()
 
 void ScenePanel::setupSceneButtons()
 {
-    // 添加初始场景按钮（按网格布局）
     addSceneButton("场景一", 0, 0);
     addSceneButton("场景二", 0, 1);
     addSceneButton("场景三", 0, 2);
@@ -96,7 +108,6 @@ void ScenePanel::setupSceneButtons()
     addSceneButton("场景九", 1, 2);
     addSceneButton("场景十", 2, 0);
 
-    // 默认选中第一个场景
     if (!m_sceneButtons.isEmpty()) {
         selectScene(0);
     }
@@ -107,7 +118,8 @@ void ScenePanel::addSceneButton(const QString &name, int row, int col)
     QPushButton *sceneButton = new QPushButton(name);
     sceneButton->setFixedSize(65, 24);
     sceneButton->setCheckable(true);
-    
+    sceneButton->setProperty("scene_btn", true);
+
     m_sceneButtonGroup->addButton(sceneButton, m_sceneButtons.size());
     m_sceneButtons.append(sceneButton);
     m_sceneGridLayout->addWidget(sceneButton, row, col);
@@ -115,6 +127,9 @@ void ScenePanel::addSceneButton(const QString &name, int row, int col)
 
 void ScenePanel::selectScene(int index)
 {
+    for (QPushButton *button : m_sceneButtons) {
+        button->setChecked(false);
+    }
     if (index >= 0 && index < m_sceneButtons.size()) {
         m_currentSceneIndex = index;
         m_sceneButtons[index]->setChecked(true);

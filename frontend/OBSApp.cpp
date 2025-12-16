@@ -1026,7 +1026,7 @@ void OBSApp::AppInit()
 	// if (!InitTheme())
 	// 	throw "Failed to load theme";
 	// 加载本地文件的qss
-	QFile qssFile(":/comet/styles.qss");
+	QFile qssFile(":/styles.qss");
 	if (qssFile.open(QFile::ReadOnly | QFile::Text)) {
 		QString qss = QString::fromUtf8(qssFile.readAll());
 		qApp->setStyleSheet(qss);

@@ -25,14 +25,21 @@ void TopBar::initUI()
 	topBarLayout->addWidget(m_logoLabel);
 
 	m_titleLabel = new QLabel("彗星号直播助手 1.0", this);
+	m_titleLabel->setProperty("label_16_bold", true);
 	topBarLayout->addWidget(m_titleLabel);
 
 	topBarLayout->addStretch();
 
 	m_settingsButton = new QPushButton("设置", this);
+	m_settingsButton->setFixedWidth(30);
+	m_settingsButton->setProperty("transparent_btn", true);
+	m_settingsButton->setStyleSheet("QPushButton { font-size: 12px; }");
 	topBarLayout->addWidget(m_settingsButton);
 
 	m_helpCenterButton = new QPushButton("帮助中心", this);
+	m_helpCenterButton->setFixedWidth(54);
+	m_helpCenterButton->setProperty("transparent_btn", true);
+	m_helpCenterButton->setStyleSheet("QPushButton { font-size: 12px; }");
 	topBarLayout->addWidget(m_helpCenterButton);
 
 	m_userButton = new QPushButton(this);
@@ -47,6 +54,8 @@ void TopBar::initUI()
 
 	m_minimizeButton = new QPushButton(this);
 	m_minimizeButton->setFixedSize(24, 24);
+	m_minimizeButton->setStyleSheet("QPushButton { border: none; }");
+	m_minimizeButton->setIcon(QIcon(":/images/minimize.png"));
 	topBarLayout->addWidget(m_minimizeButton);
 	connect(m_minimizeButton, &QPushButton::clicked, this, [this]() {
 		emit sigMinimize();
@@ -54,6 +63,8 @@ void TopBar::initUI()
 
 	m_maximizeButton = new QPushButton(this);
 	m_maximizeButton->setFixedSize(24, 24);
+	m_maximizeButton->setStyleSheet("QPushButton { border: none; }");
+	m_maximizeButton->setIcon(QIcon(":/images/maximize.png"));
 	topBarLayout->addWidget(m_maximizeButton);
 	connect(m_maximizeButton, &QPushButton::clicked, this, [this]() {
 		emit sigMaximize();

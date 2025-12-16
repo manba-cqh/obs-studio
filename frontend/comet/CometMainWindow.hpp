@@ -5,6 +5,7 @@
 
 class TopBar;
 class ScenePanel;
+class InteractPanel;
 
 class CometMainWindow : public QWidget
 {
@@ -27,4 +28,6 @@ private:
 
 	// 场景面板
 	ScenePanel *m_scenePanel;
+	// 互动玩法面板
+	InteractPanel *m_interactPanel;
 };

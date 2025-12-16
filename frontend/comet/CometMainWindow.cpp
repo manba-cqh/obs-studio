@@ -1,6 +1,8 @@
 #include "CometMainWindow.hpp"
 #include "TopBar.hpp"
+
 #include "ScenePanel.hpp"
+#include "InteractPanel.hpp"
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QWidget(parent)
@@ -15,6 +17,7 @@ CometMainWindow::~CometMainWindow()
 void CometMainWindow::initUI()
 {
 	setWindowFlags(Qt::FramelessWindowHint);
+	setProperty("main_widget", true);
 
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -39,13 +42,15 @@ void CometMainWindow::createMainContent()
 {
 	m_mainContent = new QWidget(this);
 	QHBoxLayout *mainContentLayout = new QHBoxLayout(m_mainContent);
-	mainContentLayout->setContentsMargins(14, 14, 14, 14);
+	mainContentLayout->setContentsMargins(15, 0, 15, 15);
 	mainContentLayout->setSpacing(16);
 
 	// 左侧布局
 	QVBoxLayout *leftLayout = new QVBoxLayout();
 	m_scenePanel = new ScenePanel(this);
-	leftLayout->addWidget(m_scenePanel);
+	leftLayout->addWidget(m_scenePanel, 1);
+	m_interactPanel = new InteractPanel(this);
+	leftLayout->addWidget(m_interactPanel, 1);
 	mainContentLayout->addLayout(leftLayout, 2);
 
 	// 中间布局

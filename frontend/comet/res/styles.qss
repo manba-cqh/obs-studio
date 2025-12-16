@@ -1,0 +1,58 @@
+QWidget[main_widget=true]
+{
+    background: rgba(21, 21, 32, 1);
+}
+
+QWidget[pannel_widget=true]
+{
+    background: rgba(34, 34, 50, 0.8);
+    border-radius: 4px;
+}
+
+
+QLabel[label_16_bold=true]
+{
+    color: #FFFFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+QLabel[label_12_medium=true]
+{
+    color: #FFFFFFFF;
+    font-size: 12px;
+    font-weight: medium;
+}
+
+
+QPushButton[transparent_btn=true]
+{
+    background: transparent;
+    color: #FFFFFFFF;
+    font-weight: medium;
+}
+
+QPushButton[scene_btn=true]
+{
+    background: transparent;
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
+}
+QPushButton[scene_btn=true]:checked
+{
+    background: rgba(62, 62, 82, 1);
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
+    border-radius: 4px;
+}
+
+
+QListWidget
+{
+    background: transparent;
+    color: #FFFFFFFF;
+    font-weight: medium;
+    border: none;
+}

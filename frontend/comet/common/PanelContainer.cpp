@@ -1,3 +1,6 @@
+#include <QPainter>
+#include <QStyleOption>
+
 #include "PanelContainer.hpp"
 
 PanelContainer::PanelContainer(const QString &title, QWidget *parent)
@@ -14,6 +17,8 @@ PanelContainer::~PanelContainer()
 
 void PanelContainer::initUI()
 {
+	setProperty("pannel_widget", true);
+
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setContentsMargins(12, 8, 12, 8);
 	m_mainLayout->setSpacing(6);
@@ -38,6 +43,9 @@ void PanelContainer::createHeader()
 	// 折叠按钮
 	m_collapseButton = new QPushButton(headerWidget);
 	m_collapseButton->setFixedSize(56, 24);
+	m_collapseButton->setProperty("transparent_btn", true);
+	m_collapseButton->setIcon(QIcon(":/images/down.png"));
+	m_collapseButton->setStyleSheet("QPushButton { font-size: 15px; }");
 	m_collapseButton->setText(m_title);
 	// TODO 设置折叠按钮样式
 	connect(m_collapseButton, &QPushButton::clicked, this, &PanelContainer::onCollapseButtonClicked);
@@ -102,6 +110,14 @@ void PanelContainer::setCollapsed(bool collapsed)
 bool PanelContainer::isCollapsed() const
 {
 	return m_collapsed;
+}
+
+void PanelContainer::paintEvent(QPaintEvent *event)
+{
+    QStyleOption opt;
+    opt.initFrom(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
 void PanelContainer::onCollapseButtonClicked()

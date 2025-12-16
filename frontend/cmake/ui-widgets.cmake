@@ -70,6 +70,8 @@ target_sources(
     comet/TopBar.hpp
     comet/ScenePanel.cpp
     comet/ScenePanel.hpp
+    comet/InteractPanel.cpp
+    comet/InteractPanel.hpp
     comet/common/PanelContainer.cpp
     comet/common/PanelContainer.hpp
 )
