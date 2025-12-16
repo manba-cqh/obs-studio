@@ -47,6 +47,7 @@ target_sources(
     forms/OBSRemux.ui
     forms/StatusBarWidget.ui
     forms/obs.qrc
+    comet/res/comet.qrc
     forms/PluginManagerWindow.ui
     forms/source-toolbar/browser-source-toolbar.ui
     forms/source-toolbar/color-source-toolbar.ui

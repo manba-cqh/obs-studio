@@ -1022,8 +1022,15 @@ void OBSApp::AppInit()
 		throw "Failed to initialize global config";
 	if (!InitLocale())
 		throw "Failed to load locale";
-	if (!InitTheme())
-		throw "Failed to load theme";
+	// TODO 注释掉原来主题
+	// if (!InitTheme())
+	// 	throw "Failed to load theme";
+	// 加载本地文件的qss
+	QFile qssFile(":/comet/styles.qss");
+	if (qssFile.open(QFile::ReadOnly | QFile::Text)) {
+		QString qss = QString::fromUtf8(qssFile.readAll());
+		qApp->setStyleSheet(qss);
+	}
 
 	config_set_default_string(userConfig, "Basic", "Profile", Str("Untitled"));
 	config_set_default_string(userConfig, "Basic", "ProfileDir", Str("Untitled"));
