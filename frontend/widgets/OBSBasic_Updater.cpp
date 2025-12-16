@@ -168,6 +168,9 @@ void OBSBasic::ShowWhatsNew(const QString &url)
 
 void OBSBasic::TimedCheckForUpdates()
 {
+	// TODO 禁用自动更新检查，避免弹窗
+	return;
+	
 	if (App()->IsUpdaterDisabled())
 		return;
 	if (!config_get_bool(App()->GetAppConfig(), "General", "EnableAutoUpdates"))
