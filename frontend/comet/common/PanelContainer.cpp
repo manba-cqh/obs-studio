@@ -42,7 +42,7 @@ void PanelContainer::createHeader()
 
 	// 折叠按钮
 	m_collapseButton = new QPushButton(headerWidget);
-	m_collapseButton->setFixedSize(56, 24);
+	m_collapseButton->setFixedSize(62, 24);
 	m_collapseButton->setProperty("transparent_btn", true);
 	m_collapseButton->setIcon(QIcon(":/images/down.png"));
 	m_collapseButton->setStyleSheet("QPushButton { font-size: 15px; }");

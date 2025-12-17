@@ -30,6 +30,16 @@ QPushButton[transparent_btn=true]
     background: transparent;
     color: #FFFFFFFF;
     font-weight: medium;
+    border: none;
+    text-align: center;
+}
+QPushButton[transparent_btn=true]:hover
+{
+    background: transparent;
+    color: #FFFFFFFF;
+    font-weight: medium;
+    border: none;
+    text-align: center;
 }
 
 QPushButton[scene_btn=true]
@@ -38,6 +48,14 @@ QPushButton[scene_btn=true]
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
+}
+QPushButton[scene_btn=true]:hover
+{
+    background: rgba(124, 124, 164, 1);
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
+    border-radius: 4px;
 }
 QPushButton[scene_btn=true]:checked
 {

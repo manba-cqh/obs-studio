@@ -14,7 +14,7 @@ public:
 	ScenePanel(QWidget *parent = nullptr);
 	~ScenePanel();
 
-private slots:
+public slots:
     void onBroadcastButtonClicked();
     void onAddSceneButtonClicked();
     void onAddSourceButtonClicked();
@@ -28,7 +28,8 @@ private:
     void setupSceneButtons();
     void addSceneButton(const QString &name, int row, int col);
     void selectScene(int index);
-    QString getChineseNumber(int number);
+    void updateCurrentSceneSources();
+    static void OBSFrontendEvent(enum obs_frontend_event event, void *ptr);
 
 private:
     QPushButton *m_broadcastButton;

@@ -1168,6 +1168,8 @@ private:
 
 	void AddSource(const char *id);
 	QMenu *CreateAddSourcePopupMenu();
+
+public:
 	void AddSourcePopupMenu(const QPoint &pos);
 
 private slots:
