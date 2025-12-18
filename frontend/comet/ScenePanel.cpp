@@ -7,21 +7,33 @@
 #include <obs-frontend-api.h>
 #include <obs.hpp>
 #include <widgets/OBSBasic.hpp>
+#include "common/SourceListItemWidget.hpp"
+
+#include <vector>
+
+using std::vector;
+
+namespace {
+
+// 枚举场景中的所有 scene item，用于批量删除
+static bool CollectSceneItems(obs_scene_t *, obs_sceneitem_t *item, void *param)
+{
+	auto *items = static_cast<vector<OBSSceneItem> *>(param);
+	items->emplace_back(item);
+	return true;
+}
+
+} // namespace
 
 ScenePanel::ScenePanel(QWidget *parent)
 	: PanelContainer("场景", parent)
 	, m_currentSceneIndex(0)
 {
 	initUI();
-	// 注册 OBS 前端事件回调
-	obs_frontend_add_event_callback(OBSFrontendEvent, this);
 }
 
 ScenePanel::~ScenePanel()
 {
-    // 移除 OBS 前端事件回调
-    obs_frontend_remove_event_callback(OBSFrontendEvent, this);
-    
     // 断开所有信号连接，避免在析构时触发回调
     if (m_sceneButtonGroup) {
         m_sceneButtonGroup->disconnect();
@@ -85,6 +97,7 @@ void ScenePanel::createContentWidget()
     listLayout->setSpacing(0);
 
     m_currentContentList = new QListWidget(listWidgetContainer);
+    m_currentContentList->setSpacing(2);
     listLayout->addWidget(m_currentContentList);
     contentLayout->addWidget(listWidgetContainer);
 
@@ -225,7 +238,11 @@ void ScenePanel::onAddSourceButtonClicked()
     // 调用 OBS 原生的添加源功能
     OBSBasic *main = OBSBasic::Get();
     if (main) {
+        // 显示添加源弹窗（会在用户选择/取消后返回）
         main->AddSourcePopupMenu(QCursor::pos());
+
+        // 弹窗关闭后，重新枚举当前场景的所有源，刷新列表
+        updateCurrentSceneSources();
     }
 }
 
@@ -253,7 +270,32 @@ void ScenePanel::onSceneButtonClicked(int id)
 
 void ScenePanel::onClearSourceButtonClicked()
 {
-    // TODO: 清空直播素材的逻辑
+    // 清空当前场景中的所有源
+    OBSBasic *main = OBSBasic::Get();
+    if (!main) {
+        return;
+    }
+
+    OBSScene scene = main->GetCurrentScene();
+    if (!scene) {
+        return;
+    }
+
+    vector<OBSSceneItem> items;
+    obs_scene_enum_items(scene, CollectSceneItems, &items);
+
+    // 如果没有源，直接返回
+    if (items.empty()) {
+        return;
+    }
+
+    // 依次从场景中移除所有 scene item
+    for (auto &item : items) {
+        obs_sceneitem_remove(item);
+    }
+
+    // 更新列表 UI
+    updateCurrentSceneSources();
 }
 
 void ScenePanel::updateCurrentSceneSources()
@@ -287,35 +329,19 @@ void ScenePanel::updateCurrentSceneSources()
         
         const char *sourceName = obs_source_get_name(source);
         if (sourceName) {
-            QListWidgetItem *listItem = new QListWidgetItem(QString::fromUtf8(sourceName), list);
-            list->addItem(listItem);
+            // 创建空的 QListWidgetItem，将文本交给自定义控件处理
+            QListWidgetItem *listItem = new QListWidgetItem(list);
+
+            // 创建自定义 item 控件
+            auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), list);
+
+            // 使用控件的 sizeHint 作为行高，避免上下重叠
+            listItem->setSizeHint(itemWidget->sizeHint());
+            list->setItemWidget(listItem, itemWidget);
         }
         
         return true;
     };
     
     obs_scene_enum_items(scene, enumItem, m_currentContentList);
-}
-
-void ScenePanel::OBSFrontendEvent(enum obs_frontend_event event, void *ptr)
-{
-    ScenePanel *panel = static_cast<ScenePanel *>(ptr);
-    if (!panel) {
-        return;
-    }
-    
-    switch (event) {
-    case OBS_FRONTEND_EVENT_SCENE_CHANGED:
-    case OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED:
-        // 场景改变时更新源列表
-        panel->updateCurrentSceneSources();
-        break;
-    case OBS_FRONTEND_EVENT_SCENE_LIST_CHANGED:
-        // 场景列表改变时，重新设置场景按钮并更新源列表
-        panel->setupSceneButtons();
-        panel->updateCurrentSceneSources();
-        break;
-    default:
-        break;
-    }
 }

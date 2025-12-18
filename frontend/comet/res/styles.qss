@@ -74,3 +74,25 @@ QListWidget
     font-weight: medium;
     border: none;
 }
+
+QListWidget::item
+{
+    background: transparent;
+    width: 250px;
+    min-height: 34px;
+    max-height: 34px; 
+    border: none;
+}
+QListWidget::item:hover
+{
+    background: rgba(124, 124, 164, 1);
+    border: 1px solid rgba(105, 106, 139, 1);
+    border-radius: 5px;
+}
+QListWidget::item:selected
+{
+    background: rgba(62, 62, 82, 1);
+    border: 1px solid #696A8B;
+    border-radius: 5px;
+    outline: none;
+}

@@ -11,6 +11,9 @@ class InteractPanel : public PanelContainer
 public:
     explicit InteractPanel(QWidget *parent = nullptr);
     ~InteractPanel();
+
+private:
+    void initUI();
 };
 
 #endif // INTERACTPANEL_HPP  
