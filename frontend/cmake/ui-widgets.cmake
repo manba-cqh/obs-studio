@@ -72,6 +72,12 @@ target_sources(
     comet/ScenePanel.hpp
     comet/InteractPanel.cpp
     comet/InteractPanel.hpp
+    comet/PreviewHeader.cpp
+    comet/PreviewHeader.hpp
+    comet/AudioMixPanel.cpp
+    comet/AudioMixPanel.hpp
     comet/common/PanelContainer.cpp
     comet/common/PanelContainer.hpp
+    comet/common/SourceListItemWidget.cpp
+    comet/common/SourceListItemWidget.hpp
 )

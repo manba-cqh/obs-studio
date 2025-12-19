@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-#include "common/PanelContainer.hpp"
+#include "PanelContainer.hpp"
 
 class InteractPanel : public PanelContainer
 {

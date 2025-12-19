@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/PanelContainer.hpp"
+#include "PanelContainer.hpp"
 #include <QGridLayout>
 #include <QListWidget>
 #include <QPushButton>

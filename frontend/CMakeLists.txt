@@ -26,6 +26,10 @@ if(NOT TARGET OBS::bpm)
   add_subdirectory("${CMAKE_SOURCE_DIR}/shared/bpm" bpm)
 endif()
 
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet/common")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet/tools")
+
 add_executable(obs-studio)
 add_executable(OBS::studio ALIAS obs-studio)
 

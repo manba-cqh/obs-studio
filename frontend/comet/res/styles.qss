@@ -17,6 +17,13 @@ QLabel[label_16_bold=true]
     font-weight: bold;
 }
 
+QLabel[label_15_medium=true]
+{
+    color: #FFFFFFFF;
+    font-size: 15px;
+    font-weight: medium;
+}
+
 QLabel[label_12_medium=true]
 {
     color: #FFFFFFFF;
@@ -24,23 +31,6 @@ QLabel[label_12_medium=true]
     font-weight: medium;
 }
 
-
-QPushButton[transparent_btn=true]
-{
-    background: transparent;
-    color: #FFFFFFFF;
-    font-weight: medium;
-    border: none;
-    text-align: center;
-}
-QPushButton[transparent_btn=true]:hover
-{
-    background: transparent;
-    color: #FFFFFFFF;
-    font-weight: medium;
-    border: none;
-    text-align: center;
-}
 
 QPushButton[scene_btn=true]
 {

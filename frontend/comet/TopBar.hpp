@@ -10,11 +10,18 @@ class TopBar : public QWidget
 signals:
 	void sigMinimize();
 	void sigMaximize();
+	void sigRestore();
 	void sigClose();
 
 public:
 	TopBar(QWidget *parent = nullptr);
 	~TopBar();
+
+	// 更新最大化按钮状态（根据窗口是否最大化）
+	void updateMaximizeButton(bool isMaximized);
+
+protected:
+	virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
 	void initUI();

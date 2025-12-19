@@ -4,10 +4,11 @@
 #include <QFontMetrics>
 #include <QCursor>
 
+#include "tools.hpp"
 #include <obs-frontend-api.h>
 #include <obs.hpp>
 #include <widgets/OBSBasic.hpp>
-#include "common/SourceListItemWidget.hpp"
+#include "SourceListItemWidget.hpp"
 
 #include <vector>
 
@@ -54,8 +55,7 @@ void ScenePanel::createHeaderOperWidget()
     m_broadcastButton = new QPushButton();
     m_broadcastButton->setFixedSize(56, 24);
     m_broadcastButton->setText("导播");
-    m_broadcastButton->setProperty("transparent_btn", true);
-    m_broadcastButton->setStyleSheet("QPushButton { font-size: 12px; }");
+    m_broadcastButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(12));
     // TODO 设置导播按钮图标
     connect(m_broadcastButton, &QPushButton::clicked, this, &ScenePanel::onBroadcastButtonClicked);
     setHeaderOperWidget(m_broadcastButton);
@@ -80,8 +80,9 @@ void ScenePanel::createContentWidget()
         int id = m_sceneButtonGroup->id(button);
         onSceneButtonClicked(id);
     });
-    m_addSceneButton = new QPushButton("+");
+    m_addSceneButton = new QPushButton(this);
     m_addSceneButton->setFixedSize(24, 24);
+    m_addSceneButton->setStyleSheet(BUTTON_QSS_STYLE("add.svg", "add_hover.svg", "add_hover.svg"));
     connect(m_addSceneButton, &QPushButton::clicked, this, &ScenePanel::onAddSceneButtonClicked);
     contentLayout->addWidget(sceneButtonsWidget);
 
@@ -111,15 +112,13 @@ void ScenePanel::createContentWidget()
     addSourceButtonLayout->setContentsMargins(10, 0, 10, 0);
     addSourceButtonLayout->setSpacing(0);
     m_addSourceButton = new QPushButton("添加直播素材", contentWidget);
-    m_addSourceButton->setProperty("transparent_btn", true);
-    m_addSourceButton->setStyleSheet("QPushButton { font-size: 14px;  }");
+    m_addSourceButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(14));
     m_addSourceButton->setFixedSize(120, 24);
     connect(m_addSourceButton, &QPushButton::clicked, this, &ScenePanel::onAddSourceButtonClicked);
     addSourceButtonLayout->addWidget(m_addSourceButton);
     addSourceButtonLayout->addStretch();
     m_clearSourceButton = new QPushButton("清空", contentWidget);
-    m_clearSourceButton->setProperty("transparent_btn", true);
-    m_clearSourceButton->setStyleSheet("QPushButton { font-size: 14px; }");
+    m_clearSourceButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(14));
     m_clearSourceButton->setFixedSize(42, 24);
     connect(m_clearSourceButton, &QPushButton::clicked, this, &ScenePanel::onClearSourceButtonClicked);
     addSourceButtonLayout->addWidget(m_clearSourceButton);

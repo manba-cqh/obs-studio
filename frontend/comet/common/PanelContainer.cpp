@@ -1,6 +1,8 @@
 #include <QPainter>
 #include <QStyleOption>
+#include <QLabel>
 
+#include "tools.hpp"
 #include "PanelContainer.hpp"
 
 PanelContainer::PanelContainer(const QString &title, QWidget *parent)
@@ -38,29 +40,33 @@ void PanelContainer::createHeader()
 
 	m_headerLayout = new QHBoxLayout(headerWidget);
 	m_headerLayout->setContentsMargins(0, 0, 0, 0);
-	m_headerLayout->setSpacing(8);
+	m_headerLayout->setSpacing(0);
 
 	// 折叠按钮
 	m_collapseButton = new QPushButton(headerWidget);
-	m_collapseButton->setFixedSize(62, 24);
-	m_collapseButton->setProperty("transparent_btn", true);
-	m_collapseButton->setIcon(QIcon(":/images/down.png"));
-	m_collapseButton->setStyleSheet("QPushButton { font-size: 15px; }");
-	m_collapseButton->setText(m_title);
-	// TODO 设置折叠按钮样式
+	m_collapseButton->setFixedSize(24, 24);
+	m_collapseButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("drop_down.svg", "drop_down_hover.svg", "drop_down_hover.svg", "drop_up.svg", "drop_up_hover.svg", "drop_up_hover.svg"));
 	connect(m_collapseButton, &QPushButton::clicked, this, &PanelContainer::onCollapseButtonClicked);
 	m_headerLayout->addWidget(m_collapseButton);
+	m_headerLayout->addSpacing(4);
+
+	QLabel *titleLabel = new QLabel(headerWidget);
+	titleLabel->setText(m_title);
+	titleLabel->setProperty("label_15_medium", true);
+	m_headerLayout->addWidget(titleLabel);
 
 	m_headerLayout->addStretch();
 
+	m_headerLayout->addSpacing(8);
 	QWidget *separator = new QWidget(headerWidget);
 	separator->setFixedSize(1, 10);
 	separator->setStyleSheet("background-color: rgba(255, 255, 255, 125);");
 	m_headerLayout->addWidget(separator);
+	m_headerLayout->addSpacing(8);
 
 	QPushButton *FloatingButton = new QPushButton(headerWidget);
 	FloatingButton->setFixedSize(24, 24);
-	// TODO 设置浮动按钮样式
+	FloatingButton->setStyleSheet(BUTTON_QSS_STYLE("float.svg", "float_hover.svg", "float_hover.svg"));
 	connect(FloatingButton, &QPushButton::clicked, this, &PanelContainer::onFloatingButtonClicked);
 	m_headerLayout->addWidget(FloatingButton);
 
@@ -70,7 +76,7 @@ void PanelContainer::createHeader()
 void PanelContainer::setHeaderOperWidget(QWidget *widget)
 {
 	if (m_headerLayout) {
-		m_headerLayout->insertWidget(2, widget);
+		m_headerLayout->insertWidget(4, widget);
 	}
 }
 

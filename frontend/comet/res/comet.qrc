@@ -2,9 +2,20 @@
   <qresource prefix="">
     <file>styles.qss</file>
 
-    <file>images/down.png</file>
-    <file>images/up.png</file>
-    <file>images/minimize.png</file>
-    <file>images/maximize.png</file>
+    <file>images/logo.svg</file>
+    <file>images/close.svg</file>
+    <file>images/close_hover.svg</file>
+    <file>images/minimize.svg</file>
+    <file>images/minimize_hover.svg</file>
+    <file>images/maximize_hover.svg</file>
+    <file>images/maximize.svg</file>
+    <file>images/restore.svg</file>
+    <file>images/restore_hover.svg</file>
+    <file>images/add.svg</file>
+    <file>images/add_hover.svg</file>
+    <file>images/drop_down.svg</file>
+    <file>images/drop_down_hover.svg</file>
+    <file>images/float.svg</file>
+    <file>images/float_hover.svg</file>
   </qresource>
 </RCC>

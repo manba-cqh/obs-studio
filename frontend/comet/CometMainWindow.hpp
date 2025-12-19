@@ -8,6 +8,8 @@
 class TopBar;
 class ScenePanel;
 class InteractPanel;
+class PreviewHeader;
+class AudioMixPanel;
 
 class CometMainWindow : public QWidget
 {
@@ -16,6 +18,10 @@ class CometMainWindow : public QWidget
 public:
 	CometMainWindow(QWidget *parent = nullptr);
 	~CometMainWindow();
+
+protected:
+	virtual void resizeEvent(QResizeEvent *event) override;
+	virtual void changeEvent(QEvent *event) override;
 
 private:
 	void initUI();
@@ -34,6 +40,10 @@ private:
 	// 互动玩法面板
 	InteractPanel *m_interactPanel;
 
+	// 预览头部
+	PreviewHeader *m_previewHeader;
 	// 预览控件
 	OBSQTDisplay *m_previewWidget;
+	// 混音器面板
+	AudioMixPanel *m_audioMixPanel;
 };
