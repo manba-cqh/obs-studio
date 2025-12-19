@@ -54,9 +54,12 @@ void ScenePanel::createHeaderOperWidget()
 {
     m_broadcastButton = new QPushButton();
     m_broadcastButton->setFixedSize(56, 24);
-    m_broadcastButton->setText("导播");
-    m_broadcastButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(12));
-    // TODO 设置导播按钮图标
+    m_broadcastButton->setCheckable(true);
+    m_broadcastButton->setChecked(false);
+    m_broadcastButton->setStyleSheet(QString("QPushButton { border-image: url(:/images/director.svg); }" \
+        "QPushButton:hover { border-image: url(:/images/director_hover.svg); }" \
+        "QPushButton:checked { border-image: url(:/images/director_hover.svg); }") \
+    );
     connect(m_broadcastButton, &QPushButton::clicked, this, &ScenePanel::onBroadcastButtonClicked);
     setHeaderOperWidget(m_broadcastButton);
 }
@@ -114,6 +117,7 @@ void ScenePanel::createContentWidget()
     m_addSourceButton = new QPushButton("添加直播素材", contentWidget);
     m_addSourceButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(14));
     m_addSourceButton->setFixedSize(120, 24);
+    m_addSourceButton->setIcon(QIcon(":/images/add.svg"));
     connect(m_addSourceButton, &QPushButton::clicked, this, &ScenePanel::onAddSourceButtonClicked);
     addSourceButtonLayout->addWidget(m_addSourceButton);
     addSourceButtonLayout->addStretch();
@@ -269,6 +273,13 @@ void ScenePanel::onSceneButtonClicked(int id)
 
 void ScenePanel::onClearSourceButtonClicked()
 {
+    // 弹窗确认
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "确认清空", "确定要清空当前场景中的所有直播素材吗？",
+                                  QMessageBox::Yes | QMessageBox::No);
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
     // 清空当前场景中的所有源
     OBSBasic *main = OBSBasic::Get();
     if (!main) {

@@ -15,7 +15,11 @@
     <file>images/add_hover.svg</file>
     <file>images/drop_down.svg</file>
     <file>images/drop_down_hover.svg</file>
+    <file>images/drop_down_expanded.png</file>
+    <file>images/drop_down_expanded_hover.png</file>
     <file>images/float.svg</file>
     <file>images/float_hover.svg</file>
+    <file>images/director.svg</file>
+    <file>images/director_hover.svg</file>
   </qresource>
 </RCC>

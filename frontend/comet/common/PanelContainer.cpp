@@ -45,7 +45,9 @@ void PanelContainer::createHeader()
 	// 折叠按钮
 	m_collapseButton = new QPushButton(headerWidget);
 	m_collapseButton->setFixedSize(24, 24);
-	m_collapseButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("drop_down.svg", "drop_down_hover.svg", "drop_down_hover.svg", "drop_up.svg", "drop_up_hover.svg", "drop_up_hover.svg"));
+	m_collapseButton->setCheckable(true);
+	m_collapseButton->setChecked(false);
+	m_collapseButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("drop_down.svg", "drop_down_hover.svg", "drop_down_hover.svg", "drop_down_expanded.png", "drop_down_expanded_hover.png", "drop_down_expanded_hover.png"));
 	connect(m_collapseButton, &QPushButton::clicked, this, &PanelContainer::onCollapseButtonClicked);
 	m_headerLayout->addWidget(m_collapseButton);
 	m_headerLayout->addSpacing(4);
@@ -85,6 +87,7 @@ void PanelContainer::setContentWidget(QWidget *widget)
 	m_contentWidget = widget;
 	if (m_contentWidget) {
 		m_mainLayout->addWidget(m_contentWidget);
+		m_mainLayout->addStretch();
 	}
 }
 
