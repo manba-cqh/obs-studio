@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QPixmap>
+#include <QString>
+
 #define BUTTON_QSS_STYLE(normal_icon, hover_icon, pressed_icon) \
     QString("QPushButton { border-image: url(:/images/%1); }" \
             "QPushButton:hover { border-image: url(:/images/%2); }" \

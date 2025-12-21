@@ -234,6 +234,44 @@ void OBSBasic::ResizePreview(uint32_t cx, uint32_t cy)
 	previewY += float(PREVIEW_EDGE_SIZE);
 }
 
+void OBSBasic::ResizePreviewForWidget(uint32_t cx, uint32_t cy, OBSBasicPreview *previewWidget)
+{
+	QSize targetSize;
+	bool isFixedScaling;
+	obs_video_info ovi;
+
+	/* resize preview panel using the provided preview widget size */
+	targetSize = GetPixelSize(previewWidget);
+
+	isFixedScaling = previewWidget->IsFixedScaling();
+	obs_get_video_info(&ovi);
+
+	if (isFixedScaling) {
+		previewScale = previewWidget->GetScalingAmount();
+
+		previewWidget->ClampScrollingOffsets();
+
+		// 计算居中位置，但不添加额外的边距
+		GetCenterPosFromFixedScale(int(cx), int(cy), targetSize.width(),
+					   targetSize.height(), previewX, previewY,
+					   previewScale);
+		previewX += previewWidget->GetScrollX();
+		previewY += previewWidget->GetScrollY();
+
+	} else {
+		// 计算缩放比例和居中位置，确保内容完整显示（保持宽高比，使用较小的比例）
+		GetScaleAndCenterPos(int(cx), int(cy), targetSize.width(),
+				     targetSize.height(), previewX, previewY, previewScale);
+		// 不添加额外的边距，GetScaleAndCenterPos 已经计算了居中位置
+	}
+
+	previewWidget->SetScalingAmount(previewScale);
+
+	// 设置预览尺寸为缩放后的画布大小
+	previewCX = int(previewScale * float(cx));
+	previewCY = int(previewScale * float(cy));
+}
+
 void OBSBasic::on_preview_customContextMenuRequested()
 {
 	CreateSourcePopupMenu(GetTopSelectedSourceItem(), true);

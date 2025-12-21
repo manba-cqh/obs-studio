@@ -4,6 +4,8 @@
 #include <QLabel>
 #include <QPushButton>
 
+class QMouseEvent;
+
 class TopBar : public QWidget
 {
 	Q_OBJECT
@@ -21,10 +23,14 @@ public:
 	void updateMaximizeButton(bool isMaximized);
 
 protected:
+	virtual void mousePressEvent(QMouseEvent *event) override;
+	virtual void mouseMoveEvent(QMouseEvent *event) override;
+	virtual void mouseReleaseEvent(QMouseEvent *event) override;
 	virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
 	void initUI();
+	bool isPointInButton(const QPoint &pos) const;
 
 private:
 	QLabel *m_logoLabel;
@@ -35,5 +41,10 @@ private:
 	QPushButton *m_minimizeButton;
 	QPushButton *m_maximizeButton;
 	QPushButton *m_closeButton;
+
+	bool m_isDragging;
+	QPoint m_dragStartPosition;
+	QPoint m_windowStartPosition;
+	QPoint m_relativeDragPosition;
 };
 

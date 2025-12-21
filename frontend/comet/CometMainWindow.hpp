@@ -3,7 +3,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include <widgets/OBSQTDisplay.hpp>
+#include <widgets/OBSBasicPreview.hpp>
+#include <widgets/OBSBasic.hpp>
 
 class TopBar;
 class ScenePanel;
@@ -22,6 +23,10 @@ public:
 protected:
 	virtual void resizeEvent(QResizeEvent *event) override;
 	virtual void changeEvent(QEvent *event) override;
+
+private slots:
+	void onPreviewContextMenuRequested();
+	void onPreviewResized();
 
 private:
 	void initUI();
@@ -43,7 +48,7 @@ private:
 	// 预览头部
 	PreviewHeader *m_previewHeader;
 	// 预览控件
-	OBSQTDisplay *m_previewWidget;
+	OBSBasicPreview *m_previewWidget;
 	// 混音器面板
 	AudioMixPanel *m_audioMixPanel;
 };

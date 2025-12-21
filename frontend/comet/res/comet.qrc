@@ -21,5 +21,12 @@
     <file>images/float_hover.svg</file>
     <file>images/director.svg</file>
     <file>images/director_hover.svg</file>
+
+    <file>images/monitor_capture.svg</file>
+    <file>images/display_capture.svg</file>
+    <file>images/window_capture.svg</file>
+    <file>images/game_capture.svg</file>
+    <file>images/dshow_input.svg</file>
+    <file>images/browser_source.svg</file>
   </qresource>
 </RCC>

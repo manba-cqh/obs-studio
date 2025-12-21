@@ -9,6 +9,9 @@
 #include <obs.hpp>
 #include <widgets/OBSBasic.hpp>
 #include "SourceListItemWidget.hpp"
+#include <dialogs/NameDialog.hpp>
+#include <qt-wrappers.hpp>
+#include <string>
 
 #include <vector>
 
@@ -138,6 +141,7 @@ void ScenePanel::setupSceneButtons()
     obs_frontend_get_scenes(&scenes);
 
     // 为每个场景创建按钮
+    // 注意：不要手动调用 obs_source_release，应该由 obs_frontend_source_list_free 统一管理
     int sceneCount = (int)scenes.sources.num;
     for (int i = 0; i < sceneCount; i++) {
         obs_source_t *source = scenes.sources.array[i];
@@ -146,8 +150,6 @@ void ScenePanel::setupSceneButtons()
         int row = i / 3;
         int col = i % 3;
         addSceneButton(QString::fromUtf8(sceneName), row, col);
-        
-        obs_source_release(source);
     }
 
     // 释放场景列表
@@ -209,31 +211,63 @@ void ScenePanel::onBroadcastButtonClicked()
 
 void ScenePanel::onAddSceneButtonClicked()
 {
-    // 计算新场景的位置
-    int totalButtons = m_sceneButtons.size();
-    int row = totalButtons / 3;
-    int col = totalButtons % 3;
-    
-    // 如果当前行已满，移动到下一行
-    if (col == 0 && row > 0) {
-        // 需要移动"+"按钮
-        m_sceneGridLayout->removeWidget(m_addSceneButton);
-        row++;
-        col = 0;
+    OBSBasic *main = OBSBasic::Get();
+    if (!main) {
+        return;
     }
     
-    // 添加新场景按钮
-    QString sceneName = QString("场景%1").arg(totalButtons + 1);
-    addSceneButton(sceneName, row, col);
+    // 生成默认场景名称
+    std::string name;
+    QString format{QTStr("Basic.Main.DefaultSceneName.Text")};
     
-    // 移动"+"按钮到下一个位置
-    m_sceneGridLayout->removeWidget(m_addSceneButton);
-    int nextRow = (totalButtons + 1) / 3;
-    int nextCol = (totalButtons + 1) % 3;
-    m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
+    int i = 2;
+    QString placeHolderText = format.arg(i);
+    OBSSourceAutoRelease source = nullptr;
+    while ((source = obs_get_source_by_name(QT_TO_UTF8(placeHolderText)))) {
+        placeHolderText = format.arg(++i);
+    }
     
-    // 选中新添加的场景
-    selectScene(totalButtons);
+    // 显示名称输入对话框
+    bool accepted = NameDialog::AskForName(this, QTStr("Basic.Main.AddSceneDlg.Title"),
+                                           QTStr("Basic.Main.AddSceneDlg.Text"), name, placeHolderText);
+    
+    if (accepted) {
+        if (name.empty()) {
+            QMessageBox::warning(this, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
+            return;
+        }
+        
+        // 检查名称是否已存在
+        OBSSourceAutoRelease existing = obs_get_source_by_name(name.c_str());
+        if (existing) {
+            QMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
+            return;
+        }
+        
+        // 创建场景
+        OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
+        if (scene) {
+            obs_source_t *scene_source = obs_scene_get_source(scene);
+            
+            // 添加新场景按钮到 UI
+            int totalButtons = m_sceneButtons.size();
+            int row = totalButtons / 3;
+            int col = totalButtons % 3;
+            addSceneButton(QString::fromUtf8(name.c_str()), row, col);
+            
+            // 移动"+"按钮到下一个位置
+            m_sceneGridLayout->removeWidget(m_addSceneButton);
+            int nextRow = (totalButtons + 1) / 3;
+            int nextCol = (totalButtons + 1) % 3;
+            m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
+            
+            // 设置当前场景，这会触发 AddScene 回调并更新 OBS 的内部状态
+            main->SetCurrentScene(scene_source);
+            
+            // 选中新添加的场景
+            selectScene(totalButtons);
+        }
+    }
 }
 
 void ScenePanel::onAddSourceButtonClicked()
@@ -260,10 +294,12 @@ void ScenePanel::onSceneButtonClicked(int id)
         
         if (id < (int)scenes.sources.num) {
             obs_source_t *source = scenes.sources.array[id];
+            // 注意：不要手动调用 obs_source_release，应该由 obs_frontend_source_list_free 统一管理
+            // obs_frontend_set_current_scene 内部会处理源的引用
             obs_frontend_set_current_scene(source);
-            obs_source_release(source);
         }
         
+        // 统一释放场景列表中的所有源引用
         obs_frontend_source_list_free(&scenes);
     }
     
@@ -339,11 +375,14 @@ void ScenePanel::updateCurrentSceneSources()
         
         const char *sourceName = obs_source_get_name(source);
         if (sourceName) {
+            // 获取 source ID
+            const char *sourceId = obs_source_get_id(source);
+            
             // 创建空的 QListWidgetItem，将文本交给自定义控件处理
             QListWidgetItem *listItem = new QListWidgetItem(list);
 
-            // 创建自定义 item 控件
-            auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), list);
+            // 创建自定义 item 控件，传递 sceneitem 和 source ID
+            auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), item, sourceId, list);
 
             // 使用控件的 sizeHint 作为行高，避免上下重叠
             listItem->setSizeHint(itemWidget->sizeHint());

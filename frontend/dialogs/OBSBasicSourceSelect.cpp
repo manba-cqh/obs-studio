@@ -18,6 +18,7 @@
 #include "OBSBasicSourceSelect.hpp"
 
 #include <qt-wrappers.hpp>
+#include <cstring>
 
 #include "moc_OBSBasicSourceSelect.cpp"
 
@@ -223,6 +224,31 @@ bool AddNew(QWidget *parent, const char *id, const char *name, const bool visibl
 			uint32_t flags = obs_source_get_output_flags(source);
 			if ((flags & OBS_SOURCE_MONITOR_BY_DEFAULT) != 0) {
 				obs_source_set_monitoring_type(source, OBS_MONITORING_TYPE_MONITOR_ONLY);
+			}
+
+			/* set default transform: fit to screen for video sources */
+			if (data.scene_item) {
+				uint32_t sourceFlags = obs_source_get_output_flags(source);
+				bool hasVideo = (sourceFlags & OBS_SOURCE_VIDEO) != 0;
+				
+				// 排除场景和分组
+				const char *sourceId = obs_source_get_id(source);
+				bool isScene = strcmp(sourceId, "scene") == 0;
+				bool isGroup = strcmp(sourceId, "group") == 0;
+				
+				// 如果是视频源，设置为比例适配屏幕
+				if (hasVideo && !isScene && !isGroup) {
+					obs_video_info ovi;
+					if (obs_get_video_info(&ovi)) {
+						struct vec2 bounds;
+						bounds.x = (float)ovi.base_width;
+						bounds.y = (float)ovi.base_height;
+						
+						obs_sceneitem_set_bounds_type(data.scene_item, OBS_BOUNDS_SCALE_INNER);
+						obs_sceneitem_set_bounds_alignment(data.scene_item, OBS_ALIGN_CENTER);
+						obs_sceneitem_set_bounds(data.scene_item, &bounds);
+					}
+				}
 			}
 
 			success = true;

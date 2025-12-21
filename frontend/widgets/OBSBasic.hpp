@@ -254,7 +254,7 @@ class OBSBasic : public OBSMainWindow {
 	 * MARK: - General
 	 * -------------------------------------
 	 */
-private:
+public:
 	obs_frontend_callbacks *api = nullptr;
 	std::vector<OBSSignal> signalHandlers;
 
@@ -336,7 +336,7 @@ protected:
 	 * MARK: - OAuth
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::shared_ptr<Auth> auth;
 
 public:
@@ -346,7 +346,7 @@ public:
 	 * MARK: - OBSBasic_Browser
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QWidget> extraBrowsers;
 
 #ifdef BROWSER_AVAILABLE
@@ -370,7 +370,7 @@ public:
 	 * MARK: - OBSBasic_Clipboard
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::deque<SourceCopyInfo> clipboard;
 	OBSWeakSourceAutoRelease copyFiltersSource;
 	obs_transform_info copiedTransformInfo;
@@ -379,7 +379,7 @@ private:
 	int copySourceTransitionDuration;
 	OBSWeakSourceAutoRelease copySourceTransition;
 
-private slots:
+public slots:
 	void on_actionCopySource_triggered();
 	void on_actionPasteRef_triggered();
 	void on_actionPasteDup_triggered();
@@ -405,14 +405,14 @@ public:
 	 * MARK: - OBSBasic_ContextToolbar
 	 * -------------------------------------
 	 */
-private:
+public:
 	ContextBarSize contextBarSize = ContextBarSize_Normal;
 
 	void SourceToolBarActionsSetEnabled();
 
 	void copyActionsDynamicProperties();
 
-private slots:
+public slots:
 	void on_toggleContextBar_toggled(bool visible);
 
 public slots:
@@ -428,7 +428,7 @@ public slots:
 	 * MARK: - OBSBasic_Docks
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QDockWidget> statsDock;
 	QByteArray startingDockLayout;
 	QStringList extraDockNames;
@@ -445,7 +445,7 @@ public:
 	bool IsDockObjectNameUsed(const QString &name);
 	void AddCustomDockWidget(QDockWidget *dock);
 
-private slots:
+public slots:
 	void on_resetDocks_triggered(bool force = false);
 	void on_lockDocks_toggled(bool lock);
 	void on_sideDocks_toggled(bool side);
@@ -456,7 +456,7 @@ private slots:
 	 * MARK: - OBSBasic_Dropfiles
 	 * -------------------------------------
 	 */
-private:
+public:
 	void AddDropSource(const char *file, DropType image);
 	void AddDropURL(const char *url, QString &name, obs_data_t *settings, const obs_video_info &ovi);
 	void ConfirmDropUrl(const QString &url);
@@ -469,7 +469,7 @@ private:
 	 * MARK: - OBSBasic_Hotkeys
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QObject> shortcutFilter;
 	obs_hotkey_id statsHotkey = 0;
 	obs_hotkey_id screenshotHotkey = 0;
@@ -485,7 +485,7 @@ private:
 
 	static void HotkeyTriggered(void *data, obs_hotkey_id id, bool pressed);
 
-private slots:
+public slots:
 	void ProcessHotkey(obs_hotkey_id id, bool pressed);
 	void ResetStatsHotkey();
 
@@ -493,7 +493,7 @@ private slots:
 	 * MARK: - OBSBasic_Icons
 	 * -------------------------------------
 	 */
-private:
+public:
 	QIcon imageIcon;
 	QIcon colorIcon;
 	QIcon slideshowIcon;
@@ -526,7 +526,7 @@ private:
 	QIcon GetDefaultIcon() const;
 	QIcon GetAudioProcessOutputIcon() const;
 
-private slots:
+public slots:
 	void SetImageIcon(const QIcon &icon);
 	void SetColorIcon(const QIcon &icon);
 	void SetSlideshowIcon(const QIcon &icon);
@@ -553,7 +553,7 @@ public:
 	 * MARK: - OBSBasic_MainControls
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<OBSBasicInteraction> interaction;
 	QPointer<OBSBasicProperties> properties;
 	QPointer<OBSBasicTransform> transformWindow;
@@ -585,7 +585,7 @@ private:
 	void CloseDialogs();
 	void EnumDialogs();
 
-private slots:
+public slots:
 	void on_actionMainUndo_triggered();
 	void on_actionMainRedo_triggered();
 	void ToggleAlwaysOnTop();
@@ -652,14 +652,14 @@ public:
 	 * MARK: - OBSBasic_MainMenu
 	 * -------------------------------------
 	 */
-private:
+public:
 	void setupMenuItemStateHandlers();
 
 	/* -------------------------------------
 	 * MARK: - OBSBasic_OutputHandler
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::unique_ptr<BasicOutputHandler> outputHandler;
 	std::optional<std::pair<uint32_t, uint32_t>> lastOutputResolution;
 
@@ -759,17 +759,17 @@ public:
 
 	const char *GetCurrentOutputPath();
 
-private slots:
+public slots:
 	void ResizeOutputSizeOfSource();
 
-private slots:
+public slots:
 	void on_actionOpenPluginManager_triggered();
 
 	/* -------------------------------------
 	 * MARK: - OBSBasic_Preview
 	 * -------------------------------------
 	 */
-private:
+public:
 	bool previewEnabled = true;
 	QPointer<QTimer> nudge_timer;
 	bool recent_nudge = false;
@@ -827,8 +827,9 @@ private:
 	static void RenderMain(void *data, uint32_t cx, uint32_t cy);
 
 	void ResizePreview(uint32_t cx, uint32_t cy);
+	void ResizePreviewForWidget(uint32_t cx, uint32_t cy, OBSBasicPreview *previewWidget);
 
-private slots:
+public slots:
 	void PreviewScalingModeChanged(int value);
 
 	void ColorChange();
@@ -874,7 +875,7 @@ signals:
 	 * MARK: - OBSBasic_Profiles
 	 * -------------------------------------
 	 */
-private:
+public:
 	OBSProfileCache profiles{};
 
 	void SetupNewProfile(const std::string &profileName, bool useWizard = false);
@@ -904,7 +905,7 @@ public:
 	std::optional<OBSProfile> GetProfileByName(const std::string &profileName) const;
 	std::optional<OBSProfile> GetProfileByDirectoryName(const std::string &directoryName) const;
 
-private slots:
+public slots:
 	void on_actionNewProfile_triggered();
 	void on_actionDupProfile_triggered();
 	void on_actionRenameProfile_triggered();
@@ -921,7 +922,7 @@ public slots:
 	 * MARK: - OBSBasic_Projectors
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::vector<OBSProjector *> projectors;
 	QPointer<QMenu> previewProjector;
 	QPointer<QMenu> previewProjectorSource;
@@ -934,7 +935,7 @@ private:
 	obs_data_array_t *SaveProjectors();
 	void LoadSavedProjectors(obs_data_array_t *savedProjectors);
 
-private slots:
+public slots:
 	void OpenSavedProjector(SavedProjectorInfo *info);
 
 	void OpenPreviewProjector();
@@ -966,7 +967,7 @@ public:
 	 * MARK: - OBSBasic_Recording
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QTimer> diskFullTimer;
 	bool recordingStopping = false;
 	bool recordingStarted = false;
@@ -979,7 +980,7 @@ private:
 	bool LowDiskSpace();
 	void DiskSpaceMessage();
 
-private slots:
+public slots:
 	void on_actionShow_Recordings_triggered();
 
 	/* Record action (start/stop) slot */
@@ -1016,7 +1017,7 @@ signals:
 	 * MARK: - OBSBasic_ReplayBuffer
 	 * -------------------------------------
 	 */
-private:
+public:
 	bool replayBufferStopping = false;
 	std::string lastReplay;
 
@@ -1033,7 +1034,7 @@ public slots:
 
 	bool ReplayBufferActive();
 
-private slots:
+public slots:
 	/* Replay Buffer action (start/stop) slot */
 	void ReplayBufferActionTriggered();
 
@@ -1048,7 +1049,7 @@ signals:
 	 * MARK: - OBSBasic_SceneCollections
 	 * -------------------------------------
 	 */
-private:
+public:
 	OBSDataAutoRelease collectionModuleData;
 	long disableSaving = 1;
 	bool projectChanged = false;
@@ -1094,7 +1095,7 @@ public slots:
 
 	bool CreateNewSceneCollection(const QString &name);
 
-private slots:
+public slots:
 	void on_actionShowMissingFiles_triggered();
 
 	void on_actionNewSceneCollection_triggered();
@@ -1119,7 +1120,7 @@ public:
 	 * MARK: - OBSBasic_Canvases
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::vector<OBS::Canvas> canvases;
 
 	static void CanvasRemoved(void *data, calldata_t *params);
@@ -1136,7 +1137,7 @@ public slots:
 	 * MARK: - OBSBasic_SceneItems
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QMenu> sourceProjector;
 	QPointer<QAction> renameSource;
 
@@ -1172,7 +1173,7 @@ private:
 public:
 	void AddSourcePopupMenu(const QPoint &pos);
 
-private slots:
+public slots:
 	void RenameSources(OBSSource source, QString newName, QString prevName);
 
 	void ActivateAudioSource(OBSSource source);
@@ -1245,7 +1246,7 @@ public:
 	 * MARK: - OBSBasic_Scenes
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QMenu> sceneProjectorMenu;
 	QPointer<QAction> renameScene;
 	std::atomic<obs_scene_t *> currentScene = nullptr;
@@ -1266,7 +1267,7 @@ private:
 public slots:
 	void on_actionResetTransform_triggered();
 
-private slots:
+public slots:
 	void AddSceneItem(OBSSceneItem item);
 	void AddScene(OBSSource source);
 	void RemoveScene(OBSSource source);
@@ -1321,11 +1322,11 @@ public:
 	 * MARK: - OBSBasic_Screenshots
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QObject> screenshotData;
 	std::string lastScreenshot;
 
-private slots:
+public slots:
 	void Screenshot(OBSSource source_ = nullptr);
 	void ScreenshotSelectedSource();
 	void ScreenshotProgram();
@@ -1335,7 +1336,7 @@ private slots:
 	 * MARK: - OBSBasic_Service
 	 * -------------------------------------
 	 */
-private:
+public:
 	OBSService service;
 
 	bool InitService();
@@ -1351,7 +1352,7 @@ public:
 	 * MARK: - OBSBasic_StatusBar
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QTimer> cpuUsageTimer;
 	os_cpu_usage_info_t *cpuUsageInfo = nullptr;
 
@@ -1363,7 +1364,7 @@ public:
 	 * MARK: - OBSBasic_Streaming
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::shared_future<void> setupStreamingGuard;
 	bool streamingStopping = false;
 	bool streamingStarting = false;
@@ -1383,7 +1384,7 @@ public slots:
 
 	bool StreamingActive();
 
-private slots:
+public slots:
 	/* Stream action (start/stop) slot */
 	void StreamActionTriggered();
 
@@ -1399,7 +1400,7 @@ signals:
 	 * MARK: - OBSBasic_StudioMode
 	 * -------------------------------------
 	 */
-private:
+public:
 	QPointer<QMenu> studioProgramProjector;
 	QPointer<QWidget> programWidget;
 	QPointer<QVBoxLayout> programLayout;
@@ -1428,7 +1429,7 @@ private:
 
 	void UpdatePreviewProgramIndicators();
 
-private slots:
+public slots:
 	void EnablePreviewProgram();
 	void DisablePreviewProgram();
 
@@ -1453,7 +1454,7 @@ signals:
 	 * MARK: - OBSBasic_SysTray
 	 * -------------------------------------
 	 */
-private:
+public:
 	QScopedPointer<QSystemTrayIcon> trayIcon;
 	QPointer<QAction> sysTrayStream;
 	QPointer<QAction> sysTrayRecord;
@@ -1464,7 +1465,7 @@ private:
 	bool sysTrayMinimizeToTray();
 	void updateSysTrayProjectorMenu();
 
-private slots:
+public slots:
 	void IconActivated(QSystemTrayIcon::ActivationReason reason);
 
 public:
@@ -1477,7 +1478,7 @@ public:
 	 * MARK: - OBSBasic_Transitions
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::vector<OBSDataAutoRelease> safeModeTransitions;
 	QPointer<QPushButton> transitionButton;
 	QPointer<QMenu> perSceneTransitionMenu;
@@ -1557,7 +1558,7 @@ public slots:
 
 	void SetTransitionDuration(int duration);
 
-private slots:
+public slots:
 	void AddTransition(const char *id);
 	void RenameTransition(OBSSource transition);
 
@@ -1594,7 +1595,7 @@ public:
 	 * MARK: - OBSBasic_Updater
 	 * -------------------------------------
 	 */
-private:
+public:
 	QScopedPointer<QThread> whatsNewInitThread;
 	QScopedPointer<QThread> updateCheckThread;
 	QScopedPointer<QThread> introCheckThread;
@@ -1610,7 +1611,7 @@ private:
 	 * MARK: - OBSBasic_VirtualCam
 	 * -------------------------------------
 	 */
-private:
+public:
 	bool vcamEnabled = false;
 	VCamConfig vcamConfig;
 	bool restartingVCam = false;
@@ -1624,7 +1625,7 @@ public slots:
 
 	bool VirtualCamActive();
 
-private slots:
+public slots:
 	void UpdateVirtualCamConfig(const VCamConfig &config);
 	void RestartVirtualCam(const VCamConfig &config);
 	void RestartingVirtualCam();
@@ -1647,7 +1648,7 @@ signals:
 	 * MARK: - OBSBasic_VolControl
 	 * -------------------------------------
 	 */
-private:
+public:
 	std::vector<VolControl *> volumes;
 
 	void UpdateVolumeControlsDecayRate();
@@ -1657,7 +1658,7 @@ private:
 	void ToggleVolControlLayout();
 	void ToggleMixerLayout(bool vertical);
 
-private slots:
+public slots:
 	void HideAudioControl();
 	void UnhideAllAudioControls();
 	void ToggleHideMixer();
@@ -1680,7 +1681,7 @@ public:
 	 * -------------------------------------
 	 */
 
-private:
+public:
 	bool autoStartBroadcast = true;
 	bool autoStopBroadcast = true;
 	bool broadcastActive = false;

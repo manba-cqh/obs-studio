@@ -10,6 +10,7 @@
 #include <QResizeEvent>
 #include <QEvent>
 #include <QWindowStateChangeEvent>
+#include <QTimer>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QWidget(parent)
@@ -25,7 +26,10 @@ CometMainWindow::~CometMainWindow()
 		
 		// 移除渲染回调
 		if (m_previewWidget->GetDisplay()) {
-			obs_display_remove_draw_callback(m_previewWidget->GetDisplay(), RenderPreview, this);
+			OBSBasic *main = OBSBasic::Get();
+			if (main) {
+				obs_display_remove_draw_callback(m_previewWidget->GetDisplay(), OBSBasic::RenderMain, main);
+			}
 		}
 		
 		// 销毁显示，确保在 OBS 关闭前清理
@@ -75,13 +79,32 @@ void CometMainWindow::createMainContent()
 	QVBoxLayout *centerLayout = new QVBoxLayout();
 	m_previewHeader = new PreviewHeader(this);
 	centerLayout->addWidget(m_previewHeader);
-	m_previewWidget = new OBSQTDisplay();
+	m_previewWidget = new OBSBasicPreview(this);
 	m_previewWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	m_previewWidget->Init();
+	
+	// 设置右键菜单策略
+	m_previewWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(m_previewWidget, &OBSQTDisplay::customContextMenuRequested, this, &CometMainWindow::onPreviewContextMenuRequested);
+	
+	// 连接显示大小变化信号，调用 ResizePreview
+	connect(m_previewWidget, &OBSQTDisplay::DisplayResized, this, &CometMainWindow::onPreviewResized);
+	
 	auto addDisplay = [this](OBSQTDisplay *window) {
-		obs_display_add_draw_callback(window->GetDisplay(), RenderPreview, this);
+		OBSBasic *main = OBSBasic::Get();
+		if (main) {
+			obs_display_add_draw_callback(window->GetDisplay(), OBSBasic::RenderMain, main);
+			
+			// 初始化预览大小，使用我们的预览控件
+			struct obs_video_info ovi;
+			if (obs_get_video_info(&ovi)) {
+				main->ResizePreviewForWidget(ovi.base_width, ovi.base_height, m_previewWidget);
+			}
+		}
 	};
 	connect(m_previewWidget, &OBSQTDisplay::DisplayCreated, addDisplay);
 	centerLayout->addWidget(m_previewWidget);
+	
 	QHBoxLayout *centerBottomLayout = new QHBoxLayout();
 	centerBottomLayout->setContentsMargins(0, 0, 0, 0);
 	centerBottomLayout->setSpacing(5);
@@ -95,18 +118,43 @@ void CometMainWindow::createMainContent()
 	mainContentLayout->addLayout(rightLayout, 2);
 }
 
-void CometMainWindow::RenderPreview(void *data, uint32_t cx, uint32_t cy)
+void CometMainWindow::onPreviewContextMenuRequested()
 {
-	// 渲染主预览纹理
-	obs_render_main_texture_src_color_only();
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		// 使用 OBSBasic 的方法获取当前选中的源项索引
+		int idx = main->GetTopSelectedSourceItem();
+		main->CreateSourcePopupMenu(idx, true);
+	}
+}
+
+void CometMainWindow::onPreviewResized()
+{
+	OBSBasic *main = OBSBasic::Get();
+	if (main && m_previewWidget) {
+		struct obs_video_info ovi;
+		if (obs_get_video_info(&ovi)) {
+			// 使用我们的预览控件大小来计算预览坐标
+			main->ResizePreviewForWidget(ovi.base_width, ovi.base_height, m_previewWidget);
+		}
+	}
 }
 
 void CometMainWindow::resizeEvent(QResizeEvent *event)
 {
-	int previewWidth = m_previewWidget->width();
-	int previewHeight = previewWidth * 9 / 16;
-	m_previewWidget->setFixedSize(previewWidth, previewHeight);
 	QWidget::resizeEvent(event);
+	
+	// 等待布局更新完成后再获取控件大小
+	QTimer::singleShot(0, this, [this]() {
+		if (m_previewWidget && m_mainContent) {
+			int previewWidth = m_previewWidget->width();
+			int previewHeight = previewWidth * 9 / 16;
+			m_previewWidget->setFixedSize(previewWidth, previewHeight);
+			
+			// 通知预览窗口大小变化，更新预览坐标
+			onPreviewResized();
+		}
+	});
 }
 
 void CometMainWindow::changeEvent(QEvent *event)

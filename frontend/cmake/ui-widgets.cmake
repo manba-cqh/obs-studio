@@ -80,4 +80,6 @@ target_sources(
     comet/common/PanelContainer.hpp
     comet/common/SourceListItemWidget.cpp
     comet/common/SourceListItemWidget.hpp
+    comet/tools/tools.cpp
+    comet/tools/tools.hpp
 )
