@@ -11,11 +11,19 @@
 #include <QEvent>
 #include <QWindowStateChangeEvent>
 #include <QTimer>
+#include <QMouseEvent>
+#include <QApplication>
+#include <QScreen>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QWidget(parent)
+	, m_isResizing(false)
+	, m_resizeEdge(EdgeNone)
 {
 	initUI();
+	
+	// 安装事件过滤器，用于处理子控件的鼠标事件
+	setMouseTracking(true);
 }
 
 CometMainWindow::~CometMainWindow()
@@ -41,12 +49,18 @@ void CometMainWindow::initUI()
 {
 	setWindowFlags(Qt::FramelessWindowHint);
 	setProperty("main_widget", true);
+	
+	// 启用鼠标跟踪，用于检测窗口边缘
+	setMouseTracking(true);
 
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
 	mainLayout->setSpacing(0);
 
 	m_topBar = new TopBar(this);
+	// 为 TopBar 安装事件过滤器，以便处理顶部边缘的调整大小
+	m_topBar->setMouseTracking(true);
+	m_topBar->installEventFilter(this);
 	connect(m_topBar, &TopBar::sigMinimize, this, &QWidget::showMinimized);
 	connect(m_topBar, &TopBar::sigMaximize, this, &QWidget::showMaximized);
 	connect(m_topBar, &TopBar::sigRestore, this, &QWidget::showNormal);
@@ -58,11 +72,17 @@ void CometMainWindow::initUI()
 
 	// 设置窗口初始大小（不使用 setFixedSize，允许最大化）
 	resize(1200, 700);
+	// 设置最小窗口大小
+	setMinimumSize(1200, 700);
 }
 
 void CometMainWindow::createMainContent()
 {
 	m_mainContent = new QWidget(this);
+	// 为主内容区域启用鼠标跟踪
+	m_mainContent->setMouseTracking(true);
+	m_mainContent->installEventFilter(this);
+	
 	QHBoxLayout *mainContentLayout = new QHBoxLayout(m_mainContent);
 	mainContentLayout->setContentsMargins(15, 0, 15, 15);
 	mainContentLayout->setSpacing(16);
@@ -165,4 +185,220 @@ void CometMainWindow::changeEvent(QEvent *event)
 		m_topBar->updateMaximizeButton(isMaximized);
 	}
 	QWidget::changeEvent(event);
+}
+
+ResizeEdge CometMainWindow::getResizeEdge(const QPoint &pos) const
+{
+	// 如果窗口是最大化的，不允许调整大小
+	if (isMaximized()) {
+		return EdgeNone;
+	}
+	
+	int x = pos.x();
+	int y = pos.y();
+	int width = this->width();
+	int height = this->height();
+	
+	ResizeEdge edge = EdgeNone;
+	
+	// 检测左右边缘
+	if (x <= RESIZE_MARGIN) {
+		edge = static_cast<ResizeEdge>(edge | EdgeLeft);
+	} else if (x >= width - RESIZE_MARGIN) {
+		edge = static_cast<ResizeEdge>(edge | EdgeRight);
+	}
+	
+	// 检测上下边缘
+	if (y <= RESIZE_MARGIN) {
+		edge = static_cast<ResizeEdge>(edge | EdgeTop);
+	} else if (y >= height - RESIZE_MARGIN) {
+		edge = static_cast<ResizeEdge>(edge | EdgeBottom);
+	}
+	
+	return edge;
+}
+
+void CometMainWindow::updateCursor(ResizeEdge edge)
+{
+	switch (edge) {
+	case EdgeTop:
+	case EdgeBottom:
+		setCursor(Qt::SizeVerCursor);
+		break;
+	case EdgeLeft:
+	case EdgeRight:
+		setCursor(Qt::SizeHorCursor);
+		break;
+	case EdgeTopLeft:
+	case EdgeBottomRight:
+		setCursor(Qt::SizeFDiagCursor);
+		break;
+	case EdgeTopRight:
+	case EdgeBottomLeft:
+		setCursor(Qt::SizeBDiagCursor);
+		break;
+	default:
+		setCursor(Qt::ArrowCursor);
+		break;
+	}
+}
+
+void CometMainWindow::resizeWindow(const QPoint &delta, ResizeEdge edge)
+{
+	QRect geometry = m_resizeStartGeometry;
+	QPoint newPos = geometry.topLeft();
+	QSize newSize = geometry.size();
+	
+	// 根据边缘调整位置和大小
+	if (edge & EdgeLeft) {
+		int newWidth = geometry.width() - delta.x();
+		if (newWidth >= minimumWidth()) {
+			geometry.setLeft(geometry.left() + delta.x());
+		}
+	}
+	if (edge & EdgeRight) {
+		int newWidth = geometry.width() + delta.x();
+		if (newWidth >= minimumWidth()) {
+			geometry.setRight(geometry.right() + delta.x());
+		}
+	}
+	if (edge & EdgeTop) {
+		int newHeight = geometry.height() - delta.y();
+		if (newHeight >= minimumHeight()) {
+			geometry.setTop(geometry.top() + delta.y());
+		}
+	}
+	if (edge & EdgeBottom) {
+		int newHeight = geometry.height() + delta.y();
+		if (newHeight >= minimumHeight()) {
+			geometry.setBottom(geometry.bottom() + delta.y());
+		}
+	}
+	
+	// 确保窗口不会超出屏幕边界
+	QScreen *screen = QApplication::screenAt(this->mapToGlobal(QPoint(width() / 2, height() / 2)));
+	if (screen) {
+		QRect screenGeometry = screen->availableGeometry();
+		if (geometry.left() < screenGeometry.left()) {
+			geometry.setLeft(screenGeometry.left());
+		}
+		if (geometry.top() < screenGeometry.top()) {
+			geometry.setTop(screenGeometry.top());
+		}
+		if (geometry.right() > screenGeometry.right()) {
+			geometry.setRight(screenGeometry.right());
+		}
+		if (geometry.bottom() > screenGeometry.bottom()) {
+			geometry.setBottom(screenGeometry.bottom());
+		}
+	}
+	
+	setGeometry(geometry);
+}
+
+void CometMainWindow::mousePressEvent(QMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton) {
+		ResizeEdge edge = getResizeEdge(event->pos());
+		if (edge != EdgeNone) {
+			m_isResizing = true;
+			m_resizeEdge = edge;
+			m_resizeStartPos = event->globalPosition().toPoint();
+			m_resizeStartGeometry = geometry();
+			event->accept();
+			return;
+		}
+	}
+	QWidget::mousePressEvent(event);
+}
+
+void CometMainWindow::mouseMoveEvent(QMouseEvent *event)
+{
+	if (m_isResizing) {
+		QPoint delta = event->globalPosition().toPoint() - m_resizeStartPos;
+		resizeWindow(delta, m_resizeEdge);
+		event->accept();
+		return;
+	}
+	
+	// 更新鼠标光标
+	ResizeEdge edge = getResizeEdge(event->pos());
+	updateCursor(edge);
+	
+	QWidget::mouseMoveEvent(event);
+}
+
+void CometMainWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+	if (event->button() == Qt::LeftButton && m_isResizing) {
+		m_isResizing = false;
+		m_resizeEdge = EdgeNone;
+		setCursor(Qt::ArrowCursor);
+		event->accept();
+		return;
+	}
+	QWidget::mouseReleaseEvent(event);
+}
+
+bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+	QWidget *widget = qobject_cast<QWidget *>(obj);
+	if (!widget || widget == this) {
+		return QWidget::eventFilter(obj, event);
+	}
+	
+	// 处理 TopBar 的鼠标事件，检测顶部边缘
+	if (widget == m_topBar) {
+		if (event->type() == QEvent::MouseMove) {
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+			// 将 TopBar 中的坐标转换为主窗口坐标
+			QPoint globalPos = widget->mapToGlobal(mouseEvent->pos());
+			QPoint localPos = mapFromGlobal(globalPos);
+			ResizeEdge edge = getResizeEdge(localPos);
+			updateCursor(edge);
+			
+			// 如果在顶部边缘且正在调整大小，处理调整大小
+			if (m_isResizing && (edge & EdgeTop)) {
+				QPoint delta = mouseEvent->globalPosition().toPoint() - m_resizeStartPos;
+				resizeWindow(delta, m_resizeEdge);
+				return true;
+			}
+		} else if (event->type() == QEvent::MouseButtonPress) {
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+			if (mouseEvent->button() == Qt::LeftButton) {
+				// 将 TopBar 中的坐标转换为主窗口坐标
+				QPoint globalPos = widget->mapToGlobal(mouseEvent->pos());
+				QPoint localPos = mapFromGlobal(globalPos);
+				ResizeEdge edge = getResizeEdge(localPos);
+				if (edge != EdgeNone) {
+					m_isResizing = true;
+					m_resizeEdge = edge;
+					m_resizeStartPos = mouseEvent->globalPosition().toPoint();
+					m_resizeStartGeometry = geometry();
+					return true;
+				}
+			}
+		} else if (event->type() == QEvent::MouseButtonRelease) {
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+			if (mouseEvent->button() == Qt::LeftButton && m_isResizing) {
+				m_isResizing = false;
+				m_resizeEdge = EdgeNone;
+				setCursor(Qt::ArrowCursor);
+				return true;
+			}
+		}
+	}
+	
+	// 处理其他子控件的鼠标移动事件
+	if (event->type() == QEvent::MouseMove) {
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		QPoint globalPos = widget->mapToGlobal(mouseEvent->pos());
+		QPoint localPos = mapFromGlobal(globalPos);
+		ResizeEdge edge = getResizeEdge(localPos);
+		if (edge != EdgeNone) {
+			updateCursor(edge);
+		}
+	}
+	
+	return QWidget::eventFilter(obj, event);
 }

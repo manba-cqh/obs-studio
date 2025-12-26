@@ -1,3 +1,4 @@
+#include "def.h"
 #include "tools.hpp"
 #include "TopBar.hpp"
 #include <QHBoxLayout>
@@ -100,6 +101,14 @@ void TopBar::updateMaximizeButton(bool isMaximized)
 void TopBar::mousePressEvent(QMouseEvent *event)
 {
 	if (event->button() == Qt::LeftButton) {
+		// 检查是否在顶部边缘区域（用于调整窗口大小）
+		// 如果在顶部边缘，不处理拖动，让主窗口的事件过滤器处理
+		if (event->pos().y() <= RESIZE_MARGIN) {
+			// 不处理，让事件传递给主窗口
+			event->ignore();
+			return;
+		}
+		
 		// 检查点击位置是否在按钮上
 		if (!isPointInButton(event->pos())) {
 			QWidget *parentWindow = parentWidget();
@@ -117,6 +126,14 @@ void TopBar::mousePressEvent(QMouseEvent *event)
 
 void TopBar::mouseMoveEvent(QMouseEvent *event)
 {
+	// 检查是否在顶部边缘区域（用于调整窗口大小）
+	// 如果在顶部边缘，不处理拖动，让主窗口的事件过滤器处理
+	if (event->pos().y() <= RESIZE_MARGIN) {
+		// 不处理，让事件传递给主窗口
+		event->ignore();
+		return;
+	}
+	
 	if (m_isDragging && (event->buttons() & Qt::LeftButton)) {
 		QWidget *parentWindow = parentWidget();
 		if (parentWindow) {

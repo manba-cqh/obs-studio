@@ -6,6 +6,8 @@
 #include <widgets/OBSBasicPreview.hpp>
 #include <widgets/OBSBasic.hpp>
 
+#include "def.h"
+
 class TopBar;
 class ScenePanel;
 class InteractPanel;
@@ -23,6 +25,10 @@ public:
 protected:
 	virtual void resizeEvent(QResizeEvent *event) override;
 	virtual void changeEvent(QEvent *event) override;
+	virtual void mousePressEvent(QMouseEvent *event) override;
+	virtual void mouseMoveEvent(QMouseEvent *event) override;
+	virtual void mouseReleaseEvent(QMouseEvent *event) override;
+	virtual bool eventFilter(QObject *obj, QEvent *event) override;
 
 private slots:
 	void onPreviewContextMenuRequested();
@@ -32,6 +38,10 @@ private:
 	void initUI();
 	void createMainContent();
 	static void RenderPreview(void *data, uint32_t cx, uint32_t cy);
+	
+	ResizeEdge getResizeEdge(const QPoint &pos) const;
+	void updateCursor(ResizeEdge edge);
+	void resizeWindow(const QPoint &delta, ResizeEdge edge);
 
 private:
 	// 顶部栏
@@ -51,4 +61,10 @@ private:
 	OBSBasicPreview *m_previewWidget;
 	// 混音器面板
 	AudioMixPanel *m_audioMixPanel;
+	
+	// 窗口大小调整
+	bool m_isResizing;
+	ResizeEdge m_resizeEdge;
+	QPoint m_resizeStartPos;
+	QRect m_resizeStartGeometry;
 };
