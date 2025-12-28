@@ -6,8 +6,9 @@
 #include <QMouseEvent>
 #include <QScreen>
 
-TopBar::TopBar(QWidget *parent)
-	: QWidget(parent)
+TopBar::TopBar(QMainWindow *mainWindow)
+	: QWidget(mainWindow)
+	, m_mainWindow(mainWindow)
 	, m_isDragging(false)
 {
 	initUI();
@@ -19,10 +20,9 @@ TopBar::~TopBar()
 
 void TopBar::initUI()
 {
-	setFixedHeight(50);
-
+	setFixedHeight(56);
 	QHBoxLayout *topBarLayout = new QHBoxLayout(this);
-	topBarLayout->setContentsMargins(15, 10, 15, 10);
+	topBarLayout->setContentsMargins(0, 10, 0, 10);
 	topBarLayout->setSpacing(5);
 
 	m_logoLabel = new QLabel(this);
@@ -111,11 +111,10 @@ void TopBar::mousePressEvent(QMouseEvent *event)
 		
 		// 检查点击位置是否在按钮上
 		if (!isPointInButton(event->pos())) {
-			QWidget *parentWindow = parentWidget();
-			if (parentWindow) {
+			if (m_mainWindow) {
 				m_isDragging = true;
 				m_dragStartPosition = event->globalPosition().toPoint();
-				m_windowStartPosition = parentWindow->pos();
+				m_windowStartPosition = m_mainWindow->pos();
 				// 记录鼠标在 TopBar 中的相对位置
 				m_relativeDragPosition = event->pos();
 			}
@@ -135,33 +134,32 @@ void TopBar::mouseMoveEvent(QMouseEvent *event)
 	}
 	
 	if (m_isDragging && (event->buttons() & Qt::LeftButton)) {
-		QWidget *parentWindow = parentWidget();
-		if (parentWindow) {
+		if (m_mainWindow) {
 			// 如果窗口已经最大化，先还原再拖动
-			if (parentWindow->isMaximized()) {
+			if (m_mainWindow->isMaximized()) {
 				// 还原窗口
-				parentWindow->showNormal();
+				m_mainWindow->showNormal();
 				
 				// 计算新窗口位置，使鼠标在 TopBar 中的相对位置保持不变
 				QPoint newPos = event->globalPosition().toPoint() - m_relativeDragPosition;
 				
 				// 确保窗口不会移出屏幕
-				QRect screenGeometry = parentWindow->screen()->availableGeometry();
-				newPos.setX(qBound(screenGeometry.left() - parentWindow->width() + 50, 
+				QRect screenGeometry = m_mainWindow->screen()->availableGeometry();
+				newPos.setX(qBound(screenGeometry.left() - m_mainWindow->width() + 50, 
 				                   newPos.x(), 
 				                   screenGeometry.right() - 50));
 				newPos.setY(qMax(screenGeometry.top(), newPos.y()));
 				
-				parentWindow->move(newPos);
+				m_mainWindow->move(newPos);
 				
 				// 更新拖动起始位置和窗口起始位置
 				m_dragStartPosition = event->globalPosition().toPoint();
-				m_windowStartPosition = parentWindow->pos();
+				m_windowStartPosition = m_mainWindow->pos();
 			} else {
 				// 正常拖动
 				QPoint delta = event->globalPosition().toPoint() - m_dragStartPosition;
 				QPoint newPos = m_windowStartPosition + delta;
-				parentWindow->move(newPos);
+				m_mainWindow->move(newPos);
 			}
 		}
 	}
@@ -206,10 +204,9 @@ void TopBar::mouseDoubleClickEvent(QMouseEvent *event)
 	if (event->button() == Qt::LeftButton) {
 		// 检查双击位置是否在按钮上
 		if (!isPointInButton(event->pos())) {
-		QWidget *parentWindow = parentWidget();
-		if (parentWindow) {
+		if (m_mainWindow) {
 			// 检查父窗口是否最大化
-			if (parentWindow->isMaximized()) {
+			if (m_mainWindow->isMaximized()) {
 				emit sigRestore();
 			} else {
 				emit sigMaximize();

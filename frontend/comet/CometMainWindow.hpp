@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QVBoxLayout>
-#include <QWidget>
+#include <QMainWindow>
+#include <QDockWidget>
 
 #include <widgets/OBSBasicPreview.hpp>
 #include <widgets/OBSBasic.hpp>
@@ -14,7 +15,7 @@ class InteractPanel;
 class PreviewHeader;
 class AudioMixPanel;
 
-class CometMainWindow : public QWidget
+class CometMainWindow : public QMainWindow
 {
 	Q_OBJECT
 
@@ -45,14 +46,17 @@ private:
 
 private:
 	// 顶部栏
+	QToolBar *m_titleBarToolBar;
 	TopBar *m_topBar;
 
 	// 主内容
 	QWidget *m_mainContent;
 
 	// 场景面板
+	QDockWidget *m_scenePanelDock;
 	ScenePanel *m_scenePanel;
 	// 互动玩法面板
+	QDockWidget *m_interactPanelDock;
 	InteractPanel *m_interactPanel;
 
 	// 预览头部

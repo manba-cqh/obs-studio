@@ -5,8 +5,10 @@
 #include "InteractPanel.hpp"
 #include "PreviewHeader.hpp"
 #include "AudioMixPanel.hpp"
+#include "common/PanelHeaderWidget.hpp"
 
 #include <obs.hpp>
+#include <util/base.h>
 #include <QResizeEvent>
 #include <QEvent>
 #include <QWindowStateChangeEvent>
@@ -14,16 +16,17 @@
 #include <QMouseEvent>
 #include <QApplication>
 #include <QScreen>
+#include <QToolBar>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QSplitter>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
-	: QWidget(parent)
+	: QMainWindow(parent)
 	, m_isResizing(false)
 	, m_resizeEdge(EdgeNone)
 {
 	initUI();
-	
-	// 安装事件过滤器，用于处理子控件的鼠标事件
-	setMouseTracking(true);
 }
 
 CometMainWindow::~CometMainWindow()
@@ -47,69 +50,88 @@ CometMainWindow::~CometMainWindow()
 
 void CometMainWindow::initUI()
 {
+	setMouseTracking(true);
 	setWindowFlags(Qt::FramelessWindowHint);
 	setProperty("main_widget", true);
-	
-	// 启用鼠标跟踪，用于检测窗口边缘
 	setMouseTracking(true);
+	setContentsMargins(15, 0, 15, 15);
 
-	QVBoxLayout *mainLayout = new QVBoxLayout(this);
-	mainLayout->setContentsMargins(0, 0, 0, 0);
-	mainLayout->setSpacing(0);
-
+	// 顶部栏
 	m_topBar = new TopBar(this);
-	// 为 TopBar 安装事件过滤器，以便处理顶部边缘的调整大小
 	m_topBar->setMouseTracking(true);
 	m_topBar->installEventFilter(this);
-	connect(m_topBar, &TopBar::sigMinimize, this, &QWidget::showMinimized);
-	connect(m_topBar, &TopBar::sigMaximize, this, &QWidget::showMaximized);
-	connect(m_topBar, &TopBar::sigRestore, this, &QWidget::showNormal);
-	connect(m_topBar, &TopBar::sigClose, this, &QWidget::close);
-	mainLayout->addWidget(m_topBar);
+	connect(m_topBar, &TopBar::sigMinimize, this, &QMainWindow::showMinimized);
+	connect(m_topBar, &TopBar::sigMaximize, this, &QMainWindow::showMaximized);
+	connect(m_topBar, &TopBar::sigRestore, this, &QMainWindow::showNormal);
+	connect(m_topBar, &TopBar::sigClose, this, &QMainWindow::close);
 
+	m_titleBarToolBar = new QToolBar(this);
+	m_titleBarToolBar->setMovable(false);
+	m_titleBarToolBar->setFloatable(false);
+	m_titleBarToolBar->setAllowedAreas(Qt::TopToolBarArea);
+	m_titleBarToolBar->setStyleSheet("QToolBar { border: none; spacing: 0px; } QToolBar::handle { width: 0px; image: none; }");
+	m_titleBarToolBar->setIconSize(QSize(0, 0));
+	m_titleBarToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+	m_titleBarToolBar->setContextMenuPolicy(Qt::NoContextMenu);
+	m_titleBarToolBar->addWidget(m_topBar);
+	addToolBar(Qt::TopToolBarArea, m_titleBarToolBar);
+
+	// 主内容
 	createMainContent();
-	mainLayout->addWidget(m_mainContent);
 
-	// 设置窗口初始大小（不使用 setFixedSize，允许最大化）
 	resize(1200, 700);
-	// 设置最小窗口大小
 	setMinimumSize(1200, 700);
 }
 
 void CometMainWindow::createMainContent()
 {
-	m_mainContent = new QWidget(this);
-	// 为主内容区域启用鼠标跟踪
-	m_mainContent->setMouseTracking(true);
-	m_mainContent->installEventFilter(this);
-	
-	QHBoxLayout *mainContentLayout = new QHBoxLayout(m_mainContent);
-	mainContentLayout->setContentsMargins(15, 0, 15, 15);
-	mainContentLayout->setSpacing(16);
-
-	// 左侧布局
-	QVBoxLayout *leftLayout = new QVBoxLayout();
-	m_scenePanel = new ScenePanel(this);
-	leftLayout->addWidget(m_scenePanel, 1);
-	m_interactPanel = new InteractPanel(this);
-	leftLayout->addWidget(m_interactPanel, 1);
-	mainContentLayout->addLayout(leftLayout, 2);
+	// 左侧dock
+	m_scenePanelDock = new QDockWidget();
+	m_scenePanelDock->setMinimumSize(280, 250);
+	m_scenePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_scenePanel = new ScenePanel();
+	PanelHeaderWidget *sceneHeader = new PanelHeaderWidget("场景", m_scenePanel);
+	connect(sceneHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_scenePanelDock->setFloating(floating);
+	});
+	m_scenePanelDock->setTitleBarWidget(sceneHeader);
+	// ScenePanel 的 initUI() 中已经调用了 createHeaderOperWidget()
+	QPushButton *broadcastButton = m_scenePanel->getBroadcastButton();
+	if (broadcastButton) {
+		sceneHeader->setHeaderOperWidget(broadcastButton);
+	}
+	m_scenePanelDock->setWidget(m_scenePanel);
+	m_interactPanelDock = new QDockWidget();
+	m_interactPanelDock->setMinimumSize(280, 250);
+	m_interactPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_interactPanel = new InteractPanel();
+	PanelHeaderWidget *interactHeader = new PanelHeaderWidget("互动玩法", m_interactPanelDock);
+	connect(interactHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_interactPanelDock->setFloating(floating);
+	});
+	m_interactPanelDock->setTitleBarWidget(interactHeader);
+	m_interactPanelDock->setWidget(m_interactPanel);
+	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
+	addDockWidget(Qt::LeftDockWidgetArea, m_interactPanelDock);
 
 	// 中间布局
+	m_mainContent = new QWidget(this);
+	m_mainContent->setMouseTracking(true);
+	m_mainContent->installEventFilter(this);
+	QHBoxLayout *mainContentLayout = new QHBoxLayout(m_mainContent);
+	mainContentLayout->setContentsMargins(12, 0, 12, 0);
+	mainContentLayout->setSpacing(8);
+	setCentralWidget(m_mainContent);
+
 	QVBoxLayout *centerLayout = new QVBoxLayout();
 	m_previewHeader = new PreviewHeader(this);
 	centerLayout->addWidget(m_previewHeader);
 	m_previewWidget = new OBSBasicPreview(this);
 	m_previewWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	m_previewWidget->Init();
-	
-	// 设置右键菜单策略
 	m_previewWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(m_previewWidget, &OBSQTDisplay::customContextMenuRequested, this, &CometMainWindow::onPreviewContextMenuRequested);
-	
-	// 连接显示大小变化信号，调用 ResizePreview
 	connect(m_previewWidget, &OBSQTDisplay::DisplayResized, this, &CometMainWindow::onPreviewResized);
-	
 	auto addDisplay = [this](OBSQTDisplay *window) {
 		OBSBasic *main = OBSBasic::Get();
 		if (main) {
@@ -162,7 +184,7 @@ void CometMainWindow::onPreviewResized()
 
 void CometMainWindow::resizeEvent(QResizeEvent *event)
 {
-	QWidget::resizeEvent(event);
+	QMainWindow::resizeEvent(event);
 	
 	// 等待布局更新完成后再获取控件大小
 	QTimer::singleShot(0, this, [this]() {
@@ -184,7 +206,7 @@ void CometMainWindow::changeEvent(QEvent *event)
 		bool isMaximized = (windowState() & Qt::WindowMaximized) != 0;
 		m_topBar->updateMaximizeButton(isMaximized);
 	}
-	QWidget::changeEvent(event);
+	QMainWindow::changeEvent(event);
 }
 
 ResizeEdge CometMainWindow::getResizeEdge(const QPoint &pos) const
@@ -309,7 +331,7 @@ void CometMainWindow::mousePressEvent(QMouseEvent *event)
 			return;
 		}
 	}
-	QWidget::mousePressEvent(event);
+	QMainWindow::mousePressEvent(event);
 }
 
 void CometMainWindow::mouseMoveEvent(QMouseEvent *event)
@@ -325,7 +347,7 @@ void CometMainWindow::mouseMoveEvent(QMouseEvent *event)
 	ResizeEdge edge = getResizeEdge(event->pos());
 	updateCursor(edge);
 	
-	QWidget::mouseMoveEvent(event);
+	QMainWindow::mouseMoveEvent(event);
 }
 
 void CometMainWindow::mouseReleaseEvent(QMouseEvent *event)
@@ -337,14 +359,14 @@ void CometMainWindow::mouseReleaseEvent(QMouseEvent *event)
 		event->accept();
 		return;
 	}
-	QWidget::mouseReleaseEvent(event);
+	QMainWindow::mouseReleaseEvent(event);
 }
 
 bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 {
 	QWidget *widget = qobject_cast<QWidget *>(obj);
 	if (!widget || widget == this) {
-		return QWidget::eventFilter(obj, event);
+		return QMainWindow::eventFilter(obj, event);
 	}
 	
 	// 处理 TopBar 的鼠标事件，检测顶部边缘
@@ -400,5 +422,5 @@ bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 		}
 	}
 	
-	return QWidget::eventFilter(obj, event);
+	return QMainWindow::eventFilter(obj, event);
 }

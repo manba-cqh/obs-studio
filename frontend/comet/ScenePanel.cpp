@@ -30,7 +30,7 @@ static bool CollectSceneItems(obs_scene_t *, obs_sceneitem_t *item, void *param)
 } // namespace
 
 ScenePanel::ScenePanel(QWidget *parent)
-	: PanelContainer("场景", parent)
+	: PanelContainer(parent)
 	, m_currentSceneIndex(0)
 {
 	initUI();
@@ -55,7 +55,7 @@ void ScenePanel::initUI()
 
 void ScenePanel::createHeaderOperWidget()
 {
-    m_broadcastButton = new QPushButton();
+    m_broadcastButton = new QPushButton(this);
     m_broadcastButton->setFixedSize(56, 24);
     m_broadcastButton->setCheckable(true);
     m_broadcastButton->setChecked(false);
@@ -64,7 +64,6 @@ void ScenePanel::createHeaderOperWidget()
         "QPushButton:checked { border-image: url(:/images/director_hover.svg); }") \
     );
     connect(m_broadcastButton, &QPushButton::clicked, this, &ScenePanel::onBroadcastButtonClicked);
-    setHeaderOperWidget(m_broadcastButton);
 }
 
 void ScenePanel::createContentWidget()

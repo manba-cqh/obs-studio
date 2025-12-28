@@ -1,7 +1,7 @@
 #include "InteractPanel.hpp"
 
 InteractPanel::InteractPanel(QWidget *parent)
-    : PanelContainer("互动玩法", parent)
+    : PanelContainer(parent)
 {
     initUI();
 }

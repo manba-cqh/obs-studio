@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
 #include "def.h"
@@ -17,7 +17,7 @@ signals:
 	void sigClose();
 
 public:
-	TopBar(QWidget *parent = nullptr);
+	TopBar(QMainWindow *mainWindow);
 	~TopBar();
 
 	// 更新最大化按钮状态（根据窗口是否最大化）
@@ -34,6 +34,7 @@ private:
 	bool isPointInButton(const QPoint &pos) const;
 
 private:
+	QMainWindow *m_mainWindow;
 	QLabel *m_logoLabel;
 	QLabel *m_titleLabel;
 	QPushButton *m_settingsButton;

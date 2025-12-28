@@ -9,10 +9,11 @@
 class ScenePanel : public PanelContainer
 {
 	Q_OBJECT
-
 public:
 	ScenePanel(QWidget *parent = nullptr);
 	~ScenePanel();
+
+	QPushButton *getBroadcastButton() const { return m_broadcastButton; }
 
 public slots:
     void onBroadcastButtonClicked();

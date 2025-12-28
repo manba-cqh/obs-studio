@@ -1,7 +1,7 @@
 #include "AudioMixPanel.hpp"
 
 AudioMixPanel::AudioMixPanel(QWidget *parent)
-    : PanelContainer("混音器", parent)
+    : PanelContainer(parent)
 {
     initUI();
 }

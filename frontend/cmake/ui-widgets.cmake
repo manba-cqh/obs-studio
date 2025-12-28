@@ -78,6 +78,8 @@ target_sources(
     comet/AudioMixPanel.hpp
     comet/common/PanelContainer.cpp
     comet/common/PanelContainer.hpp
+    comet/common/PanelHeaderWidget.cpp
+    comet/common/PanelHeaderWidget.hpp
     comet/common/SourceListItemWidget.cpp
     comet/common/SourceListItemWidget.hpp
     comet/tools/tools.cpp
