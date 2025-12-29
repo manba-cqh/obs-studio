@@ -14,6 +14,9 @@ class ScenePanel;
 class InteractPanel;
 class PreviewHeader;
 class AudioMixPanel;
+class BroadcastModePanel;
+class PluginPanel;
+class DanmuPanel;
 
 class CometMainWindow : public QMainWindow
 {
@@ -66,6 +69,16 @@ private:
 	// 混音器面板
 	QDockWidget *m_audioMixPanelDock;
 	AudioMixPanel *m_audioMixPanel;
+	// 开播模式面板
+	QDockWidget *m_broadcastModePanelDock;
+	BroadcastModePanel *m_broadcastModePanel;
+
+	// 插件面板
+	QDockWidget *m_pluginPanelDock;
+	PluginPanel *m_pluginPanel;
+	// 弹幕面板
+	QDockWidget *m_danmuPanelDock;
+	DanmuPanel *m_danmuPanel;
 	
 	// 窗口大小调整
 	bool m_isResizing;

@@ -5,6 +5,9 @@
 #include "InteractPanel.hpp"
 #include "PreviewHeader.hpp"
 #include "AudioMixPanel.hpp"
+#include "BroadcastModePanel.hpp"
+#include "PluginPanel.hpp"
+#include "DanmuPanel.hpp"
 #include "common/PanelHeaderWidget.hpp"
 
 #include <obs.hpp>
@@ -149,7 +152,6 @@ void CometMainWindow::createMainContent()
 
 	// 混音器面板
 	m_audioMixPanelDock = new QDockWidget();
-	m_audioMixPanelDock->setMinimumSize(280, 250);
 	m_audioMixPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_audioMixPanel = new AudioMixPanel();
 	PanelHeaderWidget *audioMixHeader = new PanelHeaderWidget("混音器", m_audioMixPanelDock);
@@ -159,8 +161,43 @@ void CometMainWindow::createMainContent()
 	m_audioMixPanelDock->setTitleBarWidget(audioMixHeader);
 	m_audioMixPanelDock->setWidget(m_audioMixPanel);
 	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
+	// 开播模式
+	m_broadcastModePanelDock = new QDockWidget();
+	m_broadcastModePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_broadcastModePanel = new BroadcastModePanel();
+	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播模式", m_broadcastModePanelDock);
+	connect(broadcastModeHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_broadcastModePanelDock->setFloating(floating);
+	});
+	m_broadcastModePanelDock->setTitleBarWidget(broadcastModeHeader);
+	m_broadcastModePanelDock->setWidget(m_broadcastModePanel);
+	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
 
 	// 右侧
+	// 插件面板
+	m_pluginPanelDock = new QDockWidget();
+	m_pluginPanelDock->setMinimumSize(280, 250);
+	m_pluginPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_pluginPanel = new PluginPanel();
+	PanelHeaderWidget *pluginHeader = new PanelHeaderWidget("插件", m_pluginPanelDock);
+	connect(pluginHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_pluginPanelDock->setFloating(floating);
+	});
+	m_pluginPanelDock->setTitleBarWidget(pluginHeader);
+	m_pluginPanelDock->setWidget(m_pluginPanel);
+	addDockWidget(Qt::RightDockWidgetArea, m_pluginPanelDock);
+	// 弹幕面板
+	m_danmuPanelDock = new QDockWidget();
+	m_danmuPanelDock->setMinimumSize(280, 250);
+	m_danmuPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_danmuPanel = new DanmuPanel();
+	PanelHeaderWidget *danmuHeader = new PanelHeaderWidget("弹幕", m_danmuPanelDock);
+	connect(danmuHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_danmuPanelDock->setFloating(floating);
+	});
+	m_danmuPanelDock->setTitleBarWidget(danmuHeader);
+	m_danmuPanelDock->setWidget(m_danmuPanel);
+	addDockWidget(Qt::RightDockWidgetArea, m_danmuPanelDock);
 
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);

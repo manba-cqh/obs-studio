@@ -76,6 +76,12 @@ target_sources(
     comet/PreviewHeader.hpp
     comet/AudioMixPanel.cpp
     comet/AudioMixPanel.hpp
+    comet/BroadcastModePanel.cpp
+    comet/BroadcastModePanel.hpp
+    comet/DanmuPanel.cpp
+    comet/DanmuPanel.hpp
+    comet/PluginPanel.cpp
+    comet/PluginPanel.hpp
     comet/common/PanelContainer.cpp
     comet/common/PanelContainer.hpp
     comet/common/PanelHeaderWidget.cpp
