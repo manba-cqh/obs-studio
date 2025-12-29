@@ -86,6 +86,7 @@ void CometMainWindow::initUI()
 void CometMainWindow::createMainContent()
 {
 	// 左侧dock
+	// 场景面板
 	m_scenePanelDock = new QDockWidget();
 	m_scenePanelDock->setMinimumSize(280, 250);
 	m_scenePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -95,12 +96,13 @@ void CometMainWindow::createMainContent()
 		m_scenePanelDock->setFloating(floating);
 	});
 	m_scenePanelDock->setTitleBarWidget(sceneHeader);
-	// ScenePanel 的 initUI() 中已经调用了 createHeaderOperWidget()
 	QPushButton *broadcastButton = m_scenePanel->getBroadcastButton();
 	if (broadcastButton) {
 		sceneHeader->setHeaderOperWidget(broadcastButton);
 	}
 	m_scenePanelDock->setWidget(m_scenePanel);
+	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
+	// 互动玩法面板
 	m_interactPanelDock = new QDockWidget();
 	m_interactPanelDock->setMinimumSize(280, 250);
 	m_interactPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -111,21 +113,19 @@ void CometMainWindow::createMainContent()
 	});
 	m_interactPanelDock->setTitleBarWidget(interactHeader);
 	m_interactPanelDock->setWidget(m_interactPanel);
-	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
 	addDockWidget(Qt::LeftDockWidgetArea, m_interactPanelDock);
 
-	// 中间布局
-	m_mainContent = new QWidget(this);
+	// 主内容
+	m_mainContent = new QWidget();
 	m_mainContent->setMouseTracking(true);
 	m_mainContent->installEventFilter(this);
-	QHBoxLayout *mainContentLayout = new QHBoxLayout(m_mainContent);
-	mainContentLayout->setContentsMargins(12, 0, 12, 0);
+	QVBoxLayout *mainContentLayout = new QVBoxLayout(m_mainContent);
+	mainContentLayout->setContentsMargins(0, 0, 0, 0);
 	mainContentLayout->setSpacing(8);
 	setCentralWidget(m_mainContent);
 
-	QVBoxLayout *centerLayout = new QVBoxLayout();
-	m_previewHeader = new PreviewHeader(this);
-	centerLayout->addWidget(m_previewHeader);
+	m_previewHeader = new PreviewHeader();
+	mainContentLayout->addWidget(m_previewHeader);
 	m_previewWidget = new OBSBasicPreview(this);
 	m_previewWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	m_previewWidget->Init();
@@ -145,19 +145,26 @@ void CometMainWindow::createMainContent()
 		}
 	};
 	connect(m_previewWidget, &OBSQTDisplay::DisplayCreated, addDisplay);
-	centerLayout->addWidget(m_previewWidget);
-	
-	QHBoxLayout *centerBottomLayout = new QHBoxLayout();
-	centerBottomLayout->setContentsMargins(0, 0, 0, 0);
-	centerBottomLayout->setSpacing(5);
-	m_audioMixPanel = new AudioMixPanel(this);
-	centerBottomLayout->addWidget(m_audioMixPanel);
-	centerLayout->addLayout(centerBottomLayout);
-	mainContentLayout->addLayout(centerLayout, 5);
+	mainContentLayout->addWidget(m_previewWidget);
 
-	// 右侧布局
-	QVBoxLayout *rightLayout = new QVBoxLayout();
-	mainContentLayout->addLayout(rightLayout, 2);
+	// 混音器面板
+	m_audioMixPanelDock = new QDockWidget();
+	m_audioMixPanelDock->setMinimumSize(280, 250);
+	m_audioMixPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_audioMixPanel = new AudioMixPanel();
+	PanelHeaderWidget *audioMixHeader = new PanelHeaderWidget("混音器", m_audioMixPanelDock);
+	connect(audioMixHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
+		m_audioMixPanelDock->setFloating(floating);
+	});
+	m_audioMixPanelDock->setTitleBarWidget(audioMixHeader);
+	m_audioMixPanelDock->setWidget(m_audioMixPanel);
+	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
+
+	// 右侧
+
+	// 底部dock不全部占据底部空间
+	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 }
 
 void CometMainWindow::onPreviewContextMenuRequested()

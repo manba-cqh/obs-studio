@@ -17,6 +17,9 @@ public:
 	explicit PanelHeaderWidget(const QString &title, QWidget *parent = nullptr);
 	~PanelHeaderWidget();
 
+	QSize sizeHint() const override;
+	QSize minimumSizeHint() const override;
+
 	void setTitle(const QString &title);
 	QString title() const;
 

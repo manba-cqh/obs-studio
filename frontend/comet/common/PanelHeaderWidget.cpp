@@ -2,13 +2,18 @@
 #include "tools.hpp"
 #include <QWidget>
 #include <QLabel>
+#include <QColor>
+#include <QPalette>
 
 PanelHeaderWidget::PanelHeaderWidget(const QString &title, QWidget *parent)
 	: QWidget(parent)
 	, m_title(title)
 {
-	setFixedHeight(40);
-    setProperty("pannel_widget", true);
+	setAutoFillBackground(true);
+	QPalette pal = palette();
+	pal.setColor(QPalette::Window, QColor(34, 34, 50, 255*0.8));
+	setPalette(pal);
+
 	m_headerLayout = new QHBoxLayout(this);
 	m_headerLayout->setContentsMargins(0, 0, 0, 0);
 	m_headerLayout->setSpacing(0);
@@ -52,6 +57,16 @@ PanelHeaderWidget::~PanelHeaderWidget()
 {
 }
 
+QSize PanelHeaderWidget::sizeHint() const
+{
+	return QSize(width(), 40);
+}
+
+QSize PanelHeaderWidget::minimumSizeHint() const
+{
+	return QSize(width(), 40);
+}
+
 void PanelHeaderWidget::setTitle(const QString &title)
 {
 	m_title = title;
@@ -68,8 +83,7 @@ QString PanelHeaderWidget::title() const
 void PanelHeaderWidget::setHeaderOperWidget(QWidget *widget)
 {
 	if (m_headerLayout && widget) {
-		// 在标题后面插入操作控件（索引为3，折叠按钮0，间距1，标题2，操作控件3）
-		m_headerLayout->insertWidget(3, widget);
+		m_headerLayout->insertWidget(4, widget);
 	}
 }
 

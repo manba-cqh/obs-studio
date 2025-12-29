@@ -6,9 +6,8 @@ QWidget[main_widget=true]
 QWidget[pannel_widget=true]
 {
     background: rgba(34, 34, 50, 0.8);
-    border-radius: 4px;
+    border-radius: 0px 0px 4px 4px;
 }
-
 
 QLabel[label_16_bold=true]
 {

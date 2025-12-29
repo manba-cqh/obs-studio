@@ -64,6 +64,7 @@ private:
 	// 预览控件
 	OBSBasicPreview *m_previewWidget;
 	// 混音器面板
+	QDockWidget *m_audioMixPanelDock;
 	AudioMixPanel *m_audioMixPanel;
 	
 	// 窗口大小调整
