@@ -88,6 +88,10 @@ target_sources(
     comet/common/PanelHeaderWidget.hpp
     comet/common/SourceListItemWidget.cpp
     comet/common/SourceListItemWidget.hpp
+    comet/config/ConfigWt.cpp
+    comet/config/ConfigWt.hpp
+    comet/config/AudioConfigWt.cpp
+    comet/config/AudioConfigWt.hpp
     comet/tools/tools.cpp
     comet/tools/tools.hpp
 )

@@ -40,6 +40,9 @@ void TopBar::initUI()
 	m_settingsButton->setFixedWidth(30);
 	m_settingsButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(12));
 	topBarLayout->addWidget(m_settingsButton);
+	connect(m_settingsButton, &QPushButton::clicked, this, [this]() {
+		emit sigSettings();
+	});
 
 	m_helpCenterButton = new QPushButton("帮助中心", this);
 	m_helpCenterButton->setFixedWidth(54);

@@ -8,6 +8,7 @@
 #include "BroadcastModePanel.hpp"
 #include "PluginPanel.hpp"
 #include "DanmuPanel.hpp"
+#include "ConfigWt.hpp"
 #include "common/PanelHeaderWidget.hpp"
 
 #include <obs.hpp>
@@ -67,6 +68,10 @@ void CometMainWindow::initUI()
 	connect(m_topBar, &TopBar::sigMaximize, this, &QMainWindow::showMaximized);
 	connect(m_topBar, &TopBar::sigRestore, this, &QMainWindow::showNormal);
 	connect(m_topBar, &TopBar::sigClose, this, &QMainWindow::close);
+	connect(m_topBar, &TopBar::sigSettings, this, [this]() {
+		m_configWt = new ConfigWt(this);
+		m_configWt->exec();
+	});
 
 	m_titleBarToolBar = new QToolBar(this);
 	m_titleBarToolBar->setMovable(false);
@@ -93,6 +98,7 @@ void CometMainWindow::createMainContent()
 	m_scenePanelDock = new QDockWidget();
 	m_scenePanelDock->setMinimumSize(280, 250);
 	m_scenePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_scenePanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_scenePanel = new ScenePanel();
 	PanelHeaderWidget *sceneHeader = new PanelHeaderWidget("场景", m_scenePanel);
 	connect(sceneHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
@@ -109,6 +115,7 @@ void CometMainWindow::createMainContent()
 	m_interactPanelDock = new QDockWidget();
 	m_interactPanelDock->setMinimumSize(280, 250);
 	m_interactPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_interactPanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_interactPanel = new InteractPanel();
 	PanelHeaderWidget *interactHeader = new PanelHeaderWidget("互动玩法", m_interactPanelDock);
 	connect(interactHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
@@ -117,6 +124,9 @@ void CometMainWindow::createMainContent()
 	m_interactPanelDock->setTitleBarWidget(interactHeader);
 	m_interactPanelDock->setWidget(m_interactPanel);
 	addDockWidget(Qt::LeftDockWidgetArea, m_interactPanelDock);
+	splitDockWidget(m_scenePanelDock, m_interactPanelDock, Qt::Vertical);
+	QList<QDockWidget*> leftDocks{m_scenePanelDock, m_interactPanelDock};
+	resizeDocks(leftDocks, {1, 1}, Qt::Vertical);
 
 	// 主内容
 	m_mainContent = new QWidget();
@@ -152,8 +162,11 @@ void CometMainWindow::createMainContent()
 
 	// 混音器面板
 	m_audioMixPanelDock = new QDockWidget();
+	m_audioMixPanelDock->setMinimumSize(280, 234);
 	m_audioMixPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_audioMixPanelDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_audioMixPanel = new AudioMixPanel();
+	m_audioMixPanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 	PanelHeaderWidget *audioMixHeader = new PanelHeaderWidget("混音器", m_audioMixPanelDock);
 	connect(audioMixHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_audioMixPanelDock->setFloating(floating);
@@ -163,8 +176,11 @@ void CometMainWindow::createMainContent()
 	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
 	// 开播模式
 	m_broadcastModePanelDock = new QDockWidget();
+	m_broadcastModePanelDock->setMinimumSize(280, 234);
 	m_broadcastModePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_broadcastModePanelDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_broadcastModePanel = new BroadcastModePanel();
+	m_broadcastModePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播模式", m_broadcastModePanelDock);
 	connect(broadcastModeHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_broadcastModePanelDock->setFloating(floating);
@@ -172,12 +188,16 @@ void CometMainWindow::createMainContent()
 	m_broadcastModePanelDock->setTitleBarWidget(broadcastModeHeader);
 	m_broadcastModePanelDock->setWidget(m_broadcastModePanel);
 	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
+	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
+	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
+	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
 
 	// 右侧
 	// 插件面板
 	m_pluginPanelDock = new QDockWidget();
 	m_pluginPanelDock->setMinimumSize(280, 250);
 	m_pluginPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_pluginPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_pluginPanel = new PluginPanel();
 	PanelHeaderWidget *pluginHeader = new PanelHeaderWidget("插件", m_pluginPanelDock);
 	connect(pluginHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
@@ -190,6 +210,7 @@ void CometMainWindow::createMainContent()
 	m_danmuPanelDock = new QDockWidget();
 	m_danmuPanelDock->setMinimumSize(280, 250);
 	m_danmuPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+	m_danmuPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_danmuPanel = new DanmuPanel();
 	PanelHeaderWidget *danmuHeader = new PanelHeaderWidget("弹幕", m_danmuPanelDock);
 	connect(danmuHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
@@ -198,6 +219,9 @@ void CometMainWindow::createMainContent()
 	m_danmuPanelDock->setTitleBarWidget(danmuHeader);
 	m_danmuPanelDock->setWidget(m_danmuPanel);
 	addDockWidget(Qt::RightDockWidgetArea, m_danmuPanelDock);
+	splitDockWidget(m_pluginPanelDock, m_danmuPanelDock, Qt::Vertical);
+	QList<QDockWidget*> rightDocks{m_pluginPanelDock, m_danmuPanelDock};
+	resizeDocks(rightDocks, {1, 1}, Qt::Vertical);
 
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -235,7 +259,7 @@ void CometMainWindow::resizeEvent(QResizeEvent *event)
 		if (m_previewWidget && m_mainContent) {
 			int previewWidth = m_previewWidget->width();
 			int previewHeight = previewWidth * 9 / 16;
-			m_previewWidget->setFixedSize(previewWidth, previewHeight);
+			m_previewWidget->resize(previewWidth, previewHeight);
 			
 			// 通知预览窗口大小变化，更新预览坐标
 			onPreviewResized();

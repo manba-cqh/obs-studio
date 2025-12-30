@@ -29,6 +29,7 @@ endif()
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet/common")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet/tools")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/comet/config")
 
 add_executable(obs-studio)
 add_executable(OBS::studio ALIAS obs-studio)

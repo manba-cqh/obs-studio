@@ -15,6 +15,7 @@ signals:
 	void sigMaximize();
 	void sigRestore();
 	void sigClose();
+	void sigSettings();
 
 public:
 	TopBar(QMainWindow *mainWindow);

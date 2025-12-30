@@ -17,6 +17,7 @@ class AudioMixPanel;
 class BroadcastModePanel;
 class PluginPanel;
 class DanmuPanel;
+class ConfigWt;
 
 class CometMainWindow : public QMainWindow
 {
@@ -79,6 +80,9 @@ private:
 	// 弹幕面板
 	QDockWidget *m_danmuPanelDock;
 	DanmuPanel *m_danmuPanel;
+
+	// 设置窗口
+	ConfigWt *m_configWt;
 	
 	// 窗口大小调整
 	bool m_isResizing;
