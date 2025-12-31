@@ -9,6 +9,7 @@
 
 class AudioConfigWt;
 class VideoConfigWt;
+class RecordConfigWt;
 
 class ConfigWt : public QDialog
 {
@@ -29,4 +30,5 @@ private:
 	
 	AudioConfigWt *m_audioConfig;
 	VideoConfigWt *m_videoConfig;
+	RecordConfigWt *m_recordConfig;
 };

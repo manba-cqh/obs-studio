@@ -1,6 +1,7 @@
 #include "ConfigWt.hpp"
 #include "AudioConfigWt.hpp"
 #include "VideoConfigWt.hpp"
+#include "RecordConfigWt.hpp"
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -35,6 +36,9 @@ void ConfigWt::initUI()
 	m_videoConfig = new VideoConfigWt(this);
 	m_stackedWidget->addWidget(m_videoConfig);
 	
+	m_recordConfig = new RecordConfigWt(this);
+	m_stackedWidget->addWidget(m_recordConfig);
+	
 	m_mainLayout->addWidget(m_navList, 0);
 	m_mainLayout->addWidget(m_stackedWidget, 1);
 	
@@ -55,6 +59,9 @@ void ConfigWt::setupNavigation()
 	
 	QListWidgetItem *videoItem = new QListWidgetItem("视频", m_navList);
 	videoItem->setData(Qt::UserRole, 1);
+	
+	QListWidgetItem *recordItem = new QListWidgetItem("录制", m_navList);
+	recordItem->setData(Qt::UserRole, 2);
 	
 	connect(m_navList, &QListWidget::currentRowChanged, this, &ConfigWt::switchPage);
 }

@@ -94,6 +94,8 @@ target_sources(
     comet/config/AudioConfigWt.hpp
     comet/config/VideoConfigWt.cpp
     comet/config/VideoConfigWt.hpp
+    comet/config/RecordConfigWt.cpp
+    comet/config/RecordConfigWt.hpp
     comet/tools/tools.cpp
     comet/tools/tools.hpp
 )
