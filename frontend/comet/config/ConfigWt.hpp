@@ -8,6 +8,7 @@
 #include <QListWidgetItem>
 
 class AudioConfigWt;
+class VideoConfigWt;
 
 class ConfigWt : public QDialog
 {
@@ -27,4 +28,5 @@ private:
 	QStackedWidget *m_stackedWidget;
 	
 	AudioConfigWt *m_audioConfig;
+	VideoConfigWt *m_videoConfig;
 };

@@ -1,9 +1,11 @@
 #include "ConfigWt.hpp"
 #include "AudioConfigWt.hpp"
+#include "VideoConfigWt.hpp"
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QListWidgetItem>
 
 ConfigWt::ConfigWt(QWidget *parent)
 	: QDialog(parent)
@@ -30,9 +32,8 @@ void ConfigWt::initUI()
 	m_audioConfig = new AudioConfigWt(this);
 	m_stackedWidget->addWidget(m_audioConfig);
 	
-	// TODO: 添加其他配置页面
-	// m_videoConfig = new VideoConfigWt(this);
-	// m_stackedWidget->addWidget(m_videoConfig);
+	m_videoConfig = new VideoConfigWt(this);
+	m_stackedWidget->addWidget(m_videoConfig);
 	
 	m_mainLayout->addWidget(m_navList, 0);
 	m_mainLayout->addWidget(m_stackedWidget, 1);
@@ -52,9 +53,8 @@ void ConfigWt::setupNavigation()
 	QListWidgetItem *audioItem = new QListWidgetItem("音频", m_navList);
 	audioItem->setData(Qt::UserRole, 0);
 	
-	// TODO: 添加其他导航项
-	// QListWidgetItem *videoItem = new QListWidgetItem("视频", m_navList);
-	// videoItem->setData(Qt::UserRole, 1);
+	QListWidgetItem *videoItem = new QListWidgetItem("视频", m_navList);
+	videoItem->setData(Qt::UserRole, 1);
 	
 	connect(m_navList, &QListWidget::currentRowChanged, this, &ConfigWt::switchPage);
 }
