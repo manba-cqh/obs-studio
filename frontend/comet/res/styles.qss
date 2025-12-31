@@ -23,6 +23,13 @@ QLabel[label_15_medium=true]
     font-weight: medium;
 }
 
+QLabel[label_14_medium=true]
+{
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
+}
+
 QLabel[label_12_medium=true]
 {
     color: #FFFFFFFF;
@@ -84,4 +91,196 @@ QListWidget::item:selected
     border: 1px solid #696A8B;
     border-radius: 5px;
     outline: none;
+}
+
+/* 配置页面导航列表样式 */
+QListWidget[config_nav_list=true]
+{
+    background: transparent;
+    border: none;
+    outline: none;
+}
+QListWidget[config_nav_list=true]::item
+{
+    background: transparent;
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
+    text-align: center;
+    border: none;
+    border-radius: 5px;
+    min-height: 34px;
+    max-height: 34px;
+    min-width: 110px;
+    max-width: 110px;
+}
+QListWidget[config_nav_list=true]::item:hover
+{
+    background: #454558;
+}
+QListWidget[config_nav_list=true]::item:selected
+{
+    background: #5370FF;
+}
+QListWidget[config_nav_list=true]::item:selected:hover
+{
+    background: #5370FF;
+}
+
+/* QComboBox 通用样式 TODO 背景色还不能生效 */
+QComboBox
+{
+    background-color: #FF0000 !important;
+    color: #FFFFFFFF;
+    border-radius: 5px;
+    padding: 6px 12px;
+    height: 32px;
+    font-size: 14px;
+    font-weight: medium;
+}
+QComboBox::drop-down
+{
+    border: none;
+    width: 24px;
+    background: transparent;
+}
+QComboBox::down-arrow
+{
+    image: url(:/images/drop_down.svg)
+}
+QComboBox QAbstractItemView
+{
+    background-color: #2C2C3C;
+    color: #FFFFFFFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    selection-background-color: #5370FF;
+    selection-color: #FFFFFFFF;
+    padding: 4px;
+}
+QComboBox QAbstractItemView::item
+{
+    padding: 6px 12px;
+    border-radius: 2px;
+}
+QComboBox QAbstractItemView::item:hover
+{
+    background-color: #454558;
+}
+QComboBox QAbstractItemView::item:selected
+{
+    background-color: #5370FF;
+    color: #FFFFFFFF;
+}
+
+/* QLineEdit 通用样式 */
+QLineEdit
+{
+    background-color: #2C2C3C;
+    color: #FFFFFFFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    padding: 6px 12px;
+    min-height: 32px;
+    font-size: 14px;
+}
+QLineEdit:hover
+{
+    border: 1px solid #5370FF;
+}
+QLineEdit:focus
+{
+    border: 1px solid #5370FF;
+    outline: none;
+}
+QLineEdit:disabled
+{
+    background-color: #1F1F2C;
+    color: #808080;
+    border: 1px solid #2C2C3C;
+}
+
+/* QSlider 通用样式 */
+QSlider::groove:horizontal
+{
+    background-color: #2C2C3C;
+    height: 6px;
+    border-radius: 3px;
+}
+QSlider::handle:horizontal
+{
+    background-color: #5370FF;
+    width: 16px;
+    height: 16px;
+    margin: -5px 0;
+    border-radius: 8px;
+}
+QSlider::handle:horizontal:hover
+{
+    background-color: #6B85FF;
+}
+QSlider::handle:horizontal:pressed
+{
+    background-color: #4A5EE6;
+}
+QSlider::sub-page:horizontal
+{
+    background-color: #5370FF;
+    border-radius: 3px;
+}
+QSlider::add-page:horizontal
+{
+    background-color: #2C2C3C;
+    border-radius: 3px;
+}
+QSlider::groove:vertical
+{
+    background-color: #2C2C3C;
+    width: 6px;
+    border-radius: 3px;
+}
+QSlider::handle:vertical
+{
+    background-color: #5370FF;
+    width: 16px;
+    height: 16px;
+    margin: 0 -5px;
+    border-radius: 8px;
+}
+QSlider::handle:vertical:hover
+{
+    background-color: #6B85FF;
+}
+QSlider::handle:vertical:pressed
+{
+    background-color: #4A5EE6;
+}
+QSlider::sub-page:vertical
+{
+    background-color: #5370FF;
+    border-radius: 3px;
+}
+QSlider::add-page:vertical
+{
+    background-color: #2C2C3C;
+    border-radius: 3px;
+}
+
+/* QGroupBox 通用样式 */
+QGroupBox
+{
+    background-color: transparent;
+    border: none;
+}
+QGroupBox::title
+{
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 12px;
+    top: 8px;
+    padding: 0px 4px;
+    background-color: transparent;
+    color: #FFFFFFFF;
+    font-size: 14px;
+    font-weight: medium;
 }

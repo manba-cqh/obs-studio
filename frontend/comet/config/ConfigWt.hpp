@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QLabel>
 
 class AudioConfigWt;
 class VideoConfigWt;
@@ -28,6 +29,7 @@ private:
 	QListWidget *m_navList;
 	QStackedWidget *m_stackedWidget;
 	
+	QLabel *m_configTitle;
 	AudioConfigWt *m_audioConfig;
 	VideoConfigWt *m_videoConfig;
 	RecordConfigWt *m_recordConfig;

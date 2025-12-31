@@ -33,6 +33,7 @@ AudioConfigWt::~AudioConfigWt()
 
 void AudioConfigWt::initUI()
 {
+	setStyleSheet("QLabel { color: #FFFFFFFF; font-size: 14px; font-weight: medium; }");
 	// 创建滚动区域
 	m_scrollArea = new QScrollArea(this);
 	m_scrollArea->setWidgetResizable(true);
@@ -42,8 +43,8 @@ void AudioConfigWt::initUI()
 	// 创建内容容器
 	m_contentWidget = new QWidget();
 	m_contentLayout = new QVBoxLayout(m_contentWidget);
-	m_contentLayout->setContentsMargins(20, 20, 20, 20);
-	m_contentLayout->setSpacing(20);
+	m_contentLayout->setContentsMargins(0, 0, 0, 0);
+	m_contentLayout->setSpacing(0);
 	
 	setupMicrophoneSettings();
 	setupSpeakerSettings();
@@ -56,6 +57,7 @@ void AudioConfigWt::initUI()
 	
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
+	mainLayout->setSpacing(0);
 	mainLayout->addWidget(m_scrollArea);
 }
 
@@ -63,11 +65,12 @@ void AudioConfigWt::setupMicrophoneSettings()
 {
 	m_micGroup = new QGroupBox("麦克风设置", this);
 	QFormLayout *micLayout = new QFormLayout(m_micGroup);
-	micLayout->setSpacing(15);
+	micLayout->setSpacing(12);
 	micLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 选择设备
 	m_micDeviceCombo = new QComboBox();
+	m_micDeviceCombo->setAttribute(Qt::WA_StyledBackground, true);
 	micLayout->addRow("选择设备:", m_micDeviceCombo);
 	connect(m_micDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
 		this, &AudioConfigWt::onMicrophoneDeviceChanged);
