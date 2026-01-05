@@ -253,18 +253,18 @@ void ScenePanel::onAddSceneButtonClicked()
             int row = totalButtons / 3;
             int col = totalButtons % 3;
             addSceneButton(QString::fromUtf8(name.c_str()), row, col);
-            
-            // 移动"+"按钮到下一个位置
-            m_sceneGridLayout->removeWidget(m_addSceneButton);
-            int nextRow = (totalButtons + 1) / 3;
-            int nextCol = (totalButtons + 1) % 3;
-            m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
+    
+    // 移动"+"按钮到下一个位置
+    m_sceneGridLayout->removeWidget(m_addSceneButton);
+    int nextRow = (totalButtons + 1) / 3;
+    int nextCol = (totalButtons + 1) % 3;
+    m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
             
             // 设置当前场景，这会触发 AddScene 回调并更新 OBS 的内部状态
             main->SetCurrentScene(scene_source);
-            
-            // 选中新添加的场景
-            selectScene(totalButtons);
+    
+    // 选中新添加的场景
+    selectScene(totalButtons);
         }
     }
 }

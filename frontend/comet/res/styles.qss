@@ -127,22 +127,34 @@ QListWidget[config_nav_list=true]::item:selected:hover
     background: #5370FF;
 }
 
-/* QComboBox 通用样式 TODO 背景色还不能生效 */
+/* QComboBox 通用样式 TODO 背景色 */
 QComboBox
 {
-    background-color: #FF0000 !important;
-    color: #FFFFFFFF;
+    background-color: #3C3C4D;
+    color: #EEEFFF;
+    border: 1px solid #454558;
     border-radius: 5px;
-    padding: 6px 12px;
-    height: 32px;
+    padding: 6px 10px;
+    padding-right: 30px;
     font-size: 14px;
     font-weight: medium;
+}
+QComboBox:hover
+{
+    border: 1px solid #5370FF;
+}
+QComboBox:focus
+{
+    border: 1px solid #5370FF;
+    outline: none;
 }
 QComboBox::drop-down
 {
     border: none;
     width: 24px;
     background: transparent;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
 }
 QComboBox::down-arrow
 {
@@ -203,67 +215,26 @@ QLineEdit:disabled
 /* QSlider 通用样式 */
 QSlider::groove:horizontal
 {
-    background-color: #2C2C3C;
+    background-color: #526FFD;
     height: 6px;
     border-radius: 3px;
 }
 QSlider::handle:horizontal
 {
-    background-color: #5370FF;
-    width: 16px;
-    height: 16px;
-    margin: -5px 0;
-    border-radius: 8px;
-}
-QSlider::handle:horizontal:hover
-{
-    background-color: #6B85FF;
-}
-QSlider::handle:horizontal:pressed
-{
-    background-color: #4A5EE6;
+    background-color: #EEEFFF;
+    width: 14px;
+    height: 14px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    border-radius: 6px;
 }
 QSlider::sub-page:horizontal
 {
-    background-color: #5370FF;
-    border-radius: 3px;
+    background-color: #526FFD;
 }
 QSlider::add-page:horizontal
 {
-    background-color: #2C2C3C;
-    border-radius: 3px;
-}
-QSlider::groove:vertical
-{
-    background-color: #2C2C3C;
-    width: 6px;
-    border-radius: 3px;
-}
-QSlider::handle:vertical
-{
-    background-color: #5370FF;
-    width: 16px;
-    height: 16px;
-    margin: 0 -5px;
-    border-radius: 8px;
-}
-QSlider::handle:vertical:hover
-{
-    background-color: #6B85FF;
-}
-QSlider::handle:vertical:pressed
-{
-    background-color: #4A5EE6;
-}
-QSlider::sub-page:vertical
-{
-    background-color: #5370FF;
-    border-radius: 3px;
-}
-QSlider::add-page:vertical
-{
-    background-color: #2C2C3C;
-    border-radius: 3px;
+    background-color: #3F4155;
 }
 
 /* QGroupBox 通用样式 */
@@ -271,16 +242,15 @@ QGroupBox
 {
     background-color: transparent;
     border: none;
+    padding-top: 16px;
 }
 QGroupBox::title
 {
-    subcontrol-origin: margin;
-    subcontrol-position: top left;
-    left: 12px;
-    top: 8px;
-    padding: 0px 4px;
     background-color: transparent;
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
+    subcontrol-origin: padding;
+    subcontrol-position: top left;
+    padding: 0px 4px;
 }

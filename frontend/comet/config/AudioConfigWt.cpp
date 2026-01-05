@@ -33,7 +33,7 @@ AudioConfigWt::~AudioConfigWt()
 
 void AudioConfigWt::initUI()
 {
-	setStyleSheet("QLabel { color: #FFFFFFFF; font-size: 14px; font-weight: medium; }");
+	setStyleSheet("QLabel { color: #B4B6D3; font-size: 14px; font-weight: medium; }");
 	// 创建滚动区域
 	m_scrollArea = new QScrollArea(this);
 	m_scrollArea->setWidgetResizable(true);
@@ -70,6 +70,7 @@ void AudioConfigWt::setupMicrophoneSettings()
 	
 	// 选择设备
 	m_micDeviceCombo = new QComboBox();
+	m_micDeviceCombo->setStyleSheet("QComboBox { background-color: #3C3C4D; }");
 	m_micDeviceCombo->setAttribute(Qt::WA_StyledBackground, true);
 	micLayout->addRow("选择设备:", m_micDeviceCombo);
 	connect(m_micDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
