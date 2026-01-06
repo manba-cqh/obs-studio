@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QMainWindow>
 #include <QDockWidget>
+#include <QStackedWidget>
 
 #include <widgets/OBSBasicPreview.hpp>
 #include <widgets/OBSBasic.hpp>
@@ -18,6 +19,7 @@ class BroadcastModePanel;
 class PluginPanel;
 class DanmuPanel;
 class ConfigWt;
+class EmptySceneWidget;
 
 class CometMainWindow : public QMainWindow
 {
@@ -47,6 +49,9 @@ private:
 	ResizeEdge getResizeEdge(const QPoint &pos) const;
 	void updateCursor(ResizeEdge edge);
 	void resizeWindow(const QPoint &delta, ResizeEdge edge);
+	
+	void updatePreviewDisplay();
+	bool hasSceneItems();
 
 private:
 	// 顶部栏
@@ -65,8 +70,12 @@ private:
 
 	// 预览头部
 	PreviewHeader *m_previewHeader;
+	// 预览控件容器（使用 QStackedWidget 切换预览和空场景界面）
+	QStackedWidget *m_previewStack;
 	// 预览控件
 	OBSBasicPreview *m_previewWidget;
+	// 空场景界面
+	EmptySceneWidget *m_emptySceneWidget;
 	// 混音器面板
 	QDockWidget *m_audioMixPanelDock;
 	AudioMixPanel *m_audioMixPanel;

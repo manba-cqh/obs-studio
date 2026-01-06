@@ -1,0 +1,126 @@
+#include "EmptySceneWidget.hpp"
+#include "tools.hpp"
+
+#include <QPainter>
+#include <QStyleOption>
+#include <QMouseEvent>
+#include <QPixmap>
+
+EmptySceneWidget::EmptySceneWidget(QWidget *parent)
+	: QWidget(parent)
+{
+	initUI();
+}
+
+EmptySceneWidget::~EmptySceneWidget()
+{
+}
+
+void EmptySceneWidget::initUI()
+{
+	setStyleSheet("EmptySceneWidget { background-color: #10101B; }");
+	
+	m_mainLayout = new QVBoxLayout(this);
+	m_mainLayout->setContentsMargins(0, 0, 0, 0);
+	m_mainLayout->setSpacing(0);
+
+	m_mainLayout->addStretch();
+	
+	QWidget *addWidget = new QWidget(this);
+	QVBoxLayout *addLayout = new QVBoxLayout(addWidget);
+	addLayout->setContentsMargins(0, 0, 0, 0);
+	addLayout->setSpacing(16);
+	addLayout->setAlignment(Qt::AlignCenter);
+	
+	QPushButton *addBtn = new QPushButton(addWidget);
+	addBtn->setFixedSize(44, 44);
+	addBtn->setStyleSheet("QPushButton { border-image: url(:/images/add.svg;) } QPushButton:hover { border-image: url(:/images/add_hover.svg;) } QPushButton:pressed { border-image: url(:/images/add_hover.svg;) }");
+	addLayout->addWidget(addBtn);
+	
+	// 标题文字
+	m_titleLabel = new QLabel("添加直播素材", addWidget);
+	m_titleLabel->setAlignment(Qt::AlignCenter);
+	m_titleLabel->setStyleSheet(
+		"QLabel {"
+		"    color: #BBBDDB;"
+		"    font-size: 12px;"
+		"    font-weight: medium;"
+		"}"
+	);
+	addLayout->addWidget(m_titleLabel);
+	
+	m_mainLayout->addWidget(addWidget, 0, Qt::AlignCenter);
+	
+	m_mainLayout->addSpacing(64);
+	
+	// 创建按钮容器
+	m_buttonsContainer = new QWidget(this);
+	m_buttonsLayout = new QHBoxLayout(m_buttonsContainer);
+	m_buttonsLayout->setContentsMargins(0, 0, 0, 0);
+	m_buttonsLayout->setSpacing(20);
+	m_buttonsLayout->setAlignment(Qt::AlignCenter);
+	
+	// 创建5个按钮
+	createSourceButton(":/images/icon/icon/2/camera_capture_toolbar.svg", "摄像头", "dshow_input");
+	createSourceButton(":/images/window_capture.svg", "窗口采集", "window_capture");
+	createSourceButton(":/images/display_capture.svg", "显示器采集", "monitor_capture");
+	createSourceButton(":/images/browser_source.svg", "浏览器源", "browser_source");
+	createSourceButton(":/images/game_capture.svg", "游戏采集", "game_capture");
+	
+	m_mainLayout->addWidget(m_buttonsContainer, 0, Qt::AlignCenter);
+	
+	m_mainLayout->addStretch();
+}
+
+void EmptySceneWidget::createSourceButton(const QString &iconPath, const QString &text, const QString &sourceType)
+{
+	QPushButton *button = new QPushButton(m_buttonsContainer);
+	button->setFixedSize(68, 68);
+	button->setStyleSheet(
+		"QPushButton {"
+		"    background-color: #1B1B27;"
+		"    border: none;"
+		"    border-radius: 5px;"
+		"    text-align: center;"
+		"}"
+	);
+	button->setCursor(Qt::PointingHandCursor);
+	
+	QVBoxLayout *buttonLayout = new QVBoxLayout(button);
+	buttonLayout->setContentsMargins(0, 10, 0, 10);
+	buttonLayout->setSpacing(2);
+	buttonLayout->setAlignment(Qt::AlignCenter);
+	
+	// 图标
+	QLabel *iconLabel = new QLabel(button);
+	iconLabel->setFixedSize(28, 28);
+	iconLabel->setAlignment(Qt::AlignCenter);
+	iconLabel->setStyleSheet("QLabel { background: transparent; }");
+	QPixmap pixmap(iconPath);
+	if (!pixmap.isNull()) {
+		iconLabel->setPixmap(pixmap.scaled(28, 28, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	} else {
+		iconLabel->setText("");
+	}
+	buttonLayout->addWidget(iconLabel);
+	
+	// 文字
+	QLabel *textLabel = new QLabel(text, button);
+	textLabel->setAlignment(Qt::AlignCenter);
+	textLabel->setStyleSheet(
+		"QLabel {"
+		"    background: transparent;"
+		"    color: BBBDDB;"
+		"    font-size: 14px;"
+		"    font-weight: medium;"
+		"}"
+	);
+	buttonLayout->addWidget(textLabel);
+	
+	connect(button, &QPushButton::clicked, this, [this, sourceType]() {
+		emit sourceTypeSelected(sourceType);
+	});
+	
+	m_buttonsLayout->addWidget(button);
+}
+

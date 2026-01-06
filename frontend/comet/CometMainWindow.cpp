@@ -10,8 +10,10 @@
 #include "DanmuPanel.hpp"
 #include "ConfigWt.hpp"
 #include "common/PanelHeaderWidget.hpp"
+#include "EmptySceneWidget.hpp"
 
 #include <obs.hpp>
+#include <obs-frontend-api.h>
 #include <util/base.h>
 #include <QResizeEvent>
 #include <QEvent>
@@ -24,6 +26,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSplitter>
+#include <QStackedWidget>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -139,6 +142,12 @@ void CometMainWindow::createMainContent()
 
 	m_previewHeader = new PreviewHeader();
 	mainContentLayout->addWidget(m_previewHeader);
+	
+	// 创建 QStackedWidget 来切换预览和空场景界面
+	m_previewStack = new QStackedWidget(this);
+	m_previewStack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	
+	// 创建预览控件
 	m_previewWidget = new OBSBasicPreview(this);
 	m_previewWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	m_previewWidget->Init();
@@ -158,7 +167,33 @@ void CometMainWindow::createMainContent()
 		}
 	};
 	connect(m_previewWidget, &OBSQTDisplay::DisplayCreated, addDisplay);
-	mainContentLayout->addWidget(m_previewWidget);
+	m_previewStack->addWidget(m_previewWidget);
+	
+	// 创建空场景界面
+	m_emptySceneWidget = new EmptySceneWidget(this);
+	m_emptySceneWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	connect(m_emptySceneWidget, &EmptySceneWidget::sourceTypeSelected, this, [](const QString &sourceType) {
+		// TODO: 实现添加 source 的功能
+		Q_UNUSED(sourceType);
+	});
+	m_previewStack->addWidget(m_emptySceneWidget);
+	
+	mainContentLayout->addWidget(m_previewStack);
+	
+	// 初始化显示状态
+	updatePreviewDisplay();
+	
+	// 监听场景变化事件
+	obs_frontend_add_event_callback([](enum obs_frontend_event event, void *private_data) {
+		CometMainWindow *window = static_cast<CometMainWindow*>(private_data);
+		if (event == OBS_FRONTEND_EVENT_SCENE_CHANGED || 
+		    event == OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED ||
+		    event == OBS_FRONTEND_EVENT_SCENE_LIST_CHANGED) {
+			QTimer::singleShot(0, window, [window]() {
+				window->updatePreviewDisplay();
+			});
+		}
+	}, this);
 
 	// 混音器面板
 	m_audioMixPanelDock = new QDockWidget();
@@ -491,4 +526,41 @@ bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 	}
 	
 	return QMainWindow::eventFilter(obj, event);
+}
+
+static bool enumItemCheck(obs_scene_t *, obs_sceneitem_t *item, void *param)
+{
+	bool *hasItems = static_cast<bool*>(param);
+	obs_source_t *source = obs_sceneitem_get_source(item);
+	if (source && !obs_source_removed(source)) {
+		*hasItems = true;
+		return false; // 停止枚举
+	}
+	return true;
+}
+
+bool CometMainWindow::hasSceneItems()
+{
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) {
+		return false;
+	}
+	
+	OBSScene scene = main->GetCurrentScene();
+	if (!scene) {
+		return false;
+	}
+	
+	bool hasItems = false;
+	obs_scene_enum_items(scene, enumItemCheck, &hasItems);
+	return hasItems;
+}
+
+void CometMainWindow::updatePreviewDisplay()
+{
+	if (hasSceneItems()) {
+		m_previewStack->setCurrentWidget(m_previewWidget);
+	} else {
+		m_previewStack->setCurrentWidget(m_emptySceneWidget);
+	}
 }
