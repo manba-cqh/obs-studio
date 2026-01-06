@@ -2,6 +2,8 @@
 
 #include <QPixmap>
 #include <QString>
+#include <QFormLayout>
+#include <QLabel>
 
 #define BUTTON_QSS_STYLE(normal_icon, hover_icon, pressed_icon) \
     QString("QPushButton { border-image: url(:/images/%1); }" \
@@ -28,3 +30,5 @@
 #define BUTTON_TRANSPARENT_QSS_STYLE(font_size) \
     QString("QPushButton { background: transparent; color: #FFFFFFFF; font-size: %1px; font-weight: medium; border: none; text-align: center; }") \
         .arg(font_size)
+
+void setFormLayoutLabelWidth(QFormLayout *layout, int minWidth);

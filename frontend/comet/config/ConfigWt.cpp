@@ -51,7 +51,7 @@ void ConfigWt::initUI()
     QWidget *rightWidget = new QWidget(this);
     QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
     rightLayout->setContentsMargins(15, 15, 15, 15);
-    rightLayout->setSpacing(0);
+    rightLayout->setSpacing(12);
     QWidget *configHeaderWidget = new QWidget(this);
     configHeaderWidget->setFixedHeight(32);
     QHBoxLayout *configHeaderLayout = new QHBoxLayout(configHeaderWidget);

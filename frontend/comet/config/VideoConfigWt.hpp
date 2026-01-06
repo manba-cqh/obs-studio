@@ -3,13 +3,15 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QComboBox>
 #include <QLabel>
 #include <QGroupBox>
 #include <QFormLayout>
 #include <util/config-file.h>
 
-class VideoConfigWt : public QWidget
+#include "BaseConfigWt.hpp"
+#include "CommonComboBox.hpp"
+
+class VideoConfigWt : public BaseConfigWt
 {
 	Q_OBJECT
 	
@@ -42,19 +44,19 @@ private:
 	
 	// 基础分辨率
 	QGroupBox *m_baseResolutionGroup;
-	QComboBox *m_baseResolutionCombo;
+	CommonComboBox *m_baseResolutionCombo;
 	QLabel *m_baseAspectRatioLabel;
 	
 	// 输出分辨率
 	QGroupBox *m_outputResolutionGroup;
-	QComboBox *m_outputResolutionCombo;
+	CommonComboBox *m_outputResolutionCombo;
 	QLabel *m_outputAspectRatioLabel;
 	
 	// 缩小算法
-	QComboBox *m_downscaleFilterCombo;
+	CommonComboBox *m_downscaleFilterCombo;
 	
 	// 常用帧率
-	QComboBox *m_fpsCombo;
+	CommonComboBox *m_fpsCombo;
 	
 	config_t *m_config;
 };

@@ -4,9 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
-#include <QComboBox>
 #include <QLabel>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSpinBox>
@@ -20,8 +18,10 @@
 #include <obs-frontend-api.h>
 #include <qt-wrappers.hpp>
 
+#include "tools.hpp"
+
 RecordConfigWt::RecordConfigWt(QWidget *parent)
-	: QWidget(parent)
+	: BaseConfigWt(parent)
 	, m_config(nullptr)
 {
 	OBSBasic *main = OBSBasic::Get();
@@ -72,7 +72,7 @@ void RecordConfigWt::setupRecordingSettings()
 	
 	// 保存位置
 	QHBoxLayout *savePathLayout = new QHBoxLayout();
-	m_savePathEdit = new QLineEdit();
+	m_savePathEdit = new CommonLineEdit();
 	m_savePathButton = new QPushButton("选择");
 	m_savePathButton->setFixedWidth(60);
 	savePathLayout->addWidget(m_savePathEdit);
@@ -81,7 +81,7 @@ void RecordConfigWt::setupRecordingSettings()
 	connect(m_savePathButton, &QPushButton::clicked, this, &RecordConfigWt::onSavePathButtonClicked);
 	
 	// 录像格式
-	m_recordingFormatCombo = new QComboBox();
+	m_recordingFormatCombo = new CommonComboBox();
 	m_recordingFormatCombo->addItem("FLV", "flv");
 	m_recordingFormatCombo->addItem("MKV", "mkv");
 	m_recordingFormatCombo->addItem("MP4", "mp4");
@@ -96,7 +96,7 @@ void RecordConfigWt::setupRecordingSettings()
 		this, &RecordConfigWt::onRecordingFormatChanged);
 	
 	// 文件名格式
-	m_fileNameFormatEdit = new QLineEdit();
+	m_fileNameFormatEdit = new CommonLineEdit();
 	formLayout->addRow("文件名格式:", m_fileNameFormatEdit);
 	connect(m_fileNameFormatEdit, &QLineEdit::editingFinished, this, [this]() {
 		if (m_config) {
@@ -117,13 +117,13 @@ void RecordConfigWt::setupRecordingSettings()
 	});
 	
 	// 视频编码器
-	m_videoEncoderCombo = new QComboBox();
+	m_videoEncoderCombo = new CommonComboBox();
 	formLayout->addRow("视频编码器:", m_videoEncoderCombo);
 	connect(m_videoEncoderCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &RecordConfigWt::onVideoEncoderChanged);
 	
 	// 音频编码器
-	m_audioEncoderCombo = new QComboBox();
+	m_audioEncoderCombo = new CommonComboBox();
 	formLayout->addRow("音频编码器:", m_audioEncoderCombo);
 	connect(m_audioEncoderCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &RecordConfigWt::onAudioEncoderChanged);
@@ -140,14 +140,14 @@ void RecordConfigWt::setupRecordingSettings()
 	
 	// 重新缩放输出
 	QHBoxLayout *rescaleLayout = new QHBoxLayout();
-	m_rescaleFilterCombo = new QComboBox();
+	m_rescaleFilterCombo = new CommonComboBox();
 	m_rescaleFilterCombo->addItem("双线性插值(最快,但会变模糊)", (int)OBS_SCALE_BILINEAR);
 	m_rescaleFilterCombo->addItem("区域(平滑缩放)", (int)OBS_SCALE_AREA);
 	m_rescaleFilterCombo->addItem("双三次插值(平滑缩放, 32个样本)", (int)OBS_SCALE_BICUBIC);
 	m_rescaleFilterCombo->addItem("Lanczos插值(锐化缩放, 36个样本)", (int)OBS_SCALE_LANCZOS);
 	m_rescaleFilterCombo->addItem("禁用", (int)OBS_SCALE_DISABLE);
 	
-	m_rescaleResolutionCombo = new QComboBox();
+	m_rescaleResolutionCombo = new CommonComboBox();
 	m_rescaleResolutionCombo->setEditable(true);
 	rescaleLayout->addWidget(m_rescaleFilterCombo);
 	rescaleLayout->addWidget(m_rescaleResolutionCombo);
@@ -158,7 +158,7 @@ void RecordConfigWt::setupRecordingSettings()
 		this, &RecordConfigWt::onRescaleResolutionChanged);
 	
 	// 自定义混流器设置
-	m_customMuxerEdit = new QLineEdit();
+	m_customMuxerEdit = new CommonLineEdit();
 	formLayout->addRow("自定义混流器设置:", m_customMuxerEdit);
 	connect(m_customMuxerEdit, &QLineEdit::editingFinished, this, [this]() {
 		if (m_config) {
@@ -185,6 +185,8 @@ void RecordConfigWt::setupRecordingSettings()
 	connect(m_splitTimeSpin, QOverload<int>::of(&QSpinBox::valueChanged),
 		this, &RecordConfigWt::onSplitTimeChanged);
 	
+	setFormLayoutLabelWidth(formLayout, 64);
+	
 	m_contentLayout->addWidget(recordingGroup);
 }
 
@@ -196,14 +198,14 @@ void RecordConfigWt::setupStreamSettings()
 	formLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 速率控制
-	m_rateControlCombo = new QComboBox();
+	m_rateControlCombo = new CommonComboBox();
 	m_rateControlCombo->addItem("CBR", "CBR");
 	m_rateControlCombo->addItem("VBR", "VBR");
 	m_rateControlCombo->addItem("CRF", "CRF");
 	formLayout->addRow("速率控制:", m_rateControlCombo);
 	
 	// 码率
-	m_bitrateCombo = new QComboBox();
+	m_bitrateCombo = new CommonComboBox();
 	for (int i = 1000; i <= 10000; i += 500) {
 		m_bitrateCombo->addItem(QString::number(i), i);
 	}
@@ -217,13 +219,15 @@ void RecordConfigWt::setupStreamSettings()
 	formLayout->addRow("关键帧间隔(秒,0=自动):", m_keyframeIntervalSpin);
 	
 	// 预设
-	m_presetCombo = new QComboBox();
+	m_presetCombo = new CommonComboBox();
 	m_presetCombo->addItem("CBR", "CBR");
 	formLayout->addRow("预设:", m_presetCombo);
 	
 	// FFmpeg选项
-	m_ffmpegOptionsEdit = new QLineEdit();
+	m_ffmpegOptionsEdit = new CommonLineEdit();
 	formLayout->addRow("FFmpeg选项:", m_ffmpegOptionsEdit);
+	
+	setFormLayoutLabelWidth(formLayout, 64);
 	
 	m_contentLayout->addWidget(streamGroup);
 }

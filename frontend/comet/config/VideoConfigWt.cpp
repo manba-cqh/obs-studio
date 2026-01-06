@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
-#include <QComboBox>
 #include <QLabel>
 #include <QGroupBox>
 #include <QScreen>
@@ -16,6 +15,8 @@
 #include <algorithm>
 #include <cmath>
 #include <obs.h>
+
+#include "tools.hpp"
 
 static QString ResString(uint32_t cx, uint32_t cy)
 {
@@ -51,7 +52,7 @@ static std::tuple<int, int> aspect_ratio(uint32_t cx, uint32_t cy)
 }
 
 VideoConfigWt::VideoConfigWt(QWidget *parent)
-	: QWidget(parent)
+	: BaseConfigWt(parent)
 	, m_config(nullptr)
 {
 	OBSBasic *main = OBSBasic::Get();
@@ -100,7 +101,7 @@ void VideoConfigWt::setupVideoSettings()
 	
 	// 基础(画布)分辨率
 	QHBoxLayout *baseResLayout = new QHBoxLayout();
-	m_baseResolutionCombo = new QComboBox();
+	m_baseResolutionCombo = new CommonComboBox();
 	m_baseResolutionCombo->setEditable(true);
 	m_baseAspectRatioLabel = new QLabel("长宽比 16:9");
 	m_baseAspectRatioLabel->setMinimumWidth(100);
@@ -114,7 +115,7 @@ void VideoConfigWt::setupVideoSettings()
 	
 	// 输出(画布)分辨率
 	QHBoxLayout *outputResLayout = new QHBoxLayout();
-	m_outputResolutionCombo = new QComboBox();
+	m_outputResolutionCombo = new CommonComboBox();
 	m_outputResolutionCombo->setEditable(true);
 	m_outputAspectRatioLabel = new QLabel("长宽比 16:9");
 	m_outputAspectRatioLabel->setMinimumWidth(100);
@@ -127,7 +128,7 @@ void VideoConfigWt::setupVideoSettings()
 		this, &VideoConfigWt::onOutputResolutionChanged);
 	
 	// 缩小算法
-	m_downscaleFilterCombo = new QComboBox();
+	m_downscaleFilterCombo = new CommonComboBox();
 	m_downscaleFilterCombo->addItem("双线性(快速缩放, 32个样本)", "bilinear");
 	m_downscaleFilterCombo->addItem("区域(平滑缩放)", "area");
 	m_downscaleFilterCombo->addItem("双三次插值(平滑缩放, 32个样本)", "bicubic");
@@ -137,7 +138,7 @@ void VideoConfigWt::setupVideoSettings()
 		this, &VideoConfigWt::onDownscaleFilterChanged);
 	
 	// 常用帧率
-	m_fpsCombo = new QComboBox();
+	m_fpsCombo = new CommonComboBox();
 	m_fpsCombo->addItem("10", "10");
 	m_fpsCombo->addItem("20", "20");
 	m_fpsCombo->addItem("24 NTSC", "23.976");
@@ -152,6 +153,8 @@ void VideoConfigWt::setupVideoSettings()
 	formLayout->addRow("常用帧率:", m_fpsCombo);
 	connect(m_fpsCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &VideoConfigWt::onFPSChanged);
+	
+	setFormLayoutLabelWidth(formLayout, 64);
 	
 	m_contentLayout->addLayout(formLayout);
 }

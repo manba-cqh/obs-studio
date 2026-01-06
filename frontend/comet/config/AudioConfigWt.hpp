@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QComboBox>
 #include <QSlider>
 #include <QSpinBox>
 #include <QPushButton>
@@ -11,7 +10,10 @@
 #include <QGroupBox>
 #include <obs.hpp>
 
-class AudioConfigWt : public QWidget
+#include "BaseConfigWt.hpp"
+#include "CommonComboBox.hpp"
+
+class AudioConfigWt : public BaseConfigWt
 {
 	Q_OBJECT
 	
@@ -63,12 +65,12 @@ private:
 	
 	// 麦克风设置
 	QGroupBox *m_micGroup;
-	QComboBox *m_micDeviceCombo;
+	CommonComboBox *m_micDeviceCombo;
 	QSlider *m_micVolumeSlider;
 	QLabel *m_micVolumeLabel;
-	QComboBox *m_micMonitorCombo;
+	CommonComboBox *m_micMonitorCombo;
 	QGroupBox *m_micAdvancedGroup;
-	QComboBox *m_micChannelCombo;
+	CommonComboBox *m_micChannelCombo;
 	QSpinBox *m_micOffsetSpin;
 	QSlider *m_micBalanceSlider;
 	QLabel *m_micBalanceLeftLabel;
@@ -76,12 +78,12 @@ private:
 	
 	// 扬声器设置
 	QGroupBox *m_speakerGroup;
-	QComboBox *m_speakerDeviceCombo;
+	CommonComboBox *m_speakerDeviceCombo;
 	QSlider *m_speakerVolumeSlider;
 	QLabel *m_speakerVolumeLabel;
-	QComboBox *m_speakerMonitorCombo;
+	CommonComboBox *m_speakerMonitorCombo;
 	QGroupBox *m_speakerAdvancedGroup;
-	QComboBox *m_speakerChannelCombo;
+	CommonComboBox *m_speakerChannelCombo;
 	QSpinBox *m_speakerOffsetSpin;
 	QSlider *m_speakerBalanceSlider;
 	QLabel *m_speakerBalanceLeftLabel;
@@ -92,8 +94,8 @@ private:
 	QPushButton *m_windowCaptureBtn;
 	QSlider *m_otherVolumeSlider;
 	QLabel *m_otherVolumeLabel;
-	QComboBox *m_otherMonitorCombo;
-	QComboBox *m_otherChannelCombo;
+	CommonComboBox *m_otherMonitorCombo;
+	CommonComboBox *m_otherChannelCombo;
 	QSpinBox *m_otherOffsetSpin;
 	QSlider *m_otherBalanceSlider;
 	QLabel *m_otherBalanceLeftLabel;
@@ -101,7 +103,7 @@ private:
 	
 	// 全局高级设置
 	QGroupBox *m_globalAdvancedGroup;
-	QComboBox *m_audioBitrateCombo;
+	CommonComboBox *m_audioBitrateCombo;
 	
 	// 当前音频源引用
 	OBSSource m_micSource;
