@@ -28,5 +28,19 @@
     <file>images/game_capture.svg</file>
     <file>images/dshow_input.svg</file>
     <file>images/browser_source.svg</file>
+    <file>images/window_capture_toolbar.svg</file>
+    <file>images/game_capture_toolbar.svg</file>
+    <file>images/display_capture_toolbar.svg</file>
+    <file>images/camera_capture_toolbar.svg</file>
+    <file>images/browser_toolbar.svg</file>
+    <file>images/spout_toolbar.svg</file>
+    <file>images/video_toolbar.svg</file>
+    <file>images/image_toolbar.svg</file>
+    <file>images/image_slide_toolbar.svg</file>
+    <file>images/text_toolbar.svg</file>
+    <file>images/colorsource_toolbar.svg</file>
+    <file>images/audioinput_capture_toolbar.svg</file>
+    <file>images/audiooutput_capture_toolbar.svg</file>
+    
   </qresource>
 </RCC>

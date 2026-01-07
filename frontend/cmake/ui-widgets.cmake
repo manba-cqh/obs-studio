@@ -92,6 +92,8 @@ target_sources(
     comet/common/CommonLineEdit.hpp
     comet/EmptySceneWidget.cpp
     comet/EmptySceneWidget.hpp
+    comet/SourceToolDialog.cpp
+    comet/SourceToolDialog.hpp
     comet/config/ConfigWt.cpp
     comet/config/ConfigWt.hpp
     comet/config/AudioConfigWt.cpp

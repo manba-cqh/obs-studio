@@ -9,6 +9,7 @@
 class EmptySceneWidget : public QWidget
 {
 	Q_OBJECT
+
 signals:
 	void sourceTypeSelected(const QString &sourceType);
 
@@ -19,12 +20,16 @@ public:
 protected:
 	void paintEvent(QPaintEvent *event) override;
 
+private slots:
+	void onAddBtnClicked();
+
 private:
 	void initUI();
 	void createSourceButton(const QString &iconPath, const QString &text, const QString &sourceType);
 
 private:
 	QVBoxLayout *m_mainLayout;
+	QPushButton *m_addBtn;
 	QLabel *m_titleLabel;
 	QWidget *m_buttonsContainer;
 	QHBoxLayout *m_buttonsLayout;

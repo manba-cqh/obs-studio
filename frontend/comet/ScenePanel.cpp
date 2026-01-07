@@ -4,7 +4,8 @@
 #include <QFontMetrics>
 #include <QCursor>
 
-#include "tools.hpp"
+#include "tools/tools.hpp"
+#include "SourceToolDialog.hpp"
 #include <obs-frontend-api.h>
 #include <obs.hpp>
 #include <widgets/OBSBasic.hpp>
@@ -271,15 +272,28 @@ void ScenePanel::onAddSceneButtonClicked()
 
 void ScenePanel::onAddSourceButtonClicked()
 {
-    // 调用 OBS 原生的添加源功能
-    OBSBasic *main = OBSBasic::Get();
-    if (main) {
-        // 显示添加源弹窗（会在用户选择/取消后返回）
-        main->AddSourcePopupMenu(QCursor::pos());
-
-        // 弹窗关闭后，重新枚举当前场景的所有源，刷新列表
-        updateCurrentSceneSources();
+    SourceToolDialog *dialog = new SourceToolDialog(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    
+    connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this](const QString &sourceId) {
+        OBSBasic *main = OBSBasic::Get();
+        if (main) {
+            // 使用 OBS 添加指定类型的源
+            main->AddSource(sourceId.toUtf8().constData());
+            
+            // 刷新列表
+            updateCurrentSceneSources();
+        }
+    });
+    
+    // 居中显示对话框
+    QWidget *mainWindow = window();
+    if (mainWindow) {
+        QPoint center = mainWindow->geometry().center();
+        dialog->move(center.x() - dialog->width() / 2, center.y() - dialog->height() / 2);
     }
+    
+    dialog->show();
 }
 
 void ScenePanel::onSceneButtonClicked(int id)

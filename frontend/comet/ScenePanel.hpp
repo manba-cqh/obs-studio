@@ -14,6 +14,8 @@ public:
 	~ScenePanel();
 
 	QPushButton *getBroadcastButton() const { return m_broadcastButton; }
+	
+	void updateCurrentSceneSources();
 
 public slots:
     void onBroadcastButtonClicked();
@@ -29,7 +31,6 @@ private:
     void setupSceneButtons();
     void addSceneButton(const QString &name, int row, int col);
     void selectScene(int index);
-    void updateCurrentSceneSources();
     static void OBSFrontendEvent(enum obs_frontend_event event, void *ptr);
 
 private:

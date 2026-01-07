@@ -1,5 +1,6 @@
 #include "EmptySceneWidget.hpp"
-#include "tools.hpp"
+#include "SourceToolDialog.hpp"
+#include "tools/tools.hpp"
 
 #include <QPainter>
 #include <QStyleOption>
@@ -33,10 +34,11 @@ void EmptySceneWidget::initUI()
 	addLayout->setSpacing(16);
 	addLayout->setAlignment(Qt::AlignCenter);
 	
-	QPushButton *addBtn = new QPushButton();
-	addBtn->setFixedSize(64, 64);
-	addBtn->setStyleSheet("QPushButton { border-image: url(:/images/add.svg) } QPushButton:hover { border-image: url(:/images/add_hover.svg) } QPushButton:pressed { border-image: url(:/images/add_hover.svg) }");
-	addLayout->addWidget(addBtn);
+	m_addBtn = new QPushButton();
+	m_addBtn->setFixedSize(64, 64);
+	m_addBtn->setStyleSheet("QPushButton { border-image: url(:/images/add.svg) } QPushButton:hover { border-image: url(:/images/add_hover.svg) } QPushButton:pressed { border-image: url(:/images/add_hover.svg) }");
+	connect(m_addBtn, &QPushButton::clicked, this, &EmptySceneWidget::onAddBtnClicked);
+	addLayout->addWidget(m_addBtn);
 	
 	m_titleLabel = new QLabel("添加直播素材");
 	m_titleLabel->setAlignment(Qt::AlignCenter);
@@ -61,7 +63,7 @@ void EmptySceneWidget::initUI()
 	m_buttonsLayout->setAlignment(Qt::AlignCenter);
 	
 	// 创建5个按钮
-	createSourceButton(":/images/icon/icon/2/camera_capture_toolbar.svg", "摄像头", "dshow_input");
+	createSourceButton(":/images/camera_capture_toolbar.svg", "摄像头", "dshow_input");
 	createSourceButton(":/images/window_capture.svg", "窗口采集", "window_capture");
 	createSourceButton(":/images/display_capture.svg", "显示器采集", "monitor_capture");
 	createSourceButton(":/images/browser_source.svg", "浏览器源", "browser_source");
@@ -122,5 +124,24 @@ void EmptySceneWidget::createSourceButton(const QString &iconPath, const QString
 	});
 	
 	m_buttonsLayout->addWidget(button);
+}
+
+void EmptySceneWidget::onAddBtnClicked()
+{
+	SourceToolDialog *dialog = new SourceToolDialog(window());
+	dialog->setAttribute(Qt::WA_DeleteOnClose);
+	
+	connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this](const QString &sourceType) {
+		emit sourceTypeSelected(sourceType);
+	});
+	
+	// 居中显示对话框
+	QWidget *mainWindow = window();
+	if (mainWindow) {
+		QPoint center = mainWindow->geometry().center();
+		dialog->move(center.x() - dialog->width() / 2, center.y() - dialog->height() / 2);
+	}
+	
+	dialog->show();
 }
 
