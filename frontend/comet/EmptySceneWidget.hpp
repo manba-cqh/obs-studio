@@ -9,13 +9,15 @@
 class EmptySceneWidget : public QWidget
 {
 	Q_OBJECT
+signals:
+	void sourceTypeSelected(const QString &sourceType);
 
 public:
 	EmptySceneWidget(QWidget *parent = nullptr);
 	~EmptySceneWidget();
 
-signals:
-	void sourceTypeSelected(const QString &sourceType);
+protected:
+	void paintEvent(QPaintEvent *event) override;
 
 private:
 	void initUI();

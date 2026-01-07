@@ -5,6 +5,7 @@
 #include <QStyleOption>
 #include <QMouseEvent>
 #include <QPixmap>
+#include <QStyle>
 
 EmptySceneWidget::EmptySceneWidget(QWidget *parent)
 	: QWidget(parent)
@@ -32,13 +33,12 @@ void EmptySceneWidget::initUI()
 	addLayout->setSpacing(16);
 	addLayout->setAlignment(Qt::AlignCenter);
 	
-	QPushButton *addBtn = new QPushButton(addWidget);
-	addBtn->setFixedSize(44, 44);
-	addBtn->setStyleSheet("QPushButton { border-image: url(:/images/add.svg;) } QPushButton:hover { border-image: url(:/images/add_hover.svg;) } QPushButton:pressed { border-image: url(:/images/add_hover.svg;) }");
+	QPushButton *addBtn = new QPushButton();
+	addBtn->setFixedSize(64, 64);
+	addBtn->setStyleSheet("QPushButton { border-image: url(:/images/add.svg) } QPushButton:hover { border-image: url(:/images/add_hover.svg) } QPushButton:pressed { border-image: url(:/images/add_hover.svg) }");
 	addLayout->addWidget(addBtn);
 	
-	// 标题文字
-	m_titleLabel = new QLabel("添加直播素材", addWidget);
+	m_titleLabel = new QLabel("添加直播素材");
 	m_titleLabel->setAlignment(Qt::AlignCenter);
 	m_titleLabel->setStyleSheet(
 		"QLabel {"
@@ -72,6 +72,16 @@ void EmptySceneWidget::initUI()
 	m_mainLayout->addStretch();
 }
 
+void EmptySceneWidget::paintEvent(QPaintEvent *event)
+{
+	QStyleOption opt;
+    opt.initFrom(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+
+	QWidget::paintEvent(event);
+}
+
 void EmptySceneWidget::createSourceButton(const QString &iconPath, const QString &text, const QString &sourceType)
 {
 	QPushButton *button = new QPushButton(m_buttonsContainer);
@@ -81,39 +91,29 @@ void EmptySceneWidget::createSourceButton(const QString &iconPath, const QString
 		"    background-color: #1B1B27;"
 		"    border: none;"
 		"    border-radius: 5px;"
-		"    text-align: center;"
 		"}"
 	);
 	button->setCursor(Qt::PointingHandCursor);
 	
 	QVBoxLayout *buttonLayout = new QVBoxLayout(button);
 	buttonLayout->setContentsMargins(0, 10, 0, 10);
-	buttonLayout->setSpacing(2);
+	buttonLayout->setSpacing(4);
 	buttonLayout->setAlignment(Qt::AlignCenter);
 	
-	// 图标
 	QLabel *iconLabel = new QLabel(button);
 	iconLabel->setFixedSize(28, 28);
 	iconLabel->setAlignment(Qt::AlignCenter);
 	iconLabel->setStyleSheet("QLabel { background: transparent; }");
-	QPixmap pixmap(iconPath);
-	if (!pixmap.isNull()) {
-		iconLabel->setPixmap(pixmap.scaled(28, 28, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-	} else {
-		iconLabel->setText("");
-	}
-	buttonLayout->addWidget(iconLabel);
+	iconLabel->setStyleSheet(QString("QLabel {border-image: url(%1); }").arg(iconPath));
+	buttonLayout->addWidget(iconLabel, 0, Qt::AlignCenter);
 	
-	// 文字
 	QLabel *textLabel = new QLabel(text, button);
 	textLabel->setAlignment(Qt::AlignCenter);
 	textLabel->setStyleSheet(
-		"QLabel {"
-		"    background: transparent;"
-		"    color: BBBDDB;"
-		"    font-size: 14px;"
-		"    font-weight: medium;"
-		"}"
+		"background: transparent;"
+		"color: #BBBDDB;"
+		"font-size: 12px;"
+		"font-weight: medium;"
 	);
 	buttonLayout->addWidget(textLabel);
 	
