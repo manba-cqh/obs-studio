@@ -5,6 +5,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <vector>
+#include <QPushButton>
 
 #include "PanelContainer.hpp"
 
@@ -19,7 +20,8 @@ public:
     ~AudioMixPanel();
     
     void updateAudioSources();
-    
+    QPushButton* getAudioSettingButton() const { return m_audioSettingButton; }
+
 private:
     void initUI();
     void clearVolumeControls();
@@ -34,4 +36,6 @@ private:
     QWidget *m_contentWidget;
     QVBoxLayout *m_contentLayout;
     std::vector<VolControl*> m_volumeControls;
+
+    QPushButton *m_audioSettingButton;
 };

@@ -7,6 +7,8 @@
 #include <QWidget>
 #include <QFrame>
 
+#include "tools.hpp"
+
 AudioMixPanel::AudioMixPanel(QWidget *parent)
     : PanelContainer(parent)
 {
@@ -45,6 +47,10 @@ void AudioMixPanel::initUI()
     
     m_scrollArea->setWidget(m_contentWidget);
     setContentWidget(m_scrollArea);
+
+    m_audioSettingButton = new QPushButton(this);
+    m_audioSettingButton->setFixedSize(24, 24);
+    m_audioSettingButton->setStyleSheet(BUTTON_QSS_STYLE("setting.png", "setting_hover.png", "setting_hover.png"));
 }
 
 void AudioMixPanel::updateAudioSources()

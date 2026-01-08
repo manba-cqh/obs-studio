@@ -238,6 +238,10 @@ void CometMainWindow::createMainContent()
 		audioMixHeader->setCollapseButtonChecked(collapsed);
 	});
 	m_audioMixPanelDock->setTitleBarWidget(audioMixHeader);
+	QPushButton *audioSettingButton = m_audioMixPanel->getAudioSettingButton();
+	if (audioSettingButton) {
+		audioMixHeader->setHeaderOperWidget(audioSettingButton);
+	}
 	m_audioMixPanelDock->setWidget(m_audioMixPanel);
 	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
 	// 开播模式
