@@ -114,6 +114,10 @@ void CometMainWindow::createMainContent()
 	}
 	m_scenePanelDock->setWidget(m_scenePanel);
 	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
+	
+	// 连接 ScenePanel 的信号，当源发生变化时刷新预览显示
+	connect(m_scenePanel, &ScenePanel::sourcesChanged, this, &CometMainWindow::updatePreviewDisplay);
+	
 	// 互动玩法面板
 	m_interactPanelDock = new QDockWidget();
 	m_interactPanelDock->setMinimumSize(280, 250);

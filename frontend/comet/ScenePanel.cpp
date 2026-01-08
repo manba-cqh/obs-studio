@@ -280,6 +280,8 @@ void ScenePanel::onAddSourceButtonClicked()
         if (main) {
             // 使用 OBS 添加指定类型的源
             main->AddSource(sourceId.toUtf8().constData());
+
+            emit sourcesChanged();
             
             // 刷新列表
             updateCurrentSceneSources();
@@ -355,6 +357,9 @@ void ScenePanel::onClearSourceButtonClicked()
 
     // 更新列表 UI
     updateCurrentSceneSources();
+    
+    // 通知预览窗口刷新
+    emit sourcesChanged();
 }
 
 void ScenePanel::updateCurrentSceneSources()

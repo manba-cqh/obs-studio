@@ -9,6 +9,9 @@
 class ScenePanel : public PanelContainer
 {
 	Q_OBJECT
+signals:
+	void sourcesChanged();
+
 public:
 	ScenePanel(QWidget *parent = nullptr);
 	~ScenePanel();

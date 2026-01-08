@@ -458,7 +458,7 @@ bool OBSBasicProperties::nativeEvent(const QByteArray &, void *message, qintptr 
 
 void OBSBasicProperties::Init()
 {
-	show();
+	exec();
 }
 
 int OBSBasicProperties::CheckSettings()
