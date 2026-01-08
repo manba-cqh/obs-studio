@@ -11,6 +11,8 @@ public:
 	virtual ~PanelContainer();
 
 	void setContentWidget(QWidget *widget);
+	void setCollapsed(bool collapsed);
+	bool isCollapsed() const { return m_collapsed; }
 
 protected:
 	virtual void paintEvent(QPaintEvent *event) override;
@@ -24,5 +26,11 @@ private:
 
 	// 主内容区域
 	QWidget *m_contentWidget;
+	
+	// 分隔线
+	QWidget *m_separator;
+	
+	// 是否折叠
+	bool m_collapsed;
 };
 

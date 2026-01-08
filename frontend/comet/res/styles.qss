@@ -2,12 +2,12 @@ QWidget[main_widget=true]
 {
     background: rgba(21, 21, 32, 1);
 }
-
 QWidget[pannel_widget=true]
 {
     background: rgba(34, 34, 50, 0.8);
     border-radius: 0px 0px 4px 4px;
 }
+
 
 QLabel[label_16_bold=true]
 {
@@ -15,21 +15,24 @@ QLabel[label_16_bold=true]
     font-size: 16px;
     font-weight: bold;
 }
-
+QLabel[label_15_bold=true]
+{
+    color: #FFFFFFFF;
+    font-size: 15px;
+    font-weight: bold;
+}
 QLabel[label_15_medium=true]
 {
     color: #FFFFFFFF;
     font-size: 15px;
     font-weight: medium;
 }
-
 QLabel[label_14_medium=true]
 {
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
 }
-
 QLabel[label_12_medium=true]
 {
     color: #FFFFFFFF;
@@ -37,13 +40,13 @@ QLabel[label_12_medium=true]
     font-weight: medium;
 }
 
-
 QPushButton[scene_btn=true]
 {
     background: transparent;
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
+    border: none;
 }
 QPushButton[scene_btn=true]:hover
 {
@@ -70,7 +73,6 @@ QListWidget
     font-weight: medium;
     border: none;
 }
-
 QListWidget::item
 {
     background: transparent;
@@ -78,12 +80,14 @@ QListWidget::item
     min-height: 34px;
     max-height: 34px; 
     border: none;
+    outline: none;
 }
 QListWidget::item:hover
 {
     background: rgba(124, 124, 164, 1);
     border: 1px solid rgba(105, 106, 139, 1);
     border-radius: 5px;
+    outline: none;
 }
 QListWidget::item:selected
 {
@@ -127,6 +131,7 @@ QListWidget[config_nav_list=true]::item:selected:hover
     background: #5370FF;
 }
 
+
 /* QSlider 通用样式 */
 QSlider {
     height: 18px;
@@ -158,6 +163,7 @@ QSlider::handle:horizontal
     border-radius: 7px;
 }
 
+
 /* QGroupBox 通用样式 */
 QGroupBox
 {
@@ -173,6 +179,41 @@ QGroupBox::title
     font-weight: medium;
     subcontrol-origin: padding;
     subcontrol-position: top left;
-    padding: 0px；
+    padding: 0px;
     margin: 0px;
+}
+
+
+/* QMenu 通用样式 */
+QMenu
+{
+    background-color: #222232;
+    border: 1px solid #424260;
+    border-radius: 5px;
+    padding: 4px;
+}
+QMenu::item
+{
+    background-color: transparent;
+    color: #BBBDDB;
+    padding: 10px 6px 10px 6px;
+    border: none;
+    font-size: 14px;
+    font-weight: medium;
+    max-height: 30px;
+}
+QMenu::item:selected
+{
+    background-color: #393950;
+    border: none;
+    border-radius: 3px;
+}
+QMenu::item[delete_action=true]
+{
+    color: #FF6060;
+}
+QMenu::separator
+{
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
 }

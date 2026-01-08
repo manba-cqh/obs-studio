@@ -3,11 +3,11 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
-#include "def.h"
+#include "common/MovableWidget.hpp"
 
 class QMouseEvent;
 
-class TopBar : public QWidget
+class TopBar : public MovableWidget
 {
 	Q_OBJECT
 signals:
@@ -25,9 +25,12 @@ public:
 	void updateMaximizeButton(bool isMaximized);
 
 protected:
-	virtual void mousePressEvent(QMouseEvent *event) override;
-	virtual void mouseMoveEvent(QMouseEvent *event) override;
-	virtual void mouseReleaseEvent(QMouseEvent *event) override;
+	// 实现 MovableWidget 的纯虚方法
+	virtual QWidget* targetWindow() const override;
+	
+	// 重写基类方法：检查点击位置是否在按钮上
+	virtual bool canStartDrag(const QPoint &pos) const override;
+	
 	virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
@@ -44,10 +47,5 @@ private:
 	QPushButton *m_minimizeButton;
 	QPushButton *m_maximizeButton;
 	QPushButton *m_closeButton;
-
-	bool m_isDragging;
-	QPoint m_dragStartPosition;
-	QPoint m_windowStartPosition;
-	QPoint m_relativeDragPosition;
 };
 

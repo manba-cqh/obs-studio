@@ -107,6 +107,11 @@ void CometMainWindow::createMainContent()
 	connect(sceneHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_scenePanelDock->setFloating(floating);
 	});
+	connect(sceneHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, sceneHeader]() {
+		bool collapsed = !m_scenePanel->isCollapsed();
+		m_scenePanel->setCollapsed(collapsed);
+		sceneHeader->setCollapseButtonChecked(collapsed);
+	});
 	m_scenePanelDock->setTitleBarWidget(sceneHeader);
 	QPushButton *broadcastButton = m_scenePanel->getBroadcastButton();
 	if (broadcastButton) {
@@ -127,6 +132,11 @@ void CometMainWindow::createMainContent()
 	PanelHeaderWidget *interactHeader = new PanelHeaderWidget("互动玩法", m_interactPanelDock);
 	connect(interactHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_interactPanelDock->setFloating(floating);
+	});
+	connect(interactHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, interactHeader]() {
+		bool collapsed = !m_interactPanel->isCollapsed();
+		m_interactPanel->setCollapsed(collapsed);
+		interactHeader->setCollapseButtonChecked(collapsed);
 	});
 	m_interactPanelDock->setTitleBarWidget(interactHeader);
 	m_interactPanelDock->setWidget(m_interactPanel);
@@ -222,6 +232,11 @@ void CometMainWindow::createMainContent()
 	connect(audioMixHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_audioMixPanelDock->setFloating(floating);
 	});
+	connect(audioMixHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, audioMixHeader]() {
+		bool collapsed = !m_audioMixPanel->isCollapsed();
+		m_audioMixPanel->setCollapsed(collapsed);
+		audioMixHeader->setCollapseButtonChecked(collapsed);
+	});
 	m_audioMixPanelDock->setTitleBarWidget(audioMixHeader);
 	m_audioMixPanelDock->setWidget(m_audioMixPanel);
 	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
@@ -235,6 +250,11 @@ void CometMainWindow::createMainContent()
 	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播模式", m_broadcastModePanelDock);
 	connect(broadcastModeHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_broadcastModePanelDock->setFloating(floating);
+	});
+	connect(broadcastModeHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, broadcastModeHeader]() {
+		bool collapsed = !m_broadcastModePanel->isCollapsed();
+		m_broadcastModePanel->setCollapsed(collapsed);
+		broadcastModeHeader->setCollapseButtonChecked(collapsed);
 	});
 	m_broadcastModePanelDock->setTitleBarWidget(broadcastModeHeader);
 	m_broadcastModePanelDock->setWidget(m_broadcastModePanel);
@@ -254,6 +274,11 @@ void CometMainWindow::createMainContent()
 	connect(pluginHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_pluginPanelDock->setFloating(floating);
 	});
+	connect(pluginHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, pluginHeader]() {
+		bool collapsed = !m_pluginPanel->isCollapsed();
+		m_pluginPanel->setCollapsed(collapsed);
+		pluginHeader->setCollapseButtonChecked(collapsed);
+	});
 	m_pluginPanelDock->setTitleBarWidget(pluginHeader);
 	m_pluginPanelDock->setWidget(m_pluginPanel);
 	addDockWidget(Qt::RightDockWidgetArea, m_pluginPanelDock);
@@ -266,6 +291,11 @@ void CometMainWindow::createMainContent()
 	PanelHeaderWidget *danmuHeader = new PanelHeaderWidget("弹幕", m_danmuPanelDock);
 	connect(danmuHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_danmuPanelDock->setFloating(floating);
+	});
+	connect(danmuHeader, &PanelHeaderWidget::sigCollapseClicked, this, [this, danmuHeader]() {
+		bool collapsed = !m_danmuPanel->isCollapsed();
+		m_danmuPanel->setCollapsed(collapsed);
+		danmuHeader->setCollapseButtonChecked(collapsed);
 	});
 	m_danmuPanelDock->setTitleBarWidget(danmuHeader);
 	m_danmuPanelDock->setWidget(m_danmuPanel);

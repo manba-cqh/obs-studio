@@ -383,8 +383,19 @@ void ScenePanel::updateCurrentSceneSources()
     }
     
     // 枚举场景中的所有项
+    struct EnumData {
+        QListWidget *list;
+        ScenePanel *panel;
+    };
+    
+    EnumData enumData;
+    enumData.list = m_currentContentList;
+    enumData.panel = this;
+    
     auto enumItem = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
-        QListWidget *list = static_cast<QListWidget *>(param);
+        EnumData *data = static_cast<EnumData *>(param);
+        QListWidget *list = data->list;
+        ScenePanel *panel = data->panel;
         
         obs_source_t *source = obs_sceneitem_get_source(item);
         if (!source || obs_source_removed(source)) {
@@ -401,6 +412,10 @@ void ScenePanel::updateCurrentSceneSources()
 
             // 创建自定义 item 控件，传递 sceneitem 和 source ID
             auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), item, sourceId, list);
+            connect(itemWidget, &SourceListItemWidget::sourcesChanged, panel, [panel]() {
+                panel->updateCurrentSceneSources();
+                emit panel->sourcesChanged();
+            });
 
             // 使用控件的 sizeHint 作为行高，避免上下重叠
             listItem->setSizeHint(itemWidget->sizeHint());
@@ -410,5 +425,5 @@ void ScenePanel::updateCurrentSceneSources()
         return true;
     };
     
-    obs_scene_enum_items(scene, enumItem, m_currentContentList);
+    obs_scene_enum_items(scene, enumItem, &enumData);
 }

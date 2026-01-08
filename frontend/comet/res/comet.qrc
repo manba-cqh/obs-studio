@@ -21,6 +21,21 @@
     <file>images/float_hover.svg</file>
     <file>images/director.svg</file>
     <file>images/director_hover.svg</file>
+    <file>images/add_big.png</file>
+    <file>images/display.png</file>
+    <file>images/display_hover.png</file>
+    <file>images/display_unlock.png</file>
+    <file>images/display_unlock_hover.png</file>
+    <file>images/display_lock.png</file>
+    <file>images/display_lock_hover.png</file>
+    <file>images/display_more.png</file>
+    <file>images/display_more_hover.png</file>
+    <file>images/hide.png</file>
+    <file>images/hide_hover.png</file>
+    <file>images/hide_unlock.png</file>
+    <file>images/hide_unlock_hover.png</file>
+    <file>images/hide_lock.png</file>
+    <file>images/hide_lock_hover.png</file>
 
     <file>images/monitor_capture.svg</file>
     <file>images/display_capture.svg</file>
@@ -41,6 +56,6 @@
     <file>images/colorsource_toolbar.svg</file>
     <file>images/audioinput_capture_toolbar.svg</file>
     <file>images/audiooutput_capture_toolbar.svg</file>
-    
+
   </qresource>
 </RCC>

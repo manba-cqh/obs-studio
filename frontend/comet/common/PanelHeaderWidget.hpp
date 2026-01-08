@@ -27,7 +27,7 @@ public:
 	void setCollapseButtonChecked(bool checked);
 
 private slots:
-	void onCollapseButtonClicked();
+	void onCollapseButtonClicked(bool checked);
 	void onFloatingButtonClicked();
 
 private:
@@ -36,5 +36,8 @@ private:
 	QLabel *m_titleLabel;
 	QPushButton *m_floatingButton;
 	QString m_title;
+	QSize m_preParentSize;
+	QSize m_preParentMinimumSize;
+	QSize m_preParentMaximumSize;
 };
 

@@ -43,22 +43,15 @@ void SourceToolDialog::initUI()
 	containerLayout->setContentsMargins(0, 0, 0, 0);
 	containerLayout->setSpacing(0);
 	
-	// 标题栏
-	QWidget *titleBar = new QWidget(container);
+	MovableWidget *titleBar = new MovableWidget(this, container);
 	titleBar->setFixedHeight(50);
-	titleBar->setStyleSheet("background-color: #2C2C3C;");
+	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
 	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
 	titleLayout->setContentsMargins(15, 0, 15, 0);
 	titleLayout->setSpacing(0);
 	
 	QLabel *titleLabel = new QLabel("基础工具", titleBar);
-	titleLabel->setStyleSheet(
-		"QLabel {"
-		"    color: #FFFFFF;"
-		"    font-size: 15px;"
-		"    font-weight: bold;"
-		"}"
-	);
+	titleLabel->setProperty("label_15_bold", true);
 	titleLayout->addWidget(titleLabel);
 	titleLayout->addStretch();
 	

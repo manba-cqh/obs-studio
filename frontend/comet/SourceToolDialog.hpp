@@ -9,6 +9,7 @@
 #include <QWidget>
 #include <QMap>
 #include <QSet>
+#include "MovableWidget.hpp"
 
 struct SourceTypeInfo {
 	QString id;

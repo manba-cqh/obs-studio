@@ -90,6 +90,8 @@ target_sources(
     comet/common/SourceListItemWidget.hpp
     comet/common/CommonComboBox.hpp
     comet/common/CommonLineEdit.hpp
+    comet/common/MovableWidget.cpp
+    comet/common/MovableWidget.hpp
     comet/EmptySceneWidget.cpp
     comet/EmptySceneWidget.hpp
     comet/SourceToolDialog.cpp

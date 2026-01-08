@@ -15,7 +15,7 @@ PanelHeaderWidget::PanelHeaderWidget(const QString &title, QWidget *parent)
 	setPalette(pal);
 
 	m_headerLayout = new QHBoxLayout(this);
-	m_headerLayout->setContentsMargins(0, 0, 0, 0);
+	m_headerLayout->setContentsMargins(15, 0, 15, 0);
 	m_headerLayout->setSpacing(0);
 
 	// 折叠按钮
@@ -94,9 +94,27 @@ void PanelHeaderWidget::setCollapseButtonChecked(bool checked)
 	}
 }
 
-void PanelHeaderWidget::onCollapseButtonClicked()
+void PanelHeaderWidget::onCollapseButtonClicked(bool checked)
 {
-	emit sigCollapseClicked();
+	// emit sigCollapseClicked();
+	QWidget *parentWidget = this->parentWidget();
+	if (!parentWidget) {
+		return;
+	}
+
+	if (checked) {
+		m_preParentSize = parentWidget->size();
+		m_preParentMinimumSize = parentWidget->minimumSize();
+		m_preParentMaximumSize = parentWidget->maximumSize();
+		parentWidget->setMinimumHeight(this->height() + 10);
+		parentWidget->setMaximumHeight(this->height() + 10);
+		// parentWidget->resize(m_preParentSize.width(), this->height() + 10);
+	}
+	else {
+		parentWidget->setMinimumHeight(m_preParentMinimumSize.height());
+		parentWidget->setMaximumHeight(m_preParentMaximumSize.height());
+		parentWidget->resize(m_preParentSize.width(), m_preParentSize.height());
+	}
 }
 
 void PanelHeaderWidget::onFloatingButtonClicked()
