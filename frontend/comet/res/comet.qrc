@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="">
     <file>styles.qss</file>
+    <file>property_styles.qss</file>
 
     <file>images/logo.svg</file>
     <file>images/close.svg</file>

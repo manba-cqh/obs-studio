@@ -20,6 +20,7 @@
 #include "ui_OBSBasicProperties.h"
 
 #include <QDialog>
+#include <QLabel>
 
 class OBSBasic;
 class OBSPropertiesView;
@@ -41,6 +42,7 @@ private:
 	OBSPropertiesView *view;
 	QDialogButtonBox *buttonBox;
 	QSplitter *windowSplitter;
+	QLabel *titleLabel = nullptr;
 
 	OBSSourceAutoRelease sourceA;
 	OBSSourceAutoRelease sourceB;
