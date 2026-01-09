@@ -32,6 +32,10 @@
 #include <QWidget>
 #include "comet/common/MovableWidget.hpp"
 #include "comet/tools/tools.hpp"
+#include <QPainter>
+#include <QStyleOption>
+
+#include "CommonButton.hpp"
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -64,7 +68,9 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	// 设置窗口为无边框，以便使用 MovableWidget
 	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, false);
-
+	setAutoFillBackground(true);
+	setObjectName("OBSBasicProperties");
+	
 	// 加载 OBSBasicProperties 专用样式文件
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
@@ -72,43 +78,59 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 		setStyleSheet(style);
 		styleFile.close();
 	}
-
 	// 创建容器 widget
 	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 5px; }");
+	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 0px; }");
 	
 	QVBoxLayout *containerLayout = new QVBoxLayout(container);
 	containerLayout->setContentsMargins(0, 0, 0, 0);
-	containerLayout->setSpacing(0);
+	containerLayout->setSpacing(15);
 
 	// 创建标题栏
 	MovableWidget *titleBar = new MovableWidget(this, container);
+	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
 	titleBar->setFixedHeight(50);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; border-radius: 5px 5px 0px 0px; }");
-	
 	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 0, 15, 0);
+	titleLayout->setContentsMargins(15, 13, 15, 13);
 	titleLayout->setSpacing(0);
-
-	// 标题标签（稍后设置文本）
+	// 标题标签
 	titleLabel = new QLabel(titleBar);
-	titleLabel->setProperty("label_15_bold", true);
-	titleLayout->addWidget(titleLabel);
+	titleLabel->setTextFormat(Qt::PlainText);
+	titleLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
+	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
 	titleLayout->addStretch();
-
 	// 关闭按钮
 	QPushButton *closeBtn = new QPushButton(titleBar);
+	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	closeBtn->setFixedSize(24, 24);
 	closeBtn->setCursor(Qt::PointingHandCursor);
-	closeBtn->setStyleSheet(BUTTON_QSS_STYLE("close.svg", "close_hover.svg", "close_pressed.svg"));
+	closeBtn->setStyleSheet(
+		"QPushButton {"
+		"    border: none;"
+		"    background: transparent;"
+		"    padding: 0px;"
+		"    margin: 0px;"
+		"    border-image: url(:/images/close.svg);"
+		"}"
+		"QPushButton:hover {"
+		"    border-image: url(:/images/close_hover.svg);"
+		"}"
+		"QPushButton:pressed {"
+		"    border-image: url(:/images/close_pressed.svg);"
+		"}"
+	);
 	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
-	titleLayout->addWidget(closeBtn);
-
+	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter | Qt::AlignRight);
 	containerLayout->addWidget(titleBar);
 
 	// 设置 UI（这会创建原有的布局）
 	ui->setupUi(this);
 	
+	QVBoxLayout *contentLayout = new QVBoxLayout(container);
+	contentLayout->setContentsMargins(15, 15, 15, 15);
+	contentLayout->setSpacing(15);
+	containerLayout->addLayout(contentLayout);
+
 	// 获取原有的布局和内容
 	QVBoxLayout *originalLayout = qobject_cast<QVBoxLayout *>(this->layout());
 	if (originalLayout) {
@@ -116,9 +138,9 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 		while (originalLayout->count() > 0) {
 			QLayoutItem *item = originalLayout->takeAt(0);
 			if (item->widget()) {
-				containerLayout->addWidget(item->widget());
+				contentLayout->addWidget(item->widget());
 			} else if (item->layout()) {
-				containerLayout->addLayout(item->layout());
+				contentLayout->addLayout(item->layout());
 			}
 			delete item;
 		}
@@ -131,6 +153,29 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 	dialogLayout->addWidget(container);
 
 	ui->buttonBox->button(QDialogButtonBox::Ok)->setFocus();
+	ui->buttonBox->button(QDialogButtonBox::Ok)->setFixedSize(70, 34);
+	ui->buttonBox->button(QDialogButtonBox::Cancel)->setFixedSize(70, 34);
+	ui->buttonBox->button(QDialogButtonBox::RestoreDefaults)->setFixedSize(98, 34);
+
+	ui->buttonBox->setStyleSheet(
+		"QPushButton {"
+		"    background-color: #3C3C4D;"
+		"    color: #FFFFFFFF;"
+		"    border: none;"
+		"    border-radius: 5px;"
+		"    font-size: 14px;"
+		"    font-weight: medium;"
+		"	 min-height: 34px;"
+		"	 max-width: 34px;"
+		"	 padding: 0px 15px;"
+		"}"
+		"QPushButton:hover {"
+		"    background-color: #5370FF;"
+		"}"
+		"QPushButton:pressed {"
+		"    background-color: #5370FF;"
+		"}"
+	);
 
 	// 设置标题文本
 	const char *name = obs_source_get_name(source);
@@ -237,7 +282,7 @@ OBSBasicProperties::~OBSBasicProperties()
 
 void OBSBasicProperties::AddPreviewButton()
 {
-	QPushButton *playButton = new QPushButton(QTStr("PreviewTransition"), this);
+	CommonButton *playButton = new CommonButton(QTStr("PreviewTransition"), this);
 	VScrollArea *area = view;
 	area->widget()->layout()->addWidget(playButton);
 
@@ -263,7 +308,7 @@ void OBSBasicProperties::AddPreviewButton()
 		end = nullptr;
 	};
 
-	connect(playButton, &QPushButton::clicked, play);
+	connect(playButton, &CommonButton::clicked, play);
 }
 
 static obs_source_t *CreateLabel(const char *name, size_t h)
@@ -506,6 +551,14 @@ void OBSBasicProperties::reject()
 
 	Cleanup();
 	done(0);
+}
+
+void OBSBasicProperties::paintEvent(QPaintEvent *event)
+{
+	QStyleOption opt;
+    opt.initFrom(this);
+    QPainter p(this);
+    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
 
 void OBSBasicProperties::closeEvent(QCloseEvent *event)

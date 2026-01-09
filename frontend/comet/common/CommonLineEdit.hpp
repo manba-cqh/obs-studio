@@ -4,8 +4,6 @@
 
 class CommonLineEdit : public QLineEdit
 {
-    Q_OBJECT
-
 public:
     explicit CommonLineEdit(QWidget *parent = nullptr)
         : QLineEdit(parent)

@@ -217,3 +217,107 @@ QMenu::separator
     height: 1px;
     background-color: rgba(255, 255, 255, 0.1);
 }
+
+/* QCheckBox 通用样式 */
+QCheckBox {
+    spacing: 5px;
+    color: #EEEEFF;
+    font-size: 14px;
+    font-weight: medium;
+    background: transparent;
+    border: none;
+}
+QCheckBox::indicator:checked {
+    background: transparent;
+    border: none;
+    image: url(:/images/checked.png);
+}
+QCheckBox::indicator:unchecked {
+    background: transparent;
+    border: none;
+    image: url(:/images/unchecked.png);
+}
+
+
+/* QMessageBox 全局样式 */
+QMessageBox
+{
+    background-color: #1F1F2C;
+    color: #EEEEFF;
+    border: none;
+}
+QMessageBox QLabel
+{
+    background-color: transparent;
+    color: #EEEEFF;
+    font-size: 14px;
+    font-weight: medium;
+}
+QMessageBox QPushButton
+{
+    background-color: #3C3C4D;
+    color: #FFFFFFFF;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: medium;
+    padding: 8px 24px;
+    min-width: 80px;
+    min-height: 32px;
+}
+QMessageBox QPushButton:hover
+{
+    background-color: #5370FF;
+}
+QMessageBox QPushButton:pressed
+{
+    background-color: #5370FF;
+}
+QMessageBox QPushButton:default
+{
+    background-color: #5370FF;
+    color: #FFFFFFFF;
+}
+QMessageBox QPushButton:default:hover
+{
+    background-color: #5370FF;
+}
+QMessageBox QPushButton:default:pressed
+{
+    background-color: #5370FF;
+}
+QMessageBox QPushButton:disabled
+{
+    background-color: #3C3C4D;
+    color: #666666;
+}
+QMessageBox QCheckBox
+{
+    color: #EEEEFF;
+    font-size: 14px;
+    font-weight: medium;
+    spacing: 8px;
+}
+QMessageBox QCheckBox::indicator
+{
+    width: 18px;
+    height: 18px;
+    border: 1px solid #454558;
+    border-radius: 3px;
+    background-color: #3C3C4D;
+}
+QMessageBox QCheckBox::indicator:hover
+{
+    border: 1px solid #5370FF;
+    background-color: #454558;
+}
+QMessageBox QCheckBox::indicator:checked
+{
+    background-color: #5370FF;
+    border: 1px solid #5370FF;
+}
+QMessageBox QCheckBox::indicator:checked:hover
+{
+    background-color: #6B85FF;
+    border: 1px solid #6B85FF;
+}

@@ -4,8 +4,6 @@
 
 class CommonComboBox : public QComboBox
 {
-    Q_OBJECT
-
 public:
     explicit CommonComboBox(QWidget *parent = nullptr)
         : QComboBox(parent)

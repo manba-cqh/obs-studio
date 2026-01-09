@@ -1,67 +1,13 @@
-OBSBasicProperties {
+OBSBasicProperties:scope {
     background-color: transparent;
     color: #FFFFFFFF;
+    border-radius: 5px;
 }
 
 /* MovableWidget 标题栏样式 */
 OBSBasicProperties MovableWidget {
     background-color: #2C2C3C;
     border-radius: 5px 5px 0px 0px;
-}
-
-OBSBasicProperties QComboBox {
-    background-color: #3C3C4D;
-    color: #FFFFFFFF;
-    border: 1px solid #454558;
-    border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 14px;
-    font-weight: medium;
-    min-height: 28px;
-}
-
-OBSBasicProperties QComboBox:hover {
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QComboBox:focus {
-    border: 1px solid #5370FF;
-    outline: none;
-}
-
-OBSBasicProperties QComboBox::drop-down {
-    border: none;
-    width: 24px;
-    background: transparent;
-}
-
-OBSBasicProperties QComboBox::down-arrow {
-    width: 12px;
-    height: 12px;
-}
-
-OBSBasicProperties QComboBox QAbstractItemView {
-    background-color: #2C2C3C;
-    color: #FFFFFFFF;
-    border: 1px solid #454558;
-    border-radius: 4px;
-    selection-background-color: #5370FF;
-    selection-color: #FFFFFFFF;
-    padding: 4px;
-}
-
-OBSBasicProperties QComboBox QAbstractItemView::item {
-    padding: 6px 12px;
-    border-radius: 2px;
-}
-
-OBSBasicProperties QComboBox QAbstractItemView::item:hover {
-    background-color: #454558;
-}
-
-OBSBasicProperties QComboBox QAbstractItemView::item:selected {
-    background-color: #5370FF;
-    color: #FFFFFFFF;
 }
 
 OBSBasicProperties QCheckBox {
@@ -94,67 +40,6 @@ OBSBasicProperties QCheckBox::indicator:checked:hover {
     border: 1px solid #6B85FF;
 }
 
-OBSBasicProperties QPushButton {
-    background-color: #3C3C4D;
-    color: #FFFFFFFF;
-    border: 1px solid #454558;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: medium;
-    min-height: 32px;
-}
-
-OBSBasicProperties QPushButton:hover {
-    background-color: #454558;
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QPushButton:pressed {
-    background-color: #2C2C3C;
-}
-
-OBSBasicProperties QDialogButtonBox {
-    background-color: transparent;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton {
-    background-color: #3C3C4D;
-    color: #FFFFFFFF;
-    border: 1px solid #454558;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: medium;
-    min-height: 32px;
-    min-width: 80px;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton:hover {
-    background-color: #454558;
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton:pressed {
-    background-color: #2C2C3C;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton:default {
-    background-color: #5370FF;
-    color: #FFFFFFFF;
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton:default:hover {
-    background-color: #6B85FF;
-    border: 1px solid #6B85FF;
-}
-
-OBSBasicProperties QDialogButtonBox QPushButton:default:pressed {
-    background-color: #4260E6;
-    border: 1px solid #4260E6;
-}
-
 OBSBasicProperties QFrame {
     background-color: #2C2C3C;
     border: none;
@@ -164,25 +49,6 @@ OBSBasicProperties QLabel {
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
-}
-
-OBSBasicProperties QLineEdit {
-    background-color: #3C3C4D;
-    color: #FFFFFFFF;
-    border: 1px solid #454558;
-    border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 14px;
-    min-height: 28px;
-}
-
-OBSBasicProperties QLineEdit:hover {
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QLineEdit:focus {
-    border: 1px solid #5370FF;
-    outline: none;
 }
 
 OBSBasicProperties QSpinBox,
@@ -226,36 +92,6 @@ OBSBasicProperties QTextEdit:focus,
 OBSBasicProperties QPlainTextEdit:focus {
     border: 1px solid #5370FF;
     outline: none;
-}
-
-OBSBasicProperties QRadioButton {
-    color: #FFFFFFFF;
-    font-size: 14px;
-    font-weight: medium;
-    spacing: 8px;
-}
-
-OBSBasicProperties QRadioButton::indicator {
-    width: 18px;
-    height: 18px;
-    border: 1px solid #454558;
-    border-radius: 9px;
-    background-color: #3C3C4D;
-}
-
-OBSBasicProperties QRadioButton::indicator:hover {
-    border: 1px solid #5370FF;
-    background-color: #454558;
-}
-
-OBSBasicProperties QRadioButton::indicator:checked {
-    background-color: #5370FF;
-    border: 1px solid #5370FF;
-}
-
-OBSBasicProperties QRadioButton::indicator:checked:hover {
-    background-color: #6B85FF;
-    border: 1px solid #6B85FF;
 }
 
 /* QScrollArea 滚动区域样式 */
@@ -322,4 +158,3 @@ OBSBasicProperties QScrollBar::right-arrow {
     width: 0px;
     height: 0px;
 }
-
