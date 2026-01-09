@@ -51,6 +51,17 @@ void AudioMixPanel::initUI()
     m_audioSettingButton = new QPushButton(this);
     m_audioSettingButton->setFixedSize(24, 24);
     m_audioSettingButton->setStyleSheet(BUTTON_QSS_STYLE("setting.png", "setting_hover.png", "setting_hover.png"));
+    
+    // 连接设置按钮，打开原生 OBS 高级音频设置窗口
+    connect(m_audioSettingButton, &QPushButton::clicked, this, []() {
+        OBSBasic *main = OBSBasic::Get();
+        if (!main) {
+            return;
+        }
+        
+        // 使用原生 OBS 的方法打开高级音频设置窗口
+        main->on_actionAdvAudioProperties_triggered();
+    });
 }
 
 void AudioMixPanel::updateAudioSources()

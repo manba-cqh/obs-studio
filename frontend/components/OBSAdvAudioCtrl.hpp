@@ -14,6 +14,8 @@ class QLabel;
 class QSpinBox;
 class QStackedWidget;
 class QWidget;
+class VolumeMeter;
+class VolumeSlider;
 
 enum class VolumeType {
 	dB,
@@ -35,6 +37,15 @@ private:
 	QPointer<QStackedWidget> stackedWidget;
 	QPointer<QSpinBox> percent;
 	QPointer<QDoubleSpinBox> volume;
+	QPointer<QWidget> volumeControlWidget;
+	QPointer<QLabel> volumeTitleLabel;
+	VolumeMeter *volMeter;
+	VolumeSlider *volumeSlider;
+	QPointer<QLabel> volumeValueLabel;
+	
+	// 使用 OBSFader 和 OBSVolMeter（RAII 包装类型）
+	OBSFader obs_fader;
+	OBSVolMeter obs_volmeter;
 	QPointer<QCheckBox> forceMono;
 	QPointer<BalanceSlider> balance;
 	QPointer<QLabel> labelL;
@@ -54,6 +65,9 @@ private:
 	static void OBSSourceDeactivated(void *param, calldata_t *calldata);
 	static void OBSSourceFlagsChanged(void *param, calldata_t *calldata);
 	static void OBSSourceVolumeChanged(void *param, calldata_t *calldata);
+	static void OBSVolumeChanged(void *param, float db);
+	static void OBSVolumeLevel(void *param, const float magnitude[MAX_AUDIO_CHANNELS],
+				   const float peak[MAX_AUDIO_CHANNELS], const float inputPeak[MAX_AUDIO_CHANNELS]);
 	static void OBSSourceSyncChanged(void *param, calldata_t *calldata);
 	static void OBSSourceMonitoringTypeChanged(void *param, calldata_t *calldata);
 	static void OBSSourceMixersChanged(void *param, calldata_t *calldata);
@@ -83,6 +97,8 @@ public slots:
 	void volumeChanged(double db);
 	void percentChanged(int percent);
 	void downmixMonoChanged(bool checked);
+	void updateVolumeValueLabel();
+	void updateVolumeSlider();
 	void balanceChanged(int val);
 	void syncOffsetChanged(int milliseconds);
 	void monitoringTypeChanged(int index);

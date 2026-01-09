@@ -1,11 +1,18 @@
 #include "OBSAdvAudioCtrl.hpp"
 
+// 先包含需要的完整类型定义
 #include <components/BalanceSlider.hpp>
+#include <components/VolumeSlider.hpp>
 #include <widgets/OBSBasic.hpp>
+#include <widgets/VolumeMeter.hpp>
+#include <media-io/audio-io.h>  // 包含 MAX_AUDIO_CHANNELS 定义
 
 #include <qt-wrappers.hpp>
 
 #include <QCheckBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QFrame>
 
 #include "moc_OBSAdvAudioCtrl.cpp"
 
@@ -15,6 +22,10 @@
 
 #define MIN_DB -96.0
 #define MAX_DB 26.0
+// FADER_PRECISION 在 VolumeMeter.hpp 中已定义，避免重复定义
+#ifndef FADER_PRECISION
+#define FADER_PRECISION 4096.0
+#endif
 
 static inline void setMixer(obs_source_t *source, const int mixerIdx, const bool checked);
 
@@ -113,6 +124,94 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_) : source(
 	stackedWidget->setFixedWidth(100);
 	stackedWidget->addWidget(volume);
 	stackedWidget->addWidget(percent);
+
+	// 创建新的音量控制控件（包含音量条、滑块和数值显示）
+	volumeControlWidget = new QWidget();
+	QVBoxLayout *volumeLayout = new QVBoxLayout(volumeControlWidget);
+	volumeLayout->setContentsMargins(0, 0, 0, 0);
+	volumeLayout->setSpacing(4);
+	
+	// 标题标签 "音量"
+	volumeTitleLabel = new QLabel("音量");
+	volumeTitleLabel->setAlignment(Qt::AlignCenter);
+	volumeTitleLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 14px; font-weight: bold; background: transparent; }");
+	
+	// 创建 obs_fader 和 obs_volmeter
+	obs_fader_t *fader_raw = obs_fader_create(OBS_FADER_LOG);
+	obs_volmeter_t *volmeter_raw = obs_volmeter_create(OBS_FADER_LOG);
+	obs_fader_attach_source(fader_raw, source);
+	obs_volmeter_attach_source(volmeter_raw, source);
+	
+	// 赋值给 OBSFader 和 OBSVolMeter（RAII 包装）
+	obs_fader = fader_raw;
+	obs_volmeter = volmeter_raw;
+	
+	// 音量条（meter）
+	volMeter = new VolumeMeter(nullptr, obs_volmeter, false);
+	volMeter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	volMeter->setFixedHeight(20);
+	
+	// 滑块（slider）
+	volumeSlider = new VolumeSlider(obs_fader, Qt::Horizontal);
+	volumeSlider->setLayoutDirection(Qt::LeftToRight);
+	volumeSlider->setDisplayTicks(true);
+	volumeSlider->setMinimum(0);
+	volumeSlider->setMaximum(int(FADER_PRECISION));
+	float deflection = obs_fader_get_deflection(obs_fader);
+	volumeSlider->setValue((int)(deflection * FADER_PRECISION));
+	
+	// 数值标签（显示当前音量百分比）
+	volumeValueLabel = new QLabel();
+	volumeValueLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+	volumeValueLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 14px; font-weight: bold; background: transparent; min-width: 40px; }");
+	
+	// 布局
+	QHBoxLayout *sliderLayout = new QHBoxLayout();
+	sliderLayout->setContentsMargins(0, 0, 0, 0);
+	sliderLayout->setSpacing(8);
+	sliderLayout->addWidget(volumeSlider, 1);
+	sliderLayout->addWidget(volumeValueLabel, 0);
+	
+	volumeLayout->addWidget(volumeTitleLabel);
+	volumeLayout->addWidget(volMeter);
+	volumeLayout->addLayout(sliderLayout);
+	
+	// 连接信号
+	connect(volumeSlider, &VolumeSlider::valueChanged, this, [this](int value) {
+		float prev = obs_source_get_volume(source);
+		float deflection = float(value) / FADER_PRECISION;
+		obs_fader_set_deflection(obs_fader, deflection);
+		updateVolumeValueLabel();
+		
+		// 同步更新 spinbox 的值
+		float db = obs_fader_get_db(obs_fader);
+		volume->blockSignals(true);
+		volume->setValue(db);
+		volume->blockSignals(false);
+		float vol = obs_source_get_volume(source);
+		percent->blockSignals(true);
+		percent->setValue((int)(vol * 100.0f));
+		percent->blockSignals(false);
+		
+		// 添加撤销/重做支持
+		auto undo_redo = [](const std::string &uuid, float val) {
+			OBSSourceAutoRelease src = obs_get_source_by_uuid(uuid.c_str());
+			obs_source_set_volume(src, val);
+		};
+		const char *name = obs_source_get_name(source);
+		const char *uuid = obs_source_get_uuid(source);
+		OBSBasic::Get()->undo_s.add_action(QTStr("Undo.Volume.Change").arg(name),
+					   std::bind(undo_redo, std::placeholders::_1, prev),
+					   std::bind(undo_redo, std::placeholders::_1, vol), uuid, uuid, true);
+	});
+	
+	// 添加 obs_fader 回调，监听音量变化
+	obs_fader_add_callback(obs_fader, OBSVolumeChanged, this);
+	obs_volmeter_add_callback(obs_volmeter, OBSVolumeLevel, this);
+	
+	// 初始化音量显示
+	int percentValue = (int)(obs_source_get_volume(source) * 100.0f);
+	volumeValueLabel->setText(QString::number(percentValue));
 
 	VolumeType volType = (VolumeType)config_get_int(App()->GetUserConfig(), "BasicWindow", "AdvAudioVolumeType");
 
@@ -221,6 +320,14 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_) : source(
 
 OBSAdvAudioCtrl::~OBSAdvAudioCtrl()
 {
+	// 移除回调函数
+	if (obs_fader) {
+		obs_fader_remove_callback(obs_fader, OBSVolumeChanged, this);
+	}
+	if (obs_volmeter) {
+		obs_volmeter_remove_callback(obs_volmeter, OBSVolumeLevel, this);
+	}
+	// OBSFader 和 OBSVolMeter 会自动清理资源（RAII）
 	iconLabel->deleteLater();
 	nameLabel->deleteLater();
 	active->deleteLater();
@@ -231,6 +338,8 @@ OBSAdvAudioCtrl::~OBSAdvAudioCtrl()
 	if (obs_audio_monitoring_available())
 		monitoringType->deleteLater();
 	mixerContainer->deleteLater();
+	if (volumeControlWidget)
+		volumeControlWidget->deleteLater();
 }
 
 void OBSAdvAudioCtrl::ShowAudioControl(QGridLayout *layout)
@@ -241,7 +350,7 @@ void OBSAdvAudioCtrl::ShowAudioControl(QGridLayout *layout)
 	layout->addWidget(iconLabel, lastRow, idx++);
 	layout->addWidget(nameLabel, lastRow, idx++);
 	layout->addWidget(active, lastRow, idx++);
-	layout->addWidget(stackedWidget, lastRow, idx++);
+	layout->addWidget(volumeControlWidget, lastRow, idx++);
 	layout->addWidget(forceMono, lastRow, idx++);
 	layout->addWidget(balanceContainer, lastRow, idx++);
 	layout->addWidget(syncOffset, lastRow, idx++);
@@ -275,6 +384,30 @@ void OBSAdvAudioCtrl::OBSSourceVolumeChanged(void *param, calldata_t *calldata)
 {
 	float volume = (float)calldata_float(calldata, "volume");
 	QMetaObject::invokeMethod(static_cast<OBSAdvAudioCtrl *>(param), "SourceVolumeChanged", Q_ARG(float, volume));
+}
+
+void OBSAdvAudioCtrl::OBSVolumeChanged(void *param, float db)
+{
+	OBSAdvAudioCtrl *ctrl = static_cast<OBSAdvAudioCtrl *>(param);
+	if (!ctrl)
+		return;
+	
+	// 通过槽函数来更新 UI
+	QMetaObject::invokeMethod(ctrl, "updateVolumeSlider", Qt::QueuedConnection);
+}
+
+void OBSAdvAudioCtrl::OBSVolumeLevel(void *param, const float magnitude[MAX_AUDIO_CHANNELS],
+				     const float peak[MAX_AUDIO_CHANNELS], const float inputPeak[MAX_AUDIO_CHANNELS])
+{
+	OBSAdvAudioCtrl *ctrl = static_cast<OBSAdvAudioCtrl *>(param);
+	if (!ctrl)
+		return;
+	
+	// 通过 QMetaObject 调用，因为静态函数不能直接访问私有成员
+	// 或者直接调用，因为 ctrl 是同一类的实例，可以访问私有成员
+	if (ctrl->volMeter) {
+		ctrl->volMeter->setLevels(magnitude, peak, inputPeak);
+	}
 }
 
 void OBSAdvAudioCtrl::OBSSourceSyncChanged(void *param, calldata_t *calldata)
@@ -341,10 +474,42 @@ void OBSAdvAudioCtrl::SourceVolumeChanged(float value)
 {
 	volume->blockSignals(true);
 	percent->blockSignals(true);
-	volume->setValue(obs_mul_to_db(value));
+	float db = obs_mul_to_db(value);
+	volume->setValue(db);
 	percent->setValue((int)std::round(value * 100.0f));
 	percent->blockSignals(false);
 	volume->blockSignals(false);
+	
+	// 更新滑块和数值标签
+	if (volumeSlider && obs_fader) {
+		obs_fader_set_db(obs_fader, db);
+		volumeSlider->blockSignals(true);
+		float deflection = obs_fader_get_deflection(obs_fader);
+		volumeSlider->setValue((int)(deflection * FADER_PRECISION));
+		volumeSlider->blockSignals(false);
+		updateVolumeValueLabel();
+	}
+}
+
+void OBSAdvAudioCtrl::updateVolumeValueLabel()
+{
+	if (!volumeValueLabel)
+		return;
+	
+	int percentValue = (int)(obs_source_get_volume(source) * 100.0f);
+	volumeValueLabel->setText(QString::number(percentValue));
+}
+
+void OBSAdvAudioCtrl::updateVolumeSlider()
+{
+	if (!volumeSlider || !obs_fader)
+		return;
+	
+	volumeSlider->blockSignals(true);
+	float deflection = obs_fader_get_deflection(obs_fader);
+	volumeSlider->setValue((int)(deflection * FADER_PRECISION));
+	volumeSlider->blockSignals(false);
+	updateVolumeValueLabel();
 }
 
 void OBSAdvAudioCtrl::SourceBalanceChanged(int value)
