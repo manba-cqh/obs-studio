@@ -1,11 +1,10 @@
 #include "AudioMixPanel.hpp"
 #include <widgets/OBSBasic.hpp>
-#include <widgets/VolControl.hpp>
 #include <obs-frontend-api.h>
-#include <QScrollArea>
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QFrame>
+#include <qt-wrappers.hpp>
 
 #include "tools.hpp"
 
@@ -13,40 +12,22 @@ AudioMixPanel::AudioMixPanel(QWidget *parent)
     : PanelContainer(parent)
 {
     initUI();
-    updateAudioSources();
-    
-    // 监听场景变化
-    obs_frontend_add_event_callback([](enum obs_frontend_event event, void *param) {
-        AudioMixPanel *panel = static_cast<AudioMixPanel*>(param);
-        if (event == OBS_FRONTEND_EVENT_SCENE_CHANGED) {
-            // 直接调用，避免使用 QMetaObject::invokeMethod（会导致元类型冲突）
-            panel->updateAudioSources();
-        }
-    }, this);
+    initAudioControls();
 }
 
 AudioMixPanel::~AudioMixPanel()
 {
-    clearVolumeControls();
 }
 
 void AudioMixPanel::initUI()
 {
-    // 创建滚动区域
-    m_scrollArea = new QScrollArea(this);
-    m_scrollArea->setWidgetResizable(true);
-    m_scrollArea->setFrameShape(QFrame::NoFrame);
-    m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    
-    // 创建内容容器
-    m_contentWidget = new QWidget();
+    m_contentWidget = new QWidget(this);
+    m_contentWidget->setStyleSheet("QWidget { background: transparent; }");
     m_contentLayout = new QVBoxLayout(m_contentWidget);
     m_contentLayout->setContentsMargins(0, 0, 0, 0);
-    m_contentLayout->setSpacing(0);
-    m_contentLayout->addStretch();
+    m_contentLayout->setSpacing(8);
     
-    m_scrollArea->setWidget(m_contentWidget);
-    setContentWidget(m_scrollArea);
+    setContentWidget(m_contentWidget);
 
     m_audioSettingButton = new QPushButton(this);
     m_audioSettingButton->setFixedSize(24, 24);
@@ -64,90 +45,281 @@ void AudioMixPanel::initUI()
     });
 }
 
-void AudioMixPanel::updateAudioSources()
+void AudioMixPanel::initAudioControls()
 {
-    clearVolumeControls();
-    
-    OBSBasic *main = OBSBasic::Get();
-    if (!main) {
-        return;
-    }
-    
-    OBSScene scene = main->GetCurrentScene();
-    if (!scene) {
-        return;
-    }
-    
-    // 枚举场景中的所有项，查找音频源
-    struct EnumData {
-        AudioMixPanel *panel;
-    } enumData = {this};
-    
-    auto enumItem = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
-        EnumData *data = static_cast<EnumData*>(param);
-        OBSSource source = obs_sceneitem_get_source(item);
-        if (data->panel->isAudioSource(source)) {
-            data->panel->addAudioSource(source);
-        }
-        return true;
-    };
-    
-    obs_scene_enum_items(scene, enumItem, &enumData);
-    
-    // 添加全局音频设备（桌面音频和麦克风）
+    // 固定显示第一个桌面音频设备 (对应 OBS 设置页面的"桌面音频"，channel 1)
+    // 这是全局音频输出源，与场景和场景中的源无关
     OBSSource desktopAudio = obs_get_output_source(1);
-    if (desktopAudio && isAudioSource(desktopAudio)) {
-        addAudioSource(desktopAudio);
+    QString desktopName = "桌面音频";
+    if (desktopAudio) {
+        desktopName = getDisplayName(desktopAudio);
     }
-    
-    OBSSource micAudio = obs_get_output_source(3);
-    if (micAudio && isAudioSource(micAudio)) {
-        addAudioSource(micAudio);
-    }
-}
-
-void AudioMixPanel::clearVolumeControls()
-{
-    for (VolControl *vol : m_volumeControls) {
-        m_contentLayout->removeWidget(vol);
-        delete vol;
-    }
-    m_volumeControls.clear();
-}
-
-void AudioMixPanel::addAudioSource(OBSSource source)
-{
-    if (!source || obs_source_removed(source)) {
-        return;
-    }
-    
-    // 检查是否已经存在
-    for (VolControl *vol : m_volumeControls) {
-        if (vol->GetSource() == source) {
-            return;
+    setupAudioControl(m_desktopAudio, desktopAudio, desktopName);
+    if (desktopAudio) {
+        setupAudioSignals(m_desktopAudio);
+        updateDesktopVolume();
+        updateDesktopMute();
+    } else {
+        // 源不存在时禁用控件
+        if (m_desktopAudio.volumeSlider) {
+            m_desktopAudio.volumeSlider->setEnabled(false);
+            m_desktopAudio.volumeSlider->setValue(0);
+        }
+        if (m_desktopAudio.volumeLabel) {
+            m_desktopAudio.volumeLabel->setText("0%");
+        }
+        if (m_desktopAudio.muteButton) {
+            m_desktopAudio.muteButton->setEnabled(false);
         }
     }
     
-    // 创建音量控制
-    VolControl *volControl = new VolControl(source, false, false);
-    m_volumeControls.push_back(volControl);
-    
-    // 插入到布局中（在 stretch 之前）
-    int insertIndex = m_contentLayout->count() - 1;
-    m_contentLayout->insertWidget(insertIndex, volControl);
+    // 固定显示第一个麦克风/辅助音频设备 (对应 OBS 设置页面的"麦克风/辅助音频"，channel 3)
+    // 这是全局音频输入源，与场景和场景中的源无关
+    OBSSource micAudio = obs_get_output_source(3);
+    QString micName = "麦克风/Aux";
+    if (micAudio) {
+        micName = getDisplayName(micAudio);
+    }
+    setupAudioControl(m_micAudio, micAudio, micName);
+    if (micAudio) {
+        setupAudioSignals(m_micAudio);
+        updateMicVolume();
+        updateMicMute();
+    } else {
+        // 源不存在时禁用控件
+        if (m_micAudio.volumeSlider) {
+            m_micAudio.volumeSlider->setEnabled(false);
+            m_micAudio.volumeSlider->setValue(0);
+        }
+        if (m_micAudio.volumeLabel) {
+            m_micAudio.volumeLabel->setText("0%");
+        }
+        if (m_micAudio.muteButton) {
+            m_micAudio.muteButton->setEnabled(false);
+        }
+    }
+
+    m_contentLayout->addStretch();
 }
 
-bool AudioMixPanel::isAudioSource(OBSSource source)
+
+void AudioMixPanel::setupAudioControl(AudioControlItem &item, OBSSource source, const QString &displayName)
 {
-    if (!source || obs_source_removed(source)) {
-        return false;
+    // 先清理旧的信号连接
+    item.sigs.clear();
+    
+    item.source = source;
+    item.panel = nullptr;
+    
+    // 如果容器已存在，先删除
+    if (item.container && m_contentLayout) {
+        m_contentLayout->removeWidget(item.container);
+        delete item.container;
+    }
+    item.container = nullptr;
+    
+    // 创建容器
+    item.container = new QFrame(m_contentWidget);
+    item.container->setObjectName("audioControlWidget");
+    item.container->setStyleSheet("QFrame#audioControlWidget { background: transparent; border: none; }");
+    
+    // 主布局
+    QVBoxLayout *mainLayout = new QVBoxLayout(item.container);
+    mainLayout->setContentsMargins(0, 12, 6, 0);
+    mainLayout->setSpacing(6);
+    
+    // 下拉框
+    item.dropdownBtn = new QPushButton(item.container);
+    item.dropdownBtn->setText(displayName);
+    item.dropdownBtn->setStyleSheet("QPushButton { border: none; background: transparent; color: #FFFFFF; font-size: 14px; text-align: left; }");
+    item.dropdownBtn->setEnabled(false); // 暂时禁用
+    
+    QHBoxLayout *volumeLayout = new QHBoxLayout();
+    volumeLayout->setContentsMargins(0, 0, 0, 0);
+    volumeLayout->setSpacing(6);
+
+    // 静音按钮
+    item.muteButton = new QPushButton(item.container);
+    item.muteButton->setFixedSize(24, 24);
+    item.muteButton->setCheckable(true);
+
+    // 音量滑块
+    item.volumeSlider = new QSlider(Qt::Horizontal, item.container);
+    item.volumeSlider->setMinimum(0);
+    item.volumeSlider->setMaximum(100);
+    item.volumeSlider->setFixedHeight(20);
+    
+    // 音量数值标签（百分比显示）
+    item.volumeLabel = new QLabel(item.container);
+    item.volumeLabel->setFixedWidth(40);
+    item.volumeLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    item.volumeLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 14px; font-weight: bold; background: transparent; }");
+    
+    mainLayout->addWidget(item.dropdownBtn);
+    mainLayout->addLayout(volumeLayout);
+    volumeLayout->addWidget(item.muteButton);
+    volumeLayout->addWidget(item.volumeSlider);
+    volumeLayout->addWidget(item.volumeLabel);
+    
+    m_contentLayout->addWidget(item.container);
+}
+
+// 静态回调函数
+static void OBSSourceVolumeChanged(void *param, calldata_t *calldata)
+{
+    Q_UNUSED(calldata);
+    AudioControlItem *item = static_cast<AudioControlItem*>(param);
+    if (item && item->panel) {
+        if (item->isDesktop) {
+            QMetaObject::invokeMethod(item->panel, "updateDesktopVolume", Qt::QueuedConnection);
+        } else {
+            QMetaObject::invokeMethod(item->panel, "updateMicVolume", Qt::QueuedConnection);
+        }
+    }
+}
+
+static void OBSSourceMuted(void *param, calldata_t *calldata)
+{
+    Q_UNUSED(calldata);
+    AudioControlItem *item = static_cast<AudioControlItem*>(param);
+    if (item && item->panel) {
+        if (item->isDesktop) {
+            QMetaObject::invokeMethod(item->panel, "updateDesktopMute", Qt::QueuedConnection);
+        } else {
+            QMetaObject::invokeMethod(item->panel, "updateMicMute", Qt::QueuedConnection);
+        }
+    }
+}
+
+void AudioMixPanel::setupAudioSignals(AudioControlItem &item)
+{
+    if (!item.source)
+        return;
+    
+    // 通过地址比较来确定是桌面音频还是麦克风
+    bool isDesktop = (&item == &m_desktopAudio);
+    
+    // 连接信号
+    if (isDesktop) {
+        connect(item.volumeSlider, &QSlider::valueChanged, this, &AudioMixPanel::onDesktopVolumeChanged);
+        connect(item.muteButton, &QPushButton::clicked, this, &AudioMixPanel::onDesktopMuteClicked);
+        item.isDesktop = true;
+    } else {
+        connect(item.volumeSlider, &QSlider::valueChanged, this, &AudioMixPanel::onMicVolumeChanged);
+        connect(item.muteButton, &QPushButton::clicked, this, &AudioMixPanel::onMicMuteClicked);
+        item.isDesktop = false;
     }
     
-    uint32_t flags = obs_source_get_output_flags(source);
-    return (flags & OBS_SOURCE_AUDIO) != 0;
+    item.panel = this;
+    
+    // 设置 OBS 信号
+    signal_handler_t *handler = obs_source_get_signal_handler(item.source);
+    item.sigs.emplace_back(handler, "volume", OBSSourceVolumeChanged, &item);
+    item.sigs.emplace_back(handler, "mute", OBSSourceMuted, &item);
 }
 
-void AudioMixPanel::onSceneChanged()
+void AudioMixPanel::onDesktopVolumeChanged(int value)
 {
-    updateAudioSources();
+    if (!m_desktopAudio.source)
+        return;
+    
+    float volume = (float)value / 100.0f;
+    obs_source_set_volume(m_desktopAudio.source, volume);
+    m_desktopAudio.volumeLabel->setText(QString::number(value) + "%");
+}
+
+void AudioMixPanel::onMicVolumeChanged(int value)
+{
+    if (!m_micAudio.source)
+        return;
+    
+    float volume = (float)value / 100.0f;
+    obs_source_set_volume(m_micAudio.source, volume);
+    m_micAudio.volumeLabel->setText(QString::number(value) + "%");
+}
+
+void AudioMixPanel::onDesktopMuteClicked()
+{
+    if (!m_desktopAudio.source)
+        return;
+    
+    bool muted = m_desktopAudio.muteButton->isChecked();
+    obs_source_set_muted(m_desktopAudio.source, muted);
+}
+
+void AudioMixPanel::onMicMuteClicked()
+{
+    if (!m_micAudio.source)
+        return;
+    
+    bool muted = m_micAudio.muteButton->isChecked();
+    obs_source_set_muted(m_micAudio.source, muted);
+}
+
+void AudioMixPanel::updateDesktopVolume()
+{
+    if (!m_desktopAudio.source || !m_desktopAudio.volumeSlider)
+        return;
+    
+    float volume = obs_source_get_volume(m_desktopAudio.source);
+    int volumePercent = (int)(volume * 100.0f);
+    
+    m_desktopAudio.volumeSlider->blockSignals(true);
+    m_desktopAudio.volumeSlider->setValue(volumePercent);
+    m_desktopAudio.volumeSlider->blockSignals(false);
+    
+    m_desktopAudio.volumeLabel->setText(QString::number(volumePercent) + "%");
+}
+
+void AudioMixPanel::updateMicVolume()
+{
+    if (!m_micAudio.source || !m_micAudio.volumeSlider)
+        return;
+    
+    float volume = obs_source_get_volume(m_micAudio.source);
+    int volumePercent = (int)(volume * 100.0f);
+    
+    m_micAudio.volumeSlider->blockSignals(true);
+    m_micAudio.volumeSlider->setValue(volumePercent);
+    m_micAudio.volumeSlider->blockSignals(false);
+    
+    m_micAudio.volumeLabel->setText(QString::number(volumePercent) + "%");
+}
+
+void AudioMixPanel::updateDesktopMute()
+{
+    if (!m_desktopAudio.source || !m_desktopAudio.muteButton)
+        return;
+    
+    bool muted = obs_source_muted(m_desktopAudio.source);
+    m_desktopAudio.muteButton->blockSignals(true);
+    m_desktopAudio.muteButton->setChecked(muted);
+    m_desktopAudio.muteButton->blockSignals(false);
+}
+
+void AudioMixPanel::updateMicMute()
+{
+    if (!m_micAudio.source || !m_micAudio.muteButton)
+            return;
+    
+    bool muted = obs_source_muted(m_micAudio.source);
+    m_micAudio.muteButton->blockSignals(true);
+    m_micAudio.muteButton->setChecked(muted);
+    m_micAudio.muteButton->blockSignals(false);
+}
+
+QString AudioMixPanel::getDisplayName(OBSSource source)
+{
+    QString sourceName = QT_UTF8(obs_source_get_name(source));
+    
+    if (sourceName.contains("Desktop", Qt::CaseInsensitive) || 
+        sourceName.contains("桌面", Qt::CaseInsensitive)) {
+        return "桌面音频";
+    } else if (sourceName.contains("Mic", Qt::CaseInsensitive) || 
+               sourceName.contains("Aux", Qt::CaseInsensitive) ||
+               sourceName.contains("麦克风", Qt::CaseInsensitive)) {
+        return "麦克风/Aux";
+    }
+    
+    return sourceName;
 }
