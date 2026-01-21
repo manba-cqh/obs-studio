@@ -57,7 +57,7 @@ OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent) : QDialog(parent), ui(new Ui
 	// 标题标签
 	QLabel *titleLabel = new QLabel(titleBar);
 	titleLabel->setTextFormat(Qt::PlainText);
-	titleLabel->setText(QTStr("Basic.AdvAudio"));
+	titleLabel->setText("调音台");
 	titleLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
 	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
 	titleLayout->addStretch();
@@ -69,10 +69,6 @@ OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent) : QDialog(parent), ui(new Ui
 	closeBtn->setCursor(Qt::PointingHandCursor);
 	closeBtn->setStyleSheet(
 		"QPushButton {"
-		"    border: none;"
-		"    background: transparent;"
-		"    padding: 0px;"
-		"    margin: 0px;"
 		"    border-image: url(:/images/close.svg);"
 		"}"
 		"QPushButton:hover {"
