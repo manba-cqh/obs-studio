@@ -10,7 +10,6 @@
 #include <QDoubleSpinBox>
 #include <QComboBox>
 #include <QListWidget>
-#include <QPushButton>
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QStandardItem>
@@ -29,6 +28,9 @@
 #include "spinbox-ignorewheel.hpp"
 #include "moc_properties-view.cpp"
 #include "properties-view.moc.hpp"
+
+#include "CommonComboBox.hpp"
+#include "CommonButton.hpp"
 
 #include <qt-wrappers.hpp>
 #include <plain-text-edit.hpp>
@@ -321,7 +323,7 @@ QWidget *OBSPropertiesView::AddText(obs_property_t *prop, QFormLayout *layout, Q
 	} else if (type == OBS_TEXT_PASSWORD) {
 		QLayout *subLayout = new QHBoxLayout();
 		QLineEdit *edit = new QLineEdit();
-		QPushButton *show = new QPushButton();
+		CommonButton *show = new CommonButton();
 
 		show->setText(tr("Show"));
 		show->setCheckable(true);
@@ -402,7 +404,7 @@ void OBSPropertiesView::AddPath(obs_property_t *prop, QFormLayout *layout, QLabe
 	const char *val = obs_data_get_string(settings, name);
 	QLayout *subLayout = new QHBoxLayout();
 	QLineEdit *edit = new QLineEdit();
-	QPushButton *button = new QPushButton(tr("Browse"));
+	CommonButton *button = new CommonButton(tr("Browse"));
 
 	if (!obs_property_enabled(prop)) {
 		edit->setEnabled(false);
@@ -417,7 +419,7 @@ void OBSPropertiesView::AddPath(obs_property_t *prop, QFormLayout *layout, QLabe
 	subLayout->addWidget(button);
 
 	WidgetInfo *info = new WidgetInfo(this, prop, edit);
-	connect(button, &QPushButton::clicked, info, &WidgetInfo::ControlChanged);
+	connect(button, &CommonButton::clicked, info, &WidgetInfo::ControlChanged);
 	children.emplace_back(info);
 
 	*label = new QLabel(QT_UTF8(obs_property_description(prop)));
@@ -646,7 +648,7 @@ QWidget *OBSPropertiesView::AddList(obs_property_t *prop, bool &warning)
 
 	int idx = -1;
 
-	QComboBox *combo = new QComboBox();
+	CommonComboBox *combo = new CommonComboBox();
 	for (size_t i = 0; i < count; i++)
 		AddComboItem(combo, prop, i);
 
@@ -699,11 +701,11 @@ QWidget *OBSPropertiesView::AddList(obs_property_t *prop, bool &warning)
 
 static void NewButton(QLayout *layout, WidgetInfo *info, const char *themeIcon, void (WidgetInfo::*method)())
 {
-	QPushButton *button = new QPushButton();
+	CommonButton *button = new CommonButton();
 	button->setProperty("class", "btn-tool " + QString(themeIcon));
 	button->setFlat(true);
 
-	QObject::connect(button, &QPushButton::clicked, info, method);
+	QObject::connect(button, &CommonButton::clicked, info, method);
 
 	layout->addWidget(button);
 }
@@ -765,14 +767,14 @@ QWidget *OBSPropertiesView::AddButton(obs_property_t *prop)
 {
 	const char *desc = obs_property_description(prop);
 
-	QPushButton *button = new QPushButton(QT_UTF8(desc));
+	CommonButton *button = new CommonButton(QT_UTF8(desc));
 	button->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-	return NewWidget(prop, button, &QPushButton::clicked);
+	return NewWidget(prop, button, &CommonButton::clicked);
 }
 
 void OBSPropertiesView::AddColorInternal(obs_property_t *prop, QFormLayout *layout, QLabel *&label, bool supportAlpha)
 {
-	QPushButton *button = new QPushButton;
+	CommonButton *button = new CommonButton;
 	QLabel *colorLabel = new QLabel;
 	const char *name = obs_property_name(prop);
 	long long val = obs_data_get_int(settings, name);
@@ -812,7 +814,7 @@ void OBSPropertiesView::AddColorInternal(obs_property_t *prop, QFormLayout *layo
 	subLayout->addWidget(button);
 
 	WidgetInfo *info = new WidgetInfo(this, prop, colorLabel);
-	connect(button, &QPushButton::clicked, info, &WidgetInfo::ControlChanged);
+	connect(button, &CommonButton::clicked, info, &WidgetInfo::ControlChanged);
 	children.emplace_back(info);
 
 	label = new QLabel(QT_UTF8(obs_property_description(prop)));
@@ -868,7 +870,7 @@ void OBSPropertiesView::AddFont(obs_property_t *prop, QFormLayout *layout, QLabe
 	OBSDataAutoRelease font_obj = obs_data_get_obj(settings, name);
 	const char *face = obs_data_get_string(font_obj, "face");
 	const char *style = obs_data_get_string(font_obj, "style");
-	QPushButton *button = new QPushButton;
+	CommonButton *button = new CommonButton;
 	QLabel *fontLabel = new QLabel;
 	QFont font;
 
@@ -896,7 +898,7 @@ void OBSPropertiesView::AddFont(obs_property_t *prop, QFormLayout *layout, QLabe
 	subLayout->addWidget(button);
 
 	WidgetInfo *info = new WidgetInfo(this, prop, fontLabel);
-	connect(button, &QPushButton::clicked, info, &WidgetInfo::ControlChanged);
+	connect(button, &CommonButton::clicked, info, &WidgetInfo::ControlChanged);
 	children.emplace_back(info);
 
 	label = new QLabel(QT_UTF8(obs_property_description(prop)));
@@ -1056,7 +1058,7 @@ static QWidget *CreateSimpleFPSValues(OBSFrameRatePropertyWidget *fpsProps, bool
 	auto items = vector<common_frame_rate>{};
 	items.reserve(sizeof(common_fps) / sizeof(common_frame_rate));
 
-	auto combo = fpsProps->simpleFPS = new QComboBox();
+	auto combo = fpsProps->simpleFPS = new CommonComboBox();
 
 	combo->addItem("", QVariant::fromValue(make_fps(0, 0)));
 	for (const auto &fps : common_fps) {
@@ -1132,7 +1134,7 @@ static QWidget *CreateRationalFPS(OBSFrameRatePropertyWidget *fpsProps, bool &se
 	auto str = QObject::tr("Basic.PropertiesView.FPS.ValidFPSRanges");
 	auto rlabel = new QLabel{str};
 
-	auto combo = fpsProps->fpsRange = new QComboBox();
+	auto combo = fpsProps->fpsRange = new CommonComboBox();
 	auto convert_fps = media_frames_per_second_to_fps;
 	//auto convert_fi  = media_frames_per_second_to_frame_interval;
 
@@ -1180,7 +1182,7 @@ static OBSFrameRatePropertyWidget *CreateFrameRateWidget(obs_property_t *prop, b
 
 	swap(widget->fps_ranges, fps_ranges);
 
-	auto combo = widget->modeSelect = new QComboBox();
+	auto combo = widget->modeSelect = new CommonComboBox();
 	combo->addItem(QObject::tr("Basic.PropertiesView.FPS.Simple"), QVariant::fromValue(frame_rate_tag::simple()));
 	combo->addItem(QObject::tr("Basic.PropertiesView.FPS.Rational"),
 		       QVariant::fromValue(frame_rate_tag::rational()));
@@ -2091,11 +2093,11 @@ public:
 		topLayout->setAlignment(edit, Qt::AlignVCenter);
 
 		if (browse) {
-			QPushButton *browseButton = new QPushButton(tr("Browse"));
+			CommonButton *browseButton = new CommonButton(tr("Browse"));
 			topLayout->addWidget(browseButton);
 			topLayout->setAlignment(browseButton, Qt::AlignVCenter);
 
-			connect(browseButton, &QPushButton::clicked, this, &EditableItemDialog::BrowseClicked);
+			connect(browseButton, &CommonButton::clicked, this, &EditableItemDialog::BrowseClicked);
 		}
 
 		QDialogButtonBox::StandardButtons buttons = QDialogButtonBox::Ok | QDialogButtonBox::Cancel;

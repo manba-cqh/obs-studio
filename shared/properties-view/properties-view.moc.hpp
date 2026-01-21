@@ -10,6 +10,7 @@
 #include <media-io/frame-rate.h>
 
 #include <vector>
+#include "CommonComboBox.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4505)
@@ -34,7 +35,7 @@ class OBSFrameRatePropertyWidget : public QWidget {
 public:
 	frame_rate_ranges_t fps_ranges;
 
-	QComboBox *modeSelect = nullptr;
+	CommonComboBox *modeSelect = nullptr;
 	QStackedWidget *modeDisplay = nullptr;
 
 	QWidget *labels = nullptr;
@@ -43,9 +44,9 @@ public:
 	QLabel *minLabel = nullptr;
 	QLabel *maxLabel = nullptr;
 
-	QComboBox *simpleFPS = nullptr;
+	CommonComboBox *simpleFPS = nullptr;
 
-	QComboBox *fpsRange = nullptr;
+	CommonComboBox *fpsRange = nullptr;
 	QSpinBox *numEdit = nullptr;
 	QSpinBox *denEdit = nullptr;
 
