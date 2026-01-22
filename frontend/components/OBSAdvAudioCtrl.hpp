@@ -8,6 +8,7 @@
 class BalanceSlider;
 class QCheckBox;
 class QComboBox;
+class CommonComboBox;
 class QDoubleSpinBox;
 class QGridLayout;
 class QLabel;
@@ -51,7 +52,7 @@ private:
 	QPointer<QLabel> labelL;
 	QPointer<QLabel> labelR;
 	QPointer<QSpinBox> syncOffset;
-	QPointer<QComboBox> monitoringType;
+	QPointer<CommonComboBox> monitoringType;
 	QPointer<QCheckBox> mixer1;
 	QPointer<QCheckBox> mixer2;
 	QPointer<QCheckBox> mixer3;

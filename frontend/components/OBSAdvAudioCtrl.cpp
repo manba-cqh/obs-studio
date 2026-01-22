@@ -6,6 +6,7 @@
 #include <widgets/OBSBasic.hpp>
 #include <widgets/VolumeMeter.hpp>
 #include <media-io/audio-io.h>  // 包含 MAX_AUDIO_CHANNELS 定义
+#include <comet/common/CommonComboBox.hpp>
 
 #include <qt-wrappers.hpp>
 
@@ -51,7 +52,7 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_) : source(
 	forceMono = new QCheckBox();
 	balance = new BalanceSlider();
 	if (obs_audio_monitoring_available())
-		monitoringType = new QComboBox();
+		monitoringType = new CommonComboBox();
 	syncOffset = new QSpinBox();
 	mixer1 = new QCheckBox();
 	mixer2 = new QCheckBox();
@@ -303,7 +304,7 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_) : source(
 	connect(balance, &BalanceSlider::doubleClicked, this, &OBSAdvAudioCtrl::ResetBalance);
 	connect(syncOffset, &QSpinBox::valueChanged, this, &OBSAdvAudioCtrl::syncOffsetChanged);
 	if (obs_audio_monitoring_available())
-		connect(monitoringType, &QComboBox::currentIndexChanged, this, &OBSAdvAudioCtrl::monitoringTypeChanged);
+		connect(monitoringType, &CommonComboBox::currentIndexChanged, this, &OBSAdvAudioCtrl::monitoringTypeChanged);
 
 	auto connectMixer = [this](QCheckBox *mixer, int num) {
 		connect(mixer, &QCheckBox::clicked, [this, num](bool checked) { setMixer(source, num, checked); });

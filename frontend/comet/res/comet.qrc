@@ -37,7 +37,8 @@
     <file>images/hide_unlock_hover.png</file>
     <file>images/hide_lock.png</file>
     <file>images/hide_lock_hover.png</file>
-    <file>images/setting.png</file>
+    <file>images/setting.svg</file>
+    <file>images/setting_hover.svg</file>
     <file>images/checked.png</file>
     <file>images/unchecked.png</file>
 
@@ -60,6 +61,11 @@
     <file>images/colorsource_toolbar.svg</file>
     <file>images/audioinput_capture_toolbar.svg</file>
     <file>images/audiooutput_capture_toolbar.svg</file>
+    <file>images/audioinput_capture_scenebar.svg</file>
+    <file>images/audioinput_capture_scenebar_lock.svg</file>
+    <file>images/audiooutput_capture_scenebar.svg</file>
+    <file>images/audiooutput_capture_scenebar_lock.svg</file>
+    
 
   </qresource>
 </RCC>

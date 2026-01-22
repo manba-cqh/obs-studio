@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QFrame>
 #include <QHBoxLayout>
+#include <QComboBox>
 
 #include "PanelContainer.hpp"
 
@@ -16,13 +17,14 @@ class AudioMixPanel;  // 前向声明
 struct AudioControlItem {
     OBSSource source;
     QFrame *container = nullptr;
-    QPushButton *dropdownBtn;  // 下拉框（显示名称）
+    QComboBox *dropdownBtn;      // 下拉框（选择设备）
     QSlider *volumeSlider;      // 滑动条
     QLabel *volumeLabel;        // 百分比显示
     QPushButton *muteButton;    // 静音按钮
     std::vector<OBSSignal> sigs;
     AudioMixPanel *panel;
     bool isDesktop;
+    uint32_t channel;            // 音频通道号
 };
 
 class AudioMixPanel : public PanelContainer
@@ -44,13 +46,17 @@ private slots:
     void updateMicVolume();
     void updateDesktopMute();
     void updateMicMute();
+    void onDesktopDeviceChanged(int index);
+    void onMicDeviceChanged(int index);
 
 private:
     void initUI();
     void initAudioControls();
-    void setupAudioControl(AudioControlItem &item, OBSSource source, const QString &displayName);
+    void setupAudioControl(AudioControlItem &item, OBSSource source, uint32_t channel, bool isDesktop);
     void setupAudioSignals(AudioControlItem &item);
+    void populateDeviceList(QComboBox *combo, bool isDesktop);
     QString getDisplayName(OBSSource source);
+    QString getChannelDisplayName(uint32_t channel, bool isDesktop);
     
 private:
     QWidget *m_contentWidget;
