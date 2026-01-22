@@ -8,6 +8,7 @@
 #include "AudioConfigWt.hpp"
 #include "VideoConfigWt.hpp"
 #include "RecordConfigWt.hpp"
+#include "StreamConfigWt.hpp"
 #include "tools.hpp"
 
 ConfigWt::ConfigWt(QWidget *parent)
@@ -77,6 +78,8 @@ void ConfigWt::initUI()
 	m_stackedWidget->addWidget(m_videoConfig);
 	m_recordConfig = new RecordConfigWt(this);
 	m_stackedWidget->addWidget(m_recordConfig);
+	m_streamConfig = new StreamConfigWt(this);
+	m_stackedWidget->addWidget(m_streamConfig);
 	
     mainLayout->addWidget(rightWidget, 1);
     rightLayout->addWidget(configHeaderWidget, 0);
@@ -106,6 +109,10 @@ void ConfigWt::setupNavigation()
 	QListWidgetItem *recordItem = new QListWidgetItem("录制", m_navList);
     recordItem->setTextAlignment(Qt::AlignCenter);
 	recordItem->setData(Qt::UserRole, 2);
+
+	QListWidgetItem *streamItem = new QListWidgetItem("推流", m_navList);
+    streamItem->setTextAlignment(Qt::AlignCenter);
+	streamItem->setData(Qt::UserRole, 3);
 	
 	connect(m_navList, &QListWidget::currentRowChanged, this, &ConfigWt::switchPage);
 }
@@ -114,19 +121,21 @@ void ConfigWt::switchPage(int index)
 {
 	if (index >= 0 && index < m_stackedWidget->count()) {
 		m_stackedWidget->setCurrentIndex(index);
-        switch (index)
-        {
-        case 0:
-            m_configTitle->setText("音频");
-            break;
-        case 1:
-            m_configTitle->setText("视频");
-            break;
-        case 2:
-            m_configTitle->setText("录制");
-            break;
-        default:
-            break;
-        }
+		switch (index) {
+		case 0:
+			m_configTitle->setText("音频");
+			break;
+		case 1:
+			m_configTitle->setText("视频");
+			break;
+		case 2:
+			m_configTitle->setText("录制");
+			break;
+		case 3:
+			m_configTitle->setText("推流");
+			break;
+		default:
+			break;
+		}
     }
 }
