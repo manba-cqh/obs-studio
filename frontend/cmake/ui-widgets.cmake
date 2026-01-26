@@ -88,6 +88,8 @@ target_sources(
     comet/common/PanelHeaderWidget.hpp
     comet/common/SourceListItemWidget.cpp
     comet/common/SourceListItemWidget.hpp
+    comet/common/SceneListItemWidget.cpp
+    comet/common/SceneListItemWidget.hpp
     comet/common/CommonComboBox.hpp
     comet/common/CommonLineEdit.hpp
     comet/common/CommonButton.hpp

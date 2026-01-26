@@ -5,6 +5,11 @@
 #include <QListWidget>
 #include <QPushButton>
 #include <QButtonGroup>
+#include <QList>
+#include <obs.hpp>
+#include <obs-frontend-api.h>
+
+class SceneListItemWidget;
 
 class ScenePanel : public PanelContainer
 {
@@ -19,20 +24,22 @@ public:
 	QPushButton *getBroadcastButton() const { return m_broadcastButton; }
 	
 	void updateCurrentSceneSources();
+	void refreshSceneList();
 
 public slots:
     void onBroadcastButtonClicked();
     void onAddSceneButtonClicked();
     void onAddSourceButtonClicked();
-    void onSceneButtonClicked(int id);
+    void onSceneItemClicked(OBSSource source);
     void onClearSourceButtonClicked();
+	void onSceneChanged();
 
 private:
     void initUI();
     void createHeaderOperWidget();
     void createContentWidget();
     void setupSceneButtons();
-    void addSceneButton(const QString &name, int row, int col);
+    void addSceneItem(OBSSource source, int row, int col);
     void selectScene(int index);
     static void OBSFrontendEvent(enum obs_frontend_event event, void *ptr);
 
@@ -40,13 +47,12 @@ private:
     QPushButton *m_broadcastButton;
 
     QGridLayout *m_sceneGridLayout;
-    QButtonGroup *m_sceneButtonGroup;
     QPushButton *m_addSceneButton;
     QListWidget *m_currentContentList;
     QPushButton *m_addSourceButton;
     QPushButton *m_clearSourceButton;
     
     int m_currentSceneIndex;
-    QList<QPushButton*> m_sceneButtons;
+    QList<SceneListItemWidget*> m_sceneItems;
 };
 

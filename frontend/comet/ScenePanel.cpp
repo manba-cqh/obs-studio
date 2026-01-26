@@ -10,6 +10,7 @@
 #include <obs.hpp>
 #include <widgets/OBSBasic.hpp>
 #include "SourceListItemWidget.hpp"
+#include "SceneListItemWidget.hpp"
 #include <dialogs/NameDialog.hpp>
 #include <qt-wrappers.hpp>
 #include <string>
@@ -35,17 +36,18 @@ ScenePanel::ScenePanel(QWidget *parent)
 	, m_currentSceneIndex(0)
 {
 	initUI();
+	
+	// 注册 OBS 前端事件回调，监听场景列表变化
+	obs_frontend_add_event_callback(OBSFrontendEvent, this);
 }
 
 ScenePanel::~ScenePanel()
 {
-    // 断开所有信号连接，避免在析构时触发回调
-    if (m_sceneButtonGroup) {
-        m_sceneButtonGroup->disconnect();
-    }
-    
-    // 清理按钮列表
-    m_sceneButtons.clear();
+	// 移除事件回调
+	obs_frontend_remove_event_callback(OBSFrontendEvent, this);
+	
+	// 清理场景项列表
+	m_sceneItems.clear();
 }
 
 void ScenePanel::initUI()
@@ -74,23 +76,17 @@ void ScenePanel::createContentWidget()
     contentLayout->setContentsMargins(0, 0, 0, 0);
     contentLayout->setSpacing(5);
 
-    // 创建场景按钮区域
-    QWidget *sceneButtonsWidget = new QWidget(contentWidget);
-    m_sceneGridLayout = new QGridLayout(sceneButtonsWidget);
+    // 创建场景列表区域
+    QWidget *sceneListWidget = new QWidget(contentWidget);
+    m_sceneGridLayout = new QGridLayout(sceneListWidget);
     m_sceneGridLayout->setContentsMargins(0, 0, 0, 0);
     m_sceneGridLayout->setSpacing(5);
 
-    m_sceneButtonGroup = new QButtonGroup(this);
-    m_sceneButtonGroup->setExclusive(true);
-    connect(m_sceneButtonGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked), [this](QAbstractButton *button) {
-        int id = m_sceneButtonGroup->id(button);
-        onSceneButtonClicked(id);
-    });
     m_addSceneButton = new QPushButton(this);
     m_addSceneButton->setFixedSize(24, 24);
     m_addSceneButton->setStyleSheet(BUTTON_QSS_STYLE("add.svg", "add_hover.svg", "add_hover.svg"));
     connect(m_addSceneButton, &QPushButton::clicked, this, &ScenePanel::onAddSceneButtonClicked);
-    contentLayout->addWidget(sceneButtonsWidget);
+    contentLayout->addWidget(sceneListWidget);
 
     QWidget *separator = new QWidget(contentWidget);
     separator->setFixedHeight(1);
@@ -136,72 +132,72 @@ void ScenePanel::createContentWidget()
 
 void ScenePanel::setupSceneButtons()
 {
-    // 从 OBS 获取场景列表
-    struct obs_frontend_source_list scenes = {0};
-    obs_frontend_get_scenes(&scenes);
+	// 清空现有场景项
+	for (auto *item : m_sceneItems) {
+		m_sceneGridLayout->removeWidget(item);
+		delete item;
+	}
+	m_sceneItems.clear();
 
-    // 为每个场景创建按钮
-    // 注意：不要手动调用 obs_source_release，应该由 obs_frontend_source_list_free 统一管理
-    int sceneCount = (int)scenes.sources.num;
-    for (int i = 0; i < sceneCount; i++) {
-        obs_source_t *source = scenes.sources.array[i];
-        const char *sceneName = obs_source_get_name(source);
-        
-        int row = i / 3;
-        int col = i % 3;
-        addSceneButton(QString::fromUtf8(sceneName), row, col);
-    }
+	// 从 OBS 获取场景列表
+	struct obs_frontend_source_list scenes = {0};
+	obs_frontend_get_scenes(&scenes);
 
-    // 释放场景列表
-    obs_frontend_source_list_free(&scenes);
+	// 为每个场景创建项
+	// 注意：不要手动调用 obs_source_release，应该由 obs_frontend_source_list_free 统一管理
+	int sceneCount = (int)scenes.sources.num;
+	for (int i = 0; i < sceneCount; i++) {
+		obs_source_t *source = scenes.sources.array[i];
+		
+		int row = i / 3;
+		int col = i % 3;
+		addSceneItem(source, row, col);
+	}
 
-    // 更新"+"按钮位置
-    if (m_addSceneButton) {
-        m_sceneGridLayout->removeWidget(m_addSceneButton);
-        int totalButtons = m_sceneButtons.size();
-        int nextRow = totalButtons / 3;
-        int nextCol = totalButtons % 3;
-        m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
-    }
+	// 释放场景列表
+	obs_frontend_source_list_free(&scenes);
 
-    if (!m_sceneButtons.isEmpty()) {
-        onSceneButtonClicked(0);
-    }
+	// 更新"+"按钮位置
+	if (m_addSceneButton) {
+		m_sceneGridLayout->removeWidget(m_addSceneButton);
+		int totalItems = m_sceneItems.size();
+		int nextRow = totalItems / 3;
+		int nextCol = totalItems % 3;
+		m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
+	}
+
+	// 选择第一个场景
+	if (!m_sceneItems.isEmpty()) {
+		selectScene(0);
+	}
 }
 
-void ScenePanel::addSceneButton(const QString &name, int row, int col)
+void ScenePanel::addSceneItem(OBSSource source, int row, int col)
 {
-    QPushButton *sceneButton = new QPushButton();
-    sceneButton->setFixedSize(65, 24);
-    sceneButton->setCheckable(true);
-    sceneButton->setProperty("scene_btn", true);
-    
-    // 计算文本宽度，如果超出按钮宽度则截断并添加省略号
-    QFontMetrics fm(sceneButton->font());
-    int buttonWidth = sceneButton->width();
-    int textWidth = fm.horizontalAdvance(name);
-    
-    QString displayText = name;
-    if (textWidth > buttonWidth - 10) { // 留出一些边距
-        displayText = fm.elidedText(name, Qt::ElideRight, buttonWidth - 10);
-    }
-    sceneButton->setText(displayText);
-    sceneButton->setToolTip(name); // 设置完整文本作为提示
+	if (!source) {
+		return;
+	}
 
-    m_sceneButtonGroup->addButton(sceneButton, m_sceneButtons.size());
-    m_sceneButtons.append(sceneButton);
-    m_sceneGridLayout->addWidget(sceneButton, row, col);
+	SceneListItemWidget *sceneItem = new SceneListItemWidget(source, this);
+	sceneItem->setFixedHeight(34);
+	
+	// 连接信号
+	connect(sceneItem, &SceneListItemWidget::sceneSelected, this, &ScenePanel::onSceneItemClicked);
+	connect(sceneItem, &SceneListItemWidget::sceneChanged, this, &ScenePanel::onSceneChanged);
+	
+	m_sceneItems.append(sceneItem);
+	m_sceneGridLayout->addWidget(sceneItem, row, col);
 }
 
 void ScenePanel::selectScene(int index)
 {
-    for (QPushButton *button : m_sceneButtons) {
-        button->setChecked(false);
-    }
-    if (index >= 0 && index < m_sceneButtons.size()) {
-        m_currentSceneIndex = index;
-        m_sceneButtons[index]->setChecked(true);
-    }
+	for (SceneListItemWidget *item : m_sceneItems) {
+		item->setChecked(false);
+	}
+	if (index >= 0 && index < m_sceneItems.size()) {
+		m_currentSceneIndex = index;
+		m_sceneItems[index]->setChecked(true);
+	}
 }
 
 void ScenePanel::onBroadcastButtonClicked()
@@ -249,23 +245,23 @@ void ScenePanel::onAddSceneButtonClicked()
         if (scene) {
             obs_source_t *scene_source = obs_scene_get_source(scene);
             
-            // 添加新场景按钮到 UI
-            int totalButtons = m_sceneButtons.size();
-            int row = totalButtons / 3;
-            int col = totalButtons % 3;
-            addSceneButton(QString::fromUtf8(name.c_str()), row, col);
-    
-    // 移动"+"按钮到下一个位置
-    m_sceneGridLayout->removeWidget(m_addSceneButton);
-    int nextRow = (totalButtons + 1) / 3;
-    int nextCol = (totalButtons + 1) % 3;
-    m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
-            
-            // 设置当前场景，这会触发 AddScene 回调并更新 OBS 的内部状态
-            main->SetCurrentScene(scene_source);
-    
-    // 选中新添加的场景
-    selectScene(totalButtons);
+			// 添加新场景项到 UI
+			int totalItems = m_sceneItems.size();
+			int row = totalItems / 3;
+			int col = totalItems % 3;
+			addSceneItem(scene_source, row, col);
+	
+			// 移动"+"按钮到下一个位置
+			m_sceneGridLayout->removeWidget(m_addSceneButton);
+			int nextRow = (totalItems + 1) / 3;
+			int nextCol = (totalItems + 1) % 3;
+			m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
+			
+			// 设置当前场景，这会触发 AddScene 回调并更新 OBS 的内部状态
+			main->SetCurrentScene(scene_source);
+	
+			// 选中新添加的场景
+			selectScene(totalItems);
         }
     }
 }
@@ -298,28 +294,64 @@ void ScenePanel::onAddSourceButtonClicked()
     dialog->show();
 }
 
-void ScenePanel::onSceneButtonClicked(int id)
+void ScenePanel::onSceneItemClicked(OBSSource source)
 {
-    selectScene(id);
-    
-    // 切换到对应的场景
-    if (id >= 0 && id < m_sceneButtons.size()) {
-        struct obs_frontend_source_list scenes = {0};
-        obs_frontend_get_scenes(&scenes);
-        
-        if (id < (int)scenes.sources.num) {
-            obs_source_t *source = scenes.sources.array[id];
-            // 注意：不要手动调用 obs_source_release，应该由 obs_frontend_source_list_free 统一管理
-            // obs_frontend_set_current_scene 内部会处理源的引用
-            obs_frontend_set_current_scene(source);
-        }
-        
-        // 统一释放场景列表中的所有源引用
-        obs_frontend_source_list_free(&scenes);
-    }
-    
-    // 更新当前场景的源列表
-    updateCurrentSceneSources();
+	if (!source) {
+		return;
+	}
+	
+	// 找到对应的场景项索引
+	int index = -1;
+	for (int i = 0; i < m_sceneItems.size(); i++) {
+		if (m_sceneItems[i] && m_sceneItems[i]->text() == QString::fromUtf8(obs_source_get_name(source))) {
+			index = i;
+			break;
+		}
+	}
+	
+	if (index >= 0) {
+		selectScene(index);
+	}
+	
+	// 切换到对应的场景
+	obs_frontend_set_current_scene(source);
+	
+	// 更新当前场景的源列表
+	updateCurrentSceneSources();
+}
+
+void ScenePanel::onSceneChanged()
+{
+	// 刷新场景列表
+	refreshSceneList();
+}
+
+void ScenePanel::refreshSceneList()
+{
+	setupSceneButtons();
+	
+	// 恢复当前选中的场景
+	struct obs_frontend_source_list scenes = {0};
+	obs_frontend_get_scenes(&scenes);
+	
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		OBSScene currentScene = main->GetCurrentScene();
+		if (currentScene) {
+			OBSSource currentSource = obs_scene_get_source(currentScene);
+			if (currentSource) {
+				const char *currentName = obs_source_get_name(currentSource);
+				for (int i = 0; i < m_sceneItems.size(); i++) {
+					if (m_sceneItems[i] && m_sceneItems[i]->text() == QString::fromUtf8(currentName)) {
+						selectScene(i);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	obs_frontend_source_list_free(&scenes);
 }
 
 void ScenePanel::onClearSourceButtonClicked()
@@ -426,4 +458,25 @@ void ScenePanel::updateCurrentSceneSources()
     };
     
     obs_scene_enum_items(scene, enumItem, &enumData);
+}
+
+void ScenePanel::OBSFrontendEvent(enum obs_frontend_event event, void *ptr)
+{
+	ScenePanel *panel = static_cast<ScenePanel *>(ptr);
+	if (!panel) {
+		return;
+	}
+	
+	switch (event) {
+	case OBS_FRONTEND_EVENT_SCENE_LIST_CHANGED:
+		// 场景列表变化时刷新
+		QMetaObject::invokeMethod(panel, "refreshSceneList", Qt::QueuedConnection);
+		break;
+	case OBS_FRONTEND_EVENT_SCENE_CHANGED:
+		// 场景切换时更新选中状态
+		QMetaObject::invokeMethod(panel, "refreshSceneList", Qt::QueuedConnection);
+		break;
+	default:
+		break;
+	}
 }
