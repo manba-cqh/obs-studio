@@ -20,6 +20,7 @@ class PluginPanel;
 class DanmuPanel;
 class ConfigWt;
 class EmptySceneWidget;
+class DirectorWidget;
 
 class CometMainWindow : public QMainWindow
 {
@@ -52,6 +53,7 @@ private:
 	
 	void updatePreviewDisplay();
 	bool hasSceneItems();
+	void setBroadcastMode(bool enabled);
 
 private:
 	// 顶部栏
@@ -70,12 +72,14 @@ private:
 
 	// 预览头部
 	PreviewHeader *m_previewHeader;
-	// 预览控件容器（使用 QStackedWidget 切换预览和空场景界面）
+	// 预览控件容器（使用 QStackedWidget 切换预览、空场景界面和导播界面）
 	QStackedWidget *m_previewStack;
 	// 预览控件
 	OBSBasicPreview *m_previewWidget;
 	// 空场景界面
 	EmptySceneWidget *m_emptySceneWidget;
+	// 导播界面
+	DirectorWidget *m_directorWidget;
 	// 混音器面板
 	QDockWidget *m_audioMixPanelDock;
 	AudioMixPanel *m_audioMixPanel;

@@ -70,6 +70,8 @@ target_sources(
     comet/TopBar.hpp
     comet/ScenePanel.cpp
     comet/ScenePanel.hpp
+    comet/DirectorWidget.cpp
+    comet/DirectorWidget.hpp
     comet/InteractPanel.cpp
     comet/InteractPanel.hpp
     comet/PreviewHeader.cpp

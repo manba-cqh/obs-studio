@@ -11,6 +11,7 @@
 #include "ConfigWt.hpp"
 #include "common/PanelHeaderWidget.hpp"
 #include "EmptySceneWidget.hpp"
+#include "DirectorWidget.hpp"
 
 #include <obs.hpp>
 #include <obs-frontend-api.h>
@@ -122,6 +123,8 @@ void CometMainWindow::createMainContent()
 	
 	// 连接 ScenePanel 的信号，当源发生变化时刷新预览显示
 	connect(m_scenePanel, &ScenePanel::sourcesChanged, this, &CometMainWindow::updatePreviewDisplay);
+	// 连接导播模式切换信号
+	connect(m_scenePanel, &ScenePanel::broadcastModeToggled, this, &CometMainWindow::setBroadcastMode);
 	
 	// 互动玩法面板
 	m_interactPanelDock = new QDockWidget();
@@ -203,6 +206,11 @@ void CometMainWindow::createMainContent()
 		}
 	});
 	m_previewStack->addWidget(m_emptySceneWidget);
+	
+	// 创建导播界面
+	m_directorWidget = new DirectorWidget(this);
+	m_directorWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	m_previewStack->addWidget(m_directorWidget);
 	
 	mainContentLayout->addWidget(m_previewStack);
 	
@@ -608,9 +616,23 @@ bool CometMainWindow::hasSceneItems()
 
 void CometMainWindow::updatePreviewDisplay()
 {
+	// 如果导播模式已启用，不更新预览显示
+	if (m_scenePanel && m_scenePanel->getBroadcastButton() && m_scenePanel->getBroadcastButton()->isChecked()) {
+		return;
+	}
+	
 	if (hasSceneItems()) {
 		m_previewStack->setCurrentWidget(m_previewWidget);
 	} else {
 		m_previewStack->setCurrentWidget(m_emptySceneWidget);
+	}
+}
+
+void CometMainWindow::setBroadcastMode(bool enabled)
+{
+	if (enabled) {
+		m_previewStack->setCurrentWidget(m_directorWidget);
+	} else {
+		updatePreviewDisplay();
 	}
 }

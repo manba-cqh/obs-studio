@@ -10,12 +10,14 @@
 #include <obs-frontend-api.h>
 
 class SceneListItemWidget;
+class DirectorWidget;
 
 class ScenePanel : public PanelContainer
 {
 	Q_OBJECT
 signals:
 	void sourcesChanged();
+	void broadcastModeToggled(bool enabled);
 
 public:
 	ScenePanel(QWidget *parent = nullptr);

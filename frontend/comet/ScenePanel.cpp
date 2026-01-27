@@ -3,6 +3,7 @@
 #include <QButtonGroup>
 #include <QFontMetrics>
 #include <QCursor>
+#include <QSpacerItem>
 
 #include "tools/tools.hpp"
 #include "SourceToolDialog.hpp"
@@ -14,6 +15,7 @@
 #include <dialogs/NameDialog.hpp>
 #include <qt-wrappers.hpp>
 #include <string>
+#include "DirectorWidget.hpp"
 
 #include <vector>
 
@@ -165,6 +167,46 @@ void ScenePanel::setupSceneButtons()
 		int nextCol = totalItems % 3;
 		m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
 	}
+	
+	// 为每行添加弹簧：如果行中少于3个item，在剩余位置添加弹簧
+	int totalItems = m_sceneItems.size() + (m_addSceneButton ? 1 : 0);
+	int totalRows = (totalItems + 2) / 3; // 向上取整
+	
+	// 先清理可能存在的旧弹簧（遍历所有可能存在的行）
+	for (int row = 0; row < totalRows + 1; row++) { // 多遍历一行以确保清理干净
+		for (int col = 0; col < 3; col++) {
+			QLayoutItem *item = m_sceneGridLayout->itemAtPosition(row, col);
+			if (item && item->spacerItem()) {
+				m_sceneGridLayout->removeItem(item);
+				delete item;
+			}
+		}
+	}
+	
+	// 为每行添加弹簧
+	for (int row = 0; row < totalRows; row++) {
+		int itemsInRow = 0;
+		// 计算当前行的item数量（包括场景项和"+"按钮）
+		for (int col = 0; col < 3; col++) {
+			QLayoutItem *item = m_sceneGridLayout->itemAtPosition(row, col);
+			if (item && item->widget()) {
+				itemsInRow++;
+			}
+		}
+		
+		// 如果当前行少于3个item，在剩余位置添加弹簧
+		if (itemsInRow < 3) {
+			// 在剩余的空位置添加弹簧
+			for (int col = 0; col < 3; col++) {
+				QLayoutItem *item = m_sceneGridLayout->itemAtPosition(row, col);
+				if (!item) {
+					// 该位置为空，添加弹簧
+					QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+					m_sceneGridLayout->addItem(spacer, row, col);
+				}
+			}
+		}
+	}
 
 	// 选择第一个场景
 	if (!m_sceneItems.isEmpty()) {
@@ -180,6 +222,7 @@ void ScenePanel::addSceneItem(OBSSource source, int row, int col)
 
 	SceneListItemWidget *sceneItem = new SceneListItemWidget(source, this);
 	sceneItem->setFixedHeight(34);
+    sceneItem->setMaximumWidth(82);
 	
 	// 连接信号
 	connect(sceneItem, &SceneListItemWidget::sceneSelected, this, &ScenePanel::onSceneItemClicked);
@@ -202,7 +245,9 @@ void ScenePanel::selectScene(int index)
 
 void ScenePanel::onBroadcastButtonClicked()
 {
-    // TODO 导播按钮点击事件
+	// 发送信号通知主窗口切换导播模式
+	bool checked = m_broadcastButton->isChecked();
+	emit broadcastModeToggled(checked);
 }
 
 void ScenePanel::onAddSceneButtonClicked()
