@@ -210,7 +210,16 @@ void ScenePanel::setupSceneButtons()
 
 	// 选择第一个场景
 	if (!m_sceneItems.isEmpty()) {
-		selectScene(0);
+        QTimer::singleShot(100, this, [this]() {
+            // 获取第一个场景的 source
+            struct obs_frontend_source_list scenes = {0};
+            obs_frontend_get_scenes(&scenes);
+            if (scenes.sources.num > 0) {
+                obs_source_t *firstScene = scenes.sources.array[0];
+                onSceneItemClicked(firstScene);
+            }
+            obs_frontend_source_list_free(&scenes);
+        });
 	}
 }
 
@@ -358,8 +367,8 @@ void ScenePanel::onSceneItemClicked(OBSSource source)
 		selectScene(index);
 	}
 	
-	// 切换到对应的场景
-	obs_frontend_set_current_scene(source);
+	// 切换到对应的场景（只影响预览画面，不影响直播画面）
+	obs_frontend_set_current_preview_scene(source);
 	
 	// 更新当前场景的源列表
 	updateCurrentSceneSources();

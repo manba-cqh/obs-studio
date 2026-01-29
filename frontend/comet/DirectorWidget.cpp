@@ -36,16 +36,11 @@ DirectorWidget::DirectorWidget(QWidget *parent)
 		"}"
 	);
 	
-	// 注册 OBS 前端事件回调，监听预览场景变化
-	obs_frontend_add_event_callback(OBSFrontendEvent, this);
-	
 	initUI();
 }
 
 DirectorWidget::~DirectorWidget()
 {
-	// 移除事件回调
-	obs_frontend_remove_event_callback(OBSFrontendEvent, this);
 	
 	// 清理显示回调
 	if (m_previewDisplay && m_previewDisplay->GetDisplay()) {
@@ -355,21 +350,3 @@ void DirectorWidget::resizeEvent(QResizeEvent *event)
 		m_programDisplay1->update();
 	}
 }
-
-void DirectorWidget::OBSFrontendEvent(enum obs_frontend_event event, void *ptr)
-{
-	DirectorWidget *widget = static_cast<DirectorWidget *>(ptr);
-	if (!widget) {
-		return;
-	}
-	
-	switch (event) {
-	case OBS_FRONTEND_EVENT_PREVIEW_SCENE_CHANGED:
-		// 当预览场景变化时，自动同步到程序输出
-		QMetaObject::invokeMethod(widget, "syncPreviewToProgram", Qt::QueuedConnection);
-		break;
-	default:
-		break;
-	}
-}
-

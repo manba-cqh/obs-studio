@@ -26,9 +26,9 @@ public:
 	QPushButton *getBroadcastButton() const { return m_broadcastButton; }
 	
 	void updateCurrentSceneSources();
-	void refreshSceneList();
 
 public slots:
+	void refreshSceneList();
     void onBroadcastButtonClicked();
     void onAddSceneButtonClicked();
     void onAddSourceButtonClicked();

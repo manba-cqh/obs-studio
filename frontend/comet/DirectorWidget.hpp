@@ -35,7 +35,6 @@ private:
 	void setupProgramDisplay();
 	static void RenderPreview(void *data, uint32_t cx, uint32_t cy);
 	static void RenderProgram(void *data, uint32_t cx, uint32_t cy);
-	static void OBSFrontendEvent(enum obs_frontend_event event, void *ptr);
 
 private:
 	// 预览画面

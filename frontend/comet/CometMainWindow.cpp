@@ -228,6 +228,23 @@ void CometMainWindow::createMainContent()
 			});
 		}
 	}, this);
+	
+	// 监听视频分辨率变化，当分辨率改变时更新预览控件
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		connect(main, &OBSBasic::CanvasResized, this, [this](uint32_t width, uint32_t height) {
+			// 当分辨率改变时，延迟更新预览控件大小
+			// 使用延迟确保布局已经更新完成
+			QTimer::singleShot(100, this, [this, width, height]() {
+				if (m_previewWidget) {
+					OBSBasic *main = OBSBasic::Get();
+					if (main) {
+						main->ResizePreviewForWidget(width, height, m_previewWidget);
+					}
+				}
+			});
+		});
+	}
 
 	// 混音器面板
 	m_audioMixPanelDock = new QDockWidget();
