@@ -440,10 +440,16 @@ void OBSBasicProperties::on_buttonBox_clicked(QAbstractButton *button)
 						undo_redo, undo_data, redo_data);
 
 		acceptClicked = true;
-		close();
-
+		
 		if (view->DeferUpdate())
 			view->UpdateSettings();
+		
+		// Immediately save project after updating source properties
+		blog(LOG_INFO, "[OBSBasicProperties] Accept clicked, triggering SaveProject for source: %s", 
+		     obs_source_get_name(source));
+		main->SaveProject();
+		
+		close();
 
 	} else if (val == QDialogButtonBox::RejectRole) {
 		OBSDataAutoRelease settings = obs_source_get_settings(source);
