@@ -324,8 +324,13 @@ void RecordConfigWt::loadRecordingSettings()
 		m_rescaleResolutionCombo->lineEdit()->blockSignals(false);
 		m_rescaleResolutionCombo->blockSignals(false);
 	} else {
-		// 添加常用分辨率
-		QStringList commonRes = {"1920*1080", "1280*720", "2560*1440", "3840*2160"};
+		// 添加常用分辨率（横屏和竖屏）
+		QStringList commonRes = {
+			// 横屏分辨率
+			"1920*1080", "1280*720", "2560*1440", "3840*2160",
+			// 竖屏分辨率
+			"1080*1920", "720*1280", "1440*2560", "2160*3840"
+		};
 		for (const QString &res : commonRes) {
 			if (m_rescaleResolutionCombo->findText(res) == -1) {
 				m_rescaleResolutionCombo->addItem(res);

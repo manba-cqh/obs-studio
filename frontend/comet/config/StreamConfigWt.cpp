@@ -131,7 +131,10 @@ void StreamConfigWt::initUI()
 	contentLayout->addLayout(createRow("重新缩放输出", m_scalingCombo));
 
 	m_resolutionCombo = new CommonComboBox();
-	m_resolutionCombo->addItems(QStringList{"1280×720", "1920×1080", "2560×1440"});
+	m_resolutionCombo->addItems(QStringList{
+		"1280×720", "1920×1080", "2560×1440",
+		"720×1280", "1080×1920", "1440×2560"
+	});
 	contentLayout->addLayout(createRow("输出分辨率", m_resolutionCombo));
 
 	contentLayout->addWidget(createSectionTitle("编码器设置"));
