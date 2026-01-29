@@ -45,7 +45,6 @@ private:
 	// 直播画面
 	QLabel *m_programLabel;
 	OBSQTDisplay *m_programDisplay1;
-	OBSQTDisplay *m_programDisplay2;
 	
 	// 转场选项
 	QLabel *m_transitionLabel;

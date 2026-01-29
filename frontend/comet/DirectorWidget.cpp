@@ -54,9 +54,6 @@ DirectorWidget::~DirectorWidget()
 	if (m_programDisplay1 && m_programDisplay1->GetDisplay()) {
 		obs_display_remove_draw_callback(m_programDisplay1->GetDisplay(), RenderProgram, this);
 	}
-	if (m_programDisplay2 && m_programDisplay2->GetDisplay()) {
-		obs_display_remove_draw_callback(m_programDisplay2->GetDisplay(), RenderProgram, this);
-	}
 }
 
 void DirectorWidget::initUI()
@@ -92,25 +89,13 @@ void DirectorWidget::initUI()
 	m_programLabel->setStyleSheet("font-size: 16px; font-weight: bold;");
 	m_programLayout->addWidget(m_programLabel);
 	
-	// 第一个直播画面（上方）
+	// 直播画面
 	m_programDisplay1 = new OBSQTDisplay(this);
 	m_programDisplay1->setMinimumSize(32, 32); // 设置一个很小的最小值，允许自适应
 	m_programDisplay1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	m_programDisplay1->SetDisplayBackgroundColor(QColor(16, 16, 27));
 	setupProgramDisplay();
 	m_programLayout->addWidget(m_programDisplay1, 1); // 添加拉伸因子
-	
-	// 第二个直播画面（下方）
-	m_programDisplay2 = new OBSQTDisplay(this);
-	m_programDisplay2->setMinimumSize(32, 32); // 设置一个很小的最小值，允许自适应
-	m_programDisplay2->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	m_programDisplay2->SetDisplayBackgroundColor(QColor(16, 16, 27));
-	// 使用相同的渲染回调
-	auto addDisplay2 = [this](OBSQTDisplay *window) {
-		obs_display_add_draw_callback(window->GetDisplay(), RenderProgram, this);
-	};
-	connect(m_programDisplay2, &OBSQTDisplay::DisplayCreated, addDisplay2);
-	m_programLayout->addWidget(m_programDisplay2);
 	
 	// 添加到内容布局
 	m_contentLayout->addLayout(m_previewLayout, 2); // 预览画面占更多空间
@@ -310,9 +295,6 @@ void DirectorWidget::onSyncToProgramClicked()
 	if (m_programDisplay1 && m_programDisplay1->GetDisplay()) {
 		m_programDisplay1->update();
 	}
-	if (m_programDisplay2 && m_programDisplay2->GetDisplay()) {
-		m_programDisplay2->update();
-	}
 }
 
 void DirectorWidget::onEnlargeProgramClicked()
@@ -359,9 +341,6 @@ void DirectorWidget::syncPreviewToProgram()
 	if (m_programDisplay1 && m_programDisplay1->GetDisplay()) {
 		m_programDisplay1->update();
 	}
-	if (m_programDisplay2 && m_programDisplay2->GetDisplay()) {
-		m_programDisplay2->update();
-	}
 }
 
 void DirectorWidget::resizeEvent(QResizeEvent *event)
@@ -374,9 +353,6 @@ void DirectorWidget::resizeEvent(QResizeEvent *event)
 	}
 	if (m_programDisplay1 && m_programDisplay1->GetDisplay()) {
 		m_programDisplay1->update();
-	}
-	if (m_programDisplay2 && m_programDisplay2->GetDisplay()) {
-		m_programDisplay2->update();
 	}
 }
 
