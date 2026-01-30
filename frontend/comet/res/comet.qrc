@@ -65,7 +65,13 @@
     <file>images/audioinput_capture_scenebar_lock.svg</file>
     <file>images/audiooutput_capture_scenebar.svg</file>
     <file>images/audiooutput_capture_scenebar_lock.svg</file>
-    
+    <file>images/color_source_v3.svg</file>
+    <file>images/ffmpeg_source.svg</file>
+    <file>images/image_source.svg</file>
+    <file>images/slideshow_v2.svg</file>
+    <file>images/text_gdiplus_v3.svg</file>
+    <file>images/wasapi_input_capture.svg</file>
+    <file>images/wasapi_output_capture.svg</file>
 
   </qresource>
 </RCC>
