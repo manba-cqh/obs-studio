@@ -41,6 +41,8 @@
     <file>images/setting_hover.svg</file>
     <file>images/checked.png</file>
     <file>images/unchecked.png</file>
+    <file>images/popup_box_normal.png</file>
+    <file>images/popup_box_small.png</file>
 
     <file>images/monitor_capture.svg</file>
     <file>images/display_capture.svg</file>

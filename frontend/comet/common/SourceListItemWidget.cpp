@@ -8,6 +8,7 @@
 
 #include "tools.hpp"
 #include "SourceListItemWidget.hpp"
+#include "CenterToolTipButton.hpp"
 #include <widgets/OBSBasic.hpp>
 #include <obs-frontend-api.h>
 #include <obs-source.h>
@@ -51,7 +52,7 @@ void SourceListItemWidget::initUI()
 
     m_layout->addStretch();
 
-    m_hideButton = new QPushButton(this);
+    m_hideButton = new CenterToolTipButton(this);
     m_hideButton->setFixedSize(24, 24);
     m_hideButton->setCheckable(true);
     m_hideButton->setChecked(false);
@@ -60,7 +61,7 @@ void SourceListItemWidget::initUI()
     connect(m_hideButton, &QPushButton::clicked, this, &SourceListItemWidget::onHideButtonClicked);
     m_layout->addWidget(m_hideButton);
 
-    m_lockButton = new QPushButton(this);
+    m_lockButton = new CenterToolTipButton(this);
     m_lockButton->setFixedSize(24, 24);
     m_lockButton->setCheckable(true);
     m_lockButton->setChecked(false);
@@ -69,7 +70,7 @@ void SourceListItemWidget::initUI()
     connect(m_lockButton, &QPushButton::clicked, this, &SourceListItemWidget::onLockButtonClicked);
     m_layout->addWidget(m_lockButton);
 
-    m_moreButton = new QPushButton(this);
+    m_moreButton = new CenterToolTipButton(this);
     m_moreButton->setFixedSize(24, 24);
     m_moreButton->setToolTip("更多操作");
     m_moreButton->setStyleSheet(BUTTON_QSS_STYLE("display_more.png", "display_more_hover.png", "display_more_hover.png"));
