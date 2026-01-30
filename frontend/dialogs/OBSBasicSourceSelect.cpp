@@ -180,6 +180,11 @@ static void AddExisting(OBSSource source, bool visible, bool duplicate, obs_tran
 	obs_enter_graphics();
 	obs_scene_atomic_update(scene, AddSource, &data);
 	obs_leave_graphics();
+	
+	// 将新添加的source移动到最顶层
+	if (data.scene_item) {
+		obs_sceneitem_set_order(data.scene_item, OBS_ORDER_MOVE_TOP);
+	}
 }
 
 static void AddExisting(const char *name, bool visible, bool duplicate, obs_transform_info *transform,
@@ -249,6 +254,9 @@ bool AddNew(QWidget *parent, const char *id, const char *name, const bool visibl
 						obs_sceneitem_set_bounds(data.scene_item, &bounds);
 					}
 				}
+				
+				// 将新添加的source移动到最顶层
+				obs_sceneitem_set_order(data.scene_item, OBS_ORDER_MOVE_TOP);
 			}
 
 			success = true;

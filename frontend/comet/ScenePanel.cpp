@@ -468,7 +468,16 @@ void ScenePanel::updateCurrentSceneSources()
         return;
     }
     
-    // 枚举场景中的所有项
+    // 先收集所有场景项（用于倒序遍历）
+    vector<OBSSceneItem> items;
+    auto collectItem = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
+        auto *items = static_cast<vector<OBSSceneItem> *>(param);
+        items->emplace_back(item);
+        return true;
+    };
+    obs_scene_enum_items(scene, collectItem, &items);
+    
+    // 倒序遍历items（从顶层到底层）
     struct EnumData {
         QListWidget *list;
         ScenePanel *panel;
@@ -478,14 +487,13 @@ void ScenePanel::updateCurrentSceneSources()
     enumData.list = m_currentContentList;
     enumData.panel = this;
     
-    auto enumItem = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
-        EnumData *data = static_cast<EnumData *>(param);
+    auto addItem = [](obs_sceneitem_t *item, EnumData *data) {
         QListWidget *list = data->list;
         ScenePanel *panel = data->panel;
         
         obs_source_t *source = obs_sceneitem_get_source(item);
         if (!source || obs_source_removed(source)) {
-            return true;
+            return;
         }
         
         const char *sourceName = obs_source_get_name(source);
@@ -507,11 +515,12 @@ void ScenePanel::updateCurrentSceneSources()
             listItem->setSizeHint(itemWidget->sizeHint());
             list->setItemWidget(listItem, itemWidget);
         }
-        
-        return true;
     };
     
-    obs_scene_enum_items(scene, enumItem, &enumData);
+    // 倒序遍历（从顶层到底层）
+    for (auto it = items.rbegin(); it != items.rend(); ++it) {
+        addItem(*it, &enumData);
+    }
 }
 
 void ScenePanel::OBSFrontendEvent(enum obs_frontend_event event, void *ptr)
