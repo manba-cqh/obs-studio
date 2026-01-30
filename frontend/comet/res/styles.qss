@@ -321,3 +321,23 @@ QMessageBox QCheckBox::indicator:checked:hover
     background-color: #6B85FF;
     border: 1px solid #6B85FF;
 }
+
+/* QToolBar 通用样式 */
+QToolBar
+{
+    background: transparent;
+    border: none;
+    spacing: 0px;
+    padding: 0px;
+}
+QToolBar::handle
+{
+    width: 0px;
+    image: none;
+}
+QToolBar::separator
+{
+    background: transparent;
+    width: 0px;
+    margin: 0px;
+}

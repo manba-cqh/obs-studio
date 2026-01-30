@@ -81,7 +81,6 @@ void CometMainWindow::initUI()
 	m_titleBarToolBar->setMovable(false);
 	m_titleBarToolBar->setFloatable(false);
 	m_titleBarToolBar->setAllowedAreas(Qt::TopToolBarArea);
-	m_titleBarToolBar->setStyleSheet("QToolBar { border: none; spacing: 0px; } QToolBar::handle { width: 0px; image: none; }");
 	m_titleBarToolBar->setIconSize(QSize(0, 0));
 	m_titleBarToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 	m_titleBarToolBar->setContextMenuPolicy(Qt::NoContextMenu);

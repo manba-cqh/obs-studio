@@ -55,6 +55,7 @@ void SourceListItemWidget::initUI()
     m_hideButton->setFixedSize(24, 24);
     m_hideButton->setCheckable(true);
     m_hideButton->setChecked(false);
+    m_hideButton->setToolTip("隐藏/显示");
     m_hideButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display.png", "display_hover.png", "display_hover.png", "hide.png", "hide_hover.png", "hide_hover.png"));
     connect(m_hideButton, &QPushButton::clicked, this, &SourceListItemWidget::onHideButtonClicked);
     m_layout->addWidget(m_hideButton);
@@ -63,12 +64,14 @@ void SourceListItemWidget::initUI()
     m_lockButton->setFixedSize(24, 24);
     m_lockButton->setCheckable(true);
     m_lockButton->setChecked(false);
+    m_lockButton->setToolTip("锁定/解锁");
     m_lockButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display_lock.png", "display_lock_hover.png", "display_lock_hover.png", "display_unlock.png", "display_unlock_hover.png", "display_unlock_hover.png"));
     connect(m_lockButton, &QPushButton::clicked, this, &SourceListItemWidget::onLockButtonClicked);
     m_layout->addWidget(m_lockButton);
 
     m_moreButton = new QPushButton(this);
     m_moreButton->setFixedSize(24, 24);
+    m_moreButton->setToolTip("更多操作");
     m_moreButton->setStyleSheet(BUTTON_QSS_STYLE("display_more.png", "display_more_hover.png", "display_more_hover.png"));
     connect(m_moreButton, &QPushButton::clicked, this, &SourceListItemWidget::onMoreButtonClicked);
     m_layout->addWidget(m_moreButton);
@@ -119,14 +122,16 @@ void SourceListItemWidget::updateButtonStates()
 	if (m_hideButton) {
 		bool visible = obs_sceneitem_visible(m_sceneitem);
 		m_hideButton->setChecked(!visible);  // 隐藏时按钮为选中状态
-		// 按钮的样式可以通过 CSS 根据 checked 状态来改变外观
+		// 根据状态更新 tooltip
+		m_hideButton->setToolTip(visible ? "隐藏" : "显示");
 	}
 	
 	// 更新锁定按钮状态
 	if (m_lockButton) {
 		bool locked = obs_sceneitem_locked(m_sceneitem);
 		m_lockButton->setChecked(locked);
-		// 按钮的样式可以通过 CSS 根据 checked 状态来改变外观
+		// 根据状态更新 tooltip
+		m_lockButton->setToolTip(locked ? "解锁" : "锁定");
 	}
 }
 
