@@ -74,6 +74,8 @@
     <file>images/text_gdiplus_v3.svg</file>
     <file>images/wasapi_input_capture.svg</file>
     <file>images/wasapi_output_capture.svg</file>
+    <file>images/folder_open.svg</file>
+
 
   </qresource>
 </RCC>
