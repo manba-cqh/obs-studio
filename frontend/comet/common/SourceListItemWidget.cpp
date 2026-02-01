@@ -13,13 +13,13 @@
 #include <obs-frontend-api.h>
 #include <obs-source.h>
 
-SourceListItemWidget::SourceListItemWidget(const QString &text, OBSSceneItem sceneitem, const char *sourceId, QWidget *parent)
+SourceListItemWidget::SourceListItemWidget(const QString &text, OBSSceneItem sceneitem, const char *sourceId, QWidget *parent, bool isGroup, bool indented)
     : QWidget(parent), 
     m_text(text),
 	m_sceneitem(sceneitem),
 	m_sourceId(sourceId)
 {
-    initUI();
+    initUI(isGroup, indented);
 	updateButtonStates();
 }
 
@@ -27,18 +27,25 @@ SourceListItemWidget::~SourceListItemWidget()
 {
 }
 
-void SourceListItemWidget::initUI()
+void SourceListItemWidget::initUI(bool isGroup, bool indented)
 {
     setAttribute(Qt::WA_StyledBackground, true);
 
     m_layout = new QHBoxLayout(this);
-    m_layout->setContentsMargins(5, 5, 5, 5);
+    int leftMargin = indented ? 28 : 5;
+    m_layout->setContentsMargins(leftMargin, 5, 5, 5);
     m_layout->setSpacing(5);
 
     m_iconLabel = new QLabel(this);
     m_iconLabel->setFixedSize(24, 24);
-    if (m_sourceId) {
-        QPixmap pixmap(QString(":/images/%1.svg").arg(m_sourceId));
+    QString iconPath;
+    if (isGroup) {
+        iconPath = QStringLiteral(":/images/folder_open.svg");
+    } else if (m_sourceId) {
+        iconPath = QString(":/images/%1.svg").arg(m_sourceId);
+    }
+    if (!iconPath.isEmpty()) {
+        QPixmap pixmap(iconPath);
         if (!pixmap.isNull()) {
             m_iconLabel->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         }
@@ -166,9 +173,9 @@ void SourceListItemWidget::createContextMenu()
 	
 	m_contextMenu->addSeparator();
 	
-	QAction *createGroupAction = m_contextMenu->addAction("创建分组");
-	// 添加箭头图标（如果有的话）
-	connect(createGroupAction, &QAction::triggered, this, &SourceListItemWidget::onCreateGroupAction);
+	m_moveToGroupMenu = new QMenu("移至分组", this);
+	connect(m_moveToGroupMenu, &QMenu::aboutToShow, this, &SourceListItemWidget::populateMoveToGroupMenu);
+	m_contextMenu->addMenu(m_moveToGroupMenu);
 	
 	m_contextMenu->addSeparator();
 	
@@ -255,8 +262,37 @@ void SourceListItemWidget::onRenameAction()
 	main->EditSceneItemName();
 }
 
-void SourceListItemWidget::onCreateGroupAction()
+namespace {
+
+struct EnumGroupsData {
+	SourceListItemWidget *widget;
+	const char *currentGroupName;
+};
+
+static bool enumGroupsCallback(obs_scene_t *, obs_sceneitem_t *item, void *param)
 {
+	EnumGroupsData *data = static_cast<EnumGroupsData *>(param);
+	if (!obs_sceneitem_is_group(item)) {
+		return true;
+	}
+	obs_source_t *src = obs_sceneitem_get_source(item);
+	if (!src) {
+		return true;
+	}
+	const char *name = obs_source_get_name(src);
+	if (!name || (data->currentGroupName && strcmp(name, data->currentGroupName) == 0)) {
+		return true; // 跳过当前项所在的分组
+	}
+	data->widget->addMoveToGroupAction(QString::fromUtf8(name));
+	return true;
+}
+
+} // namespace
+
+void SourceListItemWidget::populateMoveToGroupMenu()
+{
+	m_moveToGroupMenu->clear();
+	
 	if (!m_sceneitem) {
 		return;
 	}
@@ -266,12 +302,62 @@ void SourceListItemWidget::onCreateGroupAction()
 		return;
 	}
 	
-	// 创建分组（将当前源项放入分组）
-	// 注意：需要先选择源项，然后调用分组功能
-	// 这里暂时使用 OBS 的源树分组功能
-	// 如果 SourceTree 有 GroupSelectedItems 方法，可以通过 ui->sources 调用
-	// 暂时先注释，需要根据实际 UI 结构实现
-	// main->ui->sources->GroupSelectedItems();
+	OBSScene scene = main->GetCurrentScene();
+	if (!scene) {
+		return;
+	}
+	
+	obs_scene_t *enumScene = obs_scene_from_source(obs_scene_get_source(scene));
+	obs_sceneitem_t *currentGroup = obs_sceneitem_get_group(enumScene, m_sceneitem);
+	const char *currentGroupName = currentGroup ? obs_source_get_name(obs_sceneitem_get_source(currentGroup)) : nullptr;
+	
+	EnumGroupsData data = {this, currentGroupName};
+	obs_scene_enum_items(enumScene, enumGroupsCallback, &data);
+	
+	if (m_moveToGroupMenu->isEmpty()) {
+		QAction *none = m_moveToGroupMenu->addAction("(无分组)");
+		none->setEnabled(false);
+	}
+}
+
+void SourceListItemWidget::addMoveToGroupAction(const QString &groupName)
+{
+	QAction *action = m_moveToGroupMenu->addAction(groupName);
+	connect(action, &QAction::triggered, this, [this, groupName]() {
+		onMoveToGroup(groupName);
+	});
+}
+
+void SourceListItemWidget::onMoveToGroup(const QString &groupName)
+{
+	if (!m_sceneitem || groupName.isEmpty()) {
+		return;
+	}
+	
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) {
+		return;
+	}
+	
+	OBSScene scene = main->GetCurrentScene();
+	if (!scene) {
+		return;
+	}
+	
+	obs_scene_t *rootScene = obs_scene_from_source(obs_scene_get_source(scene));
+	obs_sceneitem_t *currentGroup = obs_sceneitem_get_group(rootScene, m_sceneitem);
+	// 若当前已在某分组内，先移出再加入目标分组
+	if (currentGroup) {
+		obs_sceneitem_group_remove_item(currentGroup, m_sceneitem);
+	}
+	
+	obs_sceneitem_t *groupItem = obs_scene_get_group(scene, groupName.toUtf8().constData());
+	if (!groupItem) {
+		return;
+	}
+	
+	obs_sceneitem_group_add_item(groupItem, m_sceneitem);
+	emit sourcesChanged();
 }
 
 void SourceListItemWidget::onDeleteAction()

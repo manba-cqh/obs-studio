@@ -120,6 +120,7 @@ void SourceToolDialog::setupCategories()
 		{"color_source", "色源", ":/images/colorsource_toolbar.svg"},
 		{"wasapi_input_capture", "音频输入", ":/images/audioinput_capture_toolbar.svg"},
 		{"wasapi_output_capture", "音频输出", ":/images/audiooutput_capture_toolbar.svg"},
+		{"group", "分组", ":/images/folder_open.svg"}
 	};
 	
 	// 保存所有源到 map

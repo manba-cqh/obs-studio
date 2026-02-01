@@ -327,13 +327,29 @@ void ScenePanel::onAddSourceButtonClicked()
     
     connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this](const QString &sourceId) {
         OBSBasic *main = OBSBasic::Get();
-        if (main) {
+        if (!main) {
+            return;
+        }
+        if (sourceId == QLatin1String("group")) {
+            // 直接新建空分组
+            OBSScene scene = main->GetCurrentScene();
+            if (!scene) {
+                return;
+            }
+            QString name = QStringLiteral("分组");
+            int i = 2;
+            while (obs_get_source_by_name(name.toUtf8().constData())) {
+                name = QStringLiteral("分组 %1").arg(i++);
+            }
+            obs_sceneitem_t *group = obs_scene_add_group(scene, name.toUtf8().constData());
+            if (group) {
+                emit sourcesChanged();
+                updateCurrentSceneSources();
+            }
+        } else {
             // 使用 OBS 添加指定类型的源
             main->AddSource(sourceId.toUtf8().constData());
-
             emit sourcesChanged();
-            
-            // 刷新列表
             updateCurrentSceneSources();
         }
     });
@@ -468,7 +484,7 @@ void ScenePanel::updateCurrentSceneSources()
         return;
     }
     
-    // 先收集所有场景项（用于倒序遍历）
+    // 先收集所有顶层场景项（用于倒序遍历）
     vector<OBSSceneItem> items;
     auto collectItem = [](obs_scene_t *, obs_sceneitem_t *item, void *param) -> bool {
         auto *items = static_cast<vector<OBSSceneItem> *>(param);
@@ -477,49 +493,66 @@ void ScenePanel::updateCurrentSceneSources()
     };
     obs_scene_enum_items(scene, collectItem, &items);
     
-    // 倒序遍历items（从顶层到底层）
     struct EnumData {
         QListWidget *list;
         ScenePanel *panel;
     };
-    
     EnumData enumData;
     enumData.list = m_currentContentList;
     enumData.panel = this;
     
-    auto addItem = [](obs_sceneitem_t *item, EnumData *data) {
+    auto addOneItem = [](obs_sceneitem_t *item, EnumData *data, bool isGroup, bool indented) {
         QListWidget *list = data->list;
         ScenePanel *panel = data->panel;
-        
         obs_source_t *source = obs_sceneitem_get_source(item);
         if (!source || obs_source_removed(source)) {
             return;
         }
-        
         const char *sourceName = obs_source_get_name(source);
-        if (sourceName) {
-            // 获取 source ID
-            const char *sourceId = obs_source_get_id(source);
-            
-            // 创建空的 QListWidgetItem，将文本交给自定义控件处理
-            QListWidgetItem *listItem = new QListWidgetItem(list);
-
-            // 创建自定义 item 控件，传递 sceneitem 和 source ID
-            auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), item, sourceId, list);
-            connect(itemWidget, &SourceListItemWidget::sourcesChanged, panel, [panel]() {
-                panel->updateCurrentSceneSources();
-                emit panel->sourcesChanged();
-            });
-
-            // 使用控件的 sizeHint 作为行高，避免上下重叠
-            listItem->setSizeHint(itemWidget->sizeHint());
-            list->setItemWidget(listItem, itemWidget);
+        if (!sourceName) {
+            return;
         }
+        const char *sourceId = obs_source_get_id(source);
+        QListWidgetItem *listItem = new QListWidgetItem(list);
+        auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), item, sourceId, list, isGroup, indented);
+        connect(itemWidget, &SourceListItemWidget::sourcesChanged, panel, [panel]() {
+            panel->updateCurrentSceneSources();
+            emit panel->sourcesChanged();
+        });
+        listItem->setSizeHint(itemWidget->sizeHint());
+        list->setItemWidget(listItem, itemWidget);
     };
     
-    // 倒序遍历（从顶层到底层）
+    // 倒序遍历顶层项（从顶层到底层），分组则先显示分组行再显示组内项（缩进）
     for (auto it = items.rbegin(); it != items.rend(); ++it) {
-        addItem(*it, &enumData);
+        obs_sceneitem_t *item = *it;
+        if (obs_sceneitem_is_group(item)) {
+            addOneItem(item, &enumData, true, false);
+            auto addChildItem = [](obs_scene_t *, obs_sceneitem_t *child, void *param) -> bool {
+                EnumData *data = static_cast<EnumData *>(param);
+                obs_source_t *source = obs_sceneitem_get_source(child);
+                if (!source || obs_source_removed(source)) {
+                    return true;
+                }
+                const char *sourceName = obs_source_get_name(source);
+                if (!sourceName) {
+                    return true;
+                }
+                const char *sourceId = obs_source_get_id(source);
+                QListWidgetItem *listItem = new QListWidgetItem(data->list);
+                auto *itemWidget = new SourceListItemWidget(QString::fromUtf8(sourceName), child, sourceId, data->list, false, true);
+                connect(itemWidget, &SourceListItemWidget::sourcesChanged, data->panel, [panel = data->panel]() {
+                    panel->updateCurrentSceneSources();
+                    emit panel->sourcesChanged();
+                });
+                listItem->setSizeHint(itemWidget->sizeHint());
+                data->list->setItemWidget(listItem, itemWidget);
+                return true;
+            };
+            obs_sceneitem_group_enum_items(item, addChildItem, &enumData);
+        } else {
+            addOneItem(item, &enumData, false, false);
+        }
     }
 }
 
