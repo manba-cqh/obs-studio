@@ -45,6 +45,42 @@ OBSBasicProperties QFrame {
     border: none;
 }
 
+/* 可编辑列表（如幻灯片图像文件列表） */
+OBSBasicProperties QListWidget {
+    background-color: #3C3C4D;
+    color: #FFFFFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+OBSBasicProperties QListWidget::item {
+    padding: 6px 10px;
+    min-height: 24px;
+    border-radius: 3px;
+}
+
+OBSBasicProperties QListWidget::item:hover {
+    background-color: #454558;
+}
+
+OBSBasicProperties QListWidget::item:selected {
+    background-color: #5370FF;
+    color: #FFFFFF;
+}
+
+OBSBasicProperties QListWidget::item:selected:hover {
+    background-color: #6B85FF;
+}
+
+OBSBasicProperties QListWidget:disabled {
+    color: rgba(255, 255, 255, 120);
+    border: 1px solid rgba(69, 69, 88, 120);
+    background-color: rgba(60, 60, 77, 120);
+}
+
 OBSBasicProperties QLabel {
     color: #FFFFFFFF;
     font-size: 14px;
@@ -92,6 +128,91 @@ OBSBasicProperties QTextEdit:focus,
 OBSBasicProperties QPlainTextEdit:focus {
     border: 1px solid #5370FF;
     outline: none;
+}
+
+/* 文件/目录选择（路径属性）相关控件样式 */
+OBSBasicProperties QLineEdit {
+    background-color: #3C3C4D;
+    color: #FFFFFFFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 14px;
+    min-height: 28px;
+}
+
+OBSBasicProperties QLineEdit:hover {
+    border: 1px solid #5370FF;
+}
+
+OBSBasicProperties QLineEdit:focus {
+    border: 1px solid #5370FF;
+    outline: none;
+}
+
+OBSBasicProperties QLineEdit:read-only {
+    background-color: #3C3C4D;
+    color: #FFFFFFFF;
+}
+
+OBSBasicProperties QLineEdit:disabled {
+    color: rgba(255, 255, 255, 120);
+    border: 1px solid rgba(69, 69, 88, 120);
+    background-color: rgba(60, 60, 77, 120);
+}
+
+/* 属性窗口内按钮（如路径选择 Browse、列表添加等） */
+OBSBasicProperties QPushButton,
+OBSBasicProperties CommonButton {
+    background-color: #3C3C4D;
+    color: #FFFFFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: medium;
+    min-height: 28px;
+}
+
+OBSBasicProperties QPushButton:hover,
+OBSBasicProperties CommonButton:hover {
+    background-color: #5370FF;
+    border: 1px solid #5370FF;
+}
+
+OBSBasicProperties QPushButton:pressed,
+OBSBasicProperties CommonButton:pressed {
+    background-color: #4260E6;
+    border: 1px solid #4260E6;
+}
+
+OBSBasicProperties QPushButton:disabled,
+OBSBasicProperties CommonButton:disabled {
+    color: rgba(255, 255, 255, 120);
+    border: 1px solid rgba(69, 69, 88, 120);
+    background-color: rgba(60, 60, 77, 120);
+}
+
+/* 可编辑列表右侧工具栏按钮（幻灯片图像列表的加号/删除/设置/上移/下移），需显示图标（通过 class 属性匹配） */
+OBSBasicProperties QPushButton[class*="btn-tool"] {
+    padding: 6px;
+    min-width: 28px;
+    min-height: 28px;
+}
+OBSBasicProperties QPushButton[class*="icon-plus"] {
+    qproperty-icon: url(:/res/images/plus.svg);
+}
+OBSBasicProperties QPushButton[class*="icon-trash"] {
+    qproperty-icon: url(:/res/images/trash.svg);
+}
+OBSBasicProperties QPushButton[class*="icon-gear"] {
+    qproperty-icon: url(:/res/images/settings/general.svg);
+}
+OBSBasicProperties QPushButton[class*="icon-up"] {
+    qproperty-icon: url(:/res/images/up.svg);
+}
+OBSBasicProperties QPushButton[class*="icon-down"] {
+    qproperty-icon: url(:/res/images/down.svg);
 }
 
 /* QScrollArea 滚动区域样式 */
