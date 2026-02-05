@@ -16,6 +16,7 @@
 #include <obs.hpp>
 #include <obs-frontend-api.h>
 #include <util/base.h>
+#include <utility/display-helpers.hpp>
 #include <QResizeEvent>
 #include <QEvent>
 #include <QWindowStateChangeEvent>
@@ -45,10 +46,7 @@ CometMainWindow::~CometMainWindow()
 		
 		// 移除渲染回调
 		if (m_previewWidget->GetDisplay()) {
-			OBSBasic *main = OBSBasic::Get();
-			if (main) {
-				obs_display_remove_draw_callback(m_previewWidget->GetDisplay(), OBSBasic::RenderMain, main);
-			}
+			obs_display_remove_draw_callback(m_previewWidget->GetDisplay(), CometMainWindow::RenderMain, this);
 		}
 		
 		// 销毁显示，确保在 OBS 关闭前清理
@@ -173,7 +171,8 @@ void CometMainWindow::createMainContent()
 	auto addDisplay = [this](OBSQTDisplay *window) {
 		OBSBasic *main = OBSBasic::Get();
 		if (main) {
-			obs_display_add_draw_callback(window->GetDisplay(), OBSBasic::RenderMain, main);
+			// 使用 Comet 自定义的 RenderMain，以在正确的预览控件上绘制选中框
+			obs_display_add_draw_callback(window->GetDisplay(), CometMainWindow::RenderMain, this);
 			
 			// 初始化预览大小，使用我们的预览控件
 			struct obs_video_info ovi;
@@ -335,6 +334,78 @@ void CometMainWindow::createMainContent()
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
 	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+}
+
+void CometMainWindow::RenderMain(void *data, uint32_t, uint32_t)
+{
+	CometMainWindow *window = static_cast<CometMainWindow *>(data);
+	OBSBasic *main = OBSBasic::Get();
+	if (!main || !window->m_previewWidget)
+		return;
+
+	obs_video_info ovi;
+	obs_get_video_info(&ovi);
+
+	main->previewCX = int(main->previewScale * float(ovi.base_width));
+	main->previewCY = int(main->previewScale * float(ovi.base_height));
+
+	gs_viewport_push();
+	gs_projection_push();
+
+	obs_display_t *display = window->m_previewWidget->GetDisplay();
+	uint32_t width, height;
+	obs_display_size(display, &width, &height);
+	float right = float(width) - main->previewX;
+	float bottom = float(height) - main->previewY;
+
+	gs_ortho(-main->previewX, right, -main->previewY, bottom, -100.0f, 100.0f);
+
+	window->m_previewWidget->DrawOverflow();
+
+	/* --------------------------------------- */
+
+	gs_ortho(0.0f, float(ovi.base_width), 0.0f, float(ovi.base_height), -100.0f, 100.0f);
+	gs_set_viewport(main->previewX, main->previewY, main->previewCX, main->previewCY);
+
+	if (main->IsPreviewProgramMode()) {
+		main->DrawBackdrop(float(ovi.base_width), float(ovi.base_height));
+
+		OBSScene scene = main->GetCurrentScene();
+		obs_source_t *source = obs_scene_get_source(scene);
+		if (source)
+			obs_source_video_render(source);
+	} else {
+		obs_render_main_texture_src_color_only();
+	}
+	gs_load_vertexbuffer(nullptr);
+
+	/* --------------------------------------- */
+
+	gs_ortho(-main->previewX, right, -main->previewY, bottom, -100.0f, 100.0f);
+	gs_reset_viewport();
+
+	uint32_t targetCX = main->previewCX;
+	uint32_t targetCY = main->previewCY;
+
+	if (main->drawSafeAreas) {
+		RenderSafeAreas(main->actionSafeMargin, targetCX, targetCY);
+		RenderSafeAreas(main->graphicsSafeMargin, targetCX, targetCY);
+		RenderSafeAreas(main->fourByThreeSafeMargin, targetCX, targetCY);
+		RenderSafeAreas(main->leftLine, targetCX, targetCY);
+		RenderSafeAreas(main->topLine, targetCX, targetCY);
+		RenderSafeAreas(main->rightLine, targetCX, targetCY);
+	}
+
+	// 在 Comet 的预览控件上绘制选中框和编辑手柄
+	window->m_previewWidget->DrawSceneEditing();
+
+	if (main->drawSpacingHelpers)
+		window->m_previewWidget->DrawSpacingHelpers();
+
+	/* --------------------------------------- */
+
+	gs_projection_pop();
+	gs_viewport_pop();
 }
 
 void CometMainWindow::onPreviewContextMenuRequested()

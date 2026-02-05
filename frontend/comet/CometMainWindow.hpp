@@ -46,6 +46,7 @@ private:
 	void initUI();
 	void createMainContent();
 	static void RenderPreview(void *data, uint32_t cx, uint32_t cy);
+	static void RenderMain(void *data, uint32_t cx, uint32_t cy);
 	
 	ResizeEdge getResizeEdge(const QPoint &pos) const;
 	void updateCursor(ResizeEdge edge);
