@@ -10,6 +10,7 @@
 
 #include "def.h"
 
+class QMenu;
 class TopBar;
 class ScenePanel;
 class InteractPanel;
@@ -37,6 +38,7 @@ protected:
 	virtual void mouseMoveEvent(QMouseEvent *event) override;
 	virtual void mouseReleaseEvent(QMouseEvent *event) override;
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
+	virtual QMenu *createPopupMenu() override;
 
 private slots:
 	void onPreviewContextMenuRequested();

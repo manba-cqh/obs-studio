@@ -30,6 +30,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QShortcut>
+#include <QMenu>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -690,6 +691,12 @@ bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 	}
 	
 	return QMainWindow::eventFilter(obj, event);
+}
+
+QMenu *CometMainWindow::createPopupMenu()
+{
+	// 禁用 QMainWindow 默认的 dock widget 右键菜单
+	return nullptr;
 }
 
 static bool enumItemCheck(obs_scene_t *, obs_sceneitem_t *item, void *param)
