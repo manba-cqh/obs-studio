@@ -271,8 +271,8 @@ void SceneListItemWidget::onDeleteAction()
 		// 先切换到要删除的场景
 		obs_frontend_set_current_scene(m_source);
 		
-		// 然后删除
-		main->RemoveSelectedScene();
+		// 已在本处确认过，跳过 RemoveSelectedScene 内部的二次确认
+		main->RemoveSelectedScene(true);
 		
 		// 通知场景列表变化
 		emit sceneChanged();

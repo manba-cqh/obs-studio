@@ -1273,7 +1273,7 @@ public slots:
 	void RemoveScene(OBSSource source);
 
 	void DuplicateSelectedScene();
-	void RemoveSelectedScene();
+	void RemoveSelectedScene(bool skipConfirmation = false);
 
 	SourceTreeItem *GetItemWidgetFromSceneItem(obs_sceneitem_t *sceneItem);
 

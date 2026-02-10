@@ -326,12 +326,23 @@ static inline void RemoveSceneAndReleaseNested(obs_source_t *source)
 	obs_enum_scenes(cb, NULL);
 }
 
-void OBSBasic::RemoveSelectedScene()
+void OBSBasic::RemoveSelectedScene(bool skipConfirmation)
 {
 	OBSScene scene = GetCurrentScene();
 	obs_source_t *source = obs_scene_get_source(scene);
 
-	if (!source || !QueryRemoveSource(source)) {
+	if (!source) {
+		return;
+	}
+	/* 仅剩一个场景时不允许删除 */
+	if (obs_source_get_type(source) == OBS_SOURCE_TYPE_SCENE && !obs_source_is_group(source)) {
+		int count = ui->scenes->count();
+		if (count == 1) {
+			OBSMessageBox::information(this, QTStr("FinalScene.Title"), QTStr("FinalScene.Text"));
+			return;
+		}
+	}
+	if (!skipConfirmation && !QueryRemoveSource(source)) {
 		return;
 	}
 
