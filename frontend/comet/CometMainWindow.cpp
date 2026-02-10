@@ -29,6 +29,7 @@
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QStackedWidget>
+#include <QShortcut>
 
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -166,8 +167,26 @@ void CometMainWindow::createMainContent()
 	m_previewWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	m_previewWidget->Init();
 	m_previewWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+	m_previewWidget->setFocusPolicy(Qt::StrongFocus);
 	connect(m_previewWidget, &OBSQTDisplay::customContextMenuRequested, this, &CometMainWindow::onPreviewContextMenuRequested);
 	connect(m_previewWidget, &OBSQTDisplay::DisplayResized, this, &CometMainWindow::onPreviewResized);
+	
+	// 在预览控件中按 Delete/Backspace 键删除选中的源
+	auto removeSelectedSource = [this]() {
+		OBSBasic *main = OBSBasic::Get();
+		if (main) {
+			main->on_actionRemoveSource_triggered();
+			// 更新 ScenePanel 的源列表
+			if (m_scenePanel)
+				m_scenePanel->updateCurrentSceneSources();
+		}
+	};
+	QShortcut *deleteShortcut = new QShortcut(QKeySequence(Qt::Key_Delete), m_previewWidget);
+	deleteShortcut->setContext(Qt::WidgetShortcut);
+	connect(deleteShortcut, &QShortcut::activated, this, removeSelectedSource);
+	QShortcut *backspaceShortcut = new QShortcut(QKeySequence(Qt::Key_Backspace), m_previewWidget);
+	backspaceShortcut->setContext(Qt::WidgetShortcut);
+	connect(backspaceShortcut, &QShortcut::activated, this, removeSelectedSource);
 	auto addDisplay = [this](OBSQTDisplay *window) {
 		OBSBasic *main = OBSBasic::Get();
 		if (main) {
