@@ -73,7 +73,7 @@ void SourceListItemWidget::initUI(bool isGroup, bool indented)
     m_lockButton->setCheckable(true);
     m_lockButton->setChecked(false);
     m_lockButton->setToolTip("锁定/解锁");
-    m_lockButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display_lock.png", "display_lock_hover.png", "display_lock_hover.png", "display_unlock.png", "display_unlock_hover.png", "display_unlock_hover.png"));
+    m_lockButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display_unlock.png", "display_unlock_hover.png", "display_unlock_hover.png", "display_lock.png", "display_lock_hover.png", "display_lock_hover.png"));
     connect(m_lockButton, &QPushButton::clicked, this, &SourceListItemWidget::onLockButtonClicked);
     m_layout->addWidget(m_lockButton);
 
