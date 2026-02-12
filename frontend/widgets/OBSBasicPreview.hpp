@@ -197,4 +197,5 @@ public:
 signals:
 	void scalingChanged(float scalingAmount);
 	void fixedScalingChanged(bool isFixed);
+	void sceneItemSelectionChanged();
 };

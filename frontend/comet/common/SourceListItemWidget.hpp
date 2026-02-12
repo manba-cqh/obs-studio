@@ -20,6 +20,7 @@ public:
 
     void setText(const QString &text);
     QString text() const;
+	OBSSceneItem getSceneItem() const { return m_sceneitem; }
 	void updateButtonStates();
 	void addMoveToGroupAction(const QString &groupName);
 

@@ -171,6 +171,11 @@ void CometMainWindow::createMainContent()
 	m_previewWidget->setFocusPolicy(Qt::StrongFocus);
 	connect(m_previewWidget, &OBSQTDisplay::customContextMenuRequested, this, &CometMainWindow::onPreviewContextMenuRequested);
 	connect(m_previewWidget, &OBSQTDisplay::DisplayResized, this, &CometMainWindow::onPreviewResized);
+	connect(m_previewWidget, &OBSBasicPreview::sceneItemSelectionChanged, this, [this]() {
+		if (m_scenePanel) {
+			m_scenePanel->syncSourceSelectionFromPreview();
+		}
+	});
 	
 	// 在预览控件中按 Delete/Backspace 键删除选中的源
 	auto removeSelectedSource = [this]() {

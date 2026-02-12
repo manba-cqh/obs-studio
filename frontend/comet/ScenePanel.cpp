@@ -18,6 +18,7 @@
 #include "DirectorWidget.hpp"
 
 #include <vector>
+#include <set>
 
 using std::vector;
 
@@ -28,6 +29,29 @@ static bool CollectSceneItems(obs_scene_t *, obs_sceneitem_t *item, void *param)
 {
 	auto *items = static_cast<vector<OBSSceneItem> *>(param);
 	items->emplace_back(item);
+	return true;
+}
+
+using SelectedSet = std::set<obs_sceneitem_t *>;
+
+static bool CollectSelectedGroup(obs_scene_t *, obs_sceneitem_t *item, void *param)
+{
+	auto *set = static_cast<SelectedSet *>(param);
+	if (obs_sceneitem_selected(item)) {
+		set->insert(item);
+	}
+	return true;
+}
+
+static bool CollectSelected(obs_scene_t *, obs_sceneitem_t *item, void *param)
+{
+	auto *set = static_cast<SelectedSet *>(param);
+	if (obs_sceneitem_selected(item)) {
+		set->insert(item);
+	}
+	if (obs_sceneitem_is_group(item)) {
+		obs_sceneitem_group_enum_items(item, CollectSelectedGroup, set);
+	}
 	return true;
 }
 
@@ -554,6 +578,48 @@ void ScenePanel::updateCurrentSceneSources()
             addOneItem(item, &enumData, false, false);
         }
     }
+    syncSourceSelectionFromPreview();
+}
+
+void ScenePanel::syncSourceSelectionFromPreview()
+{
+	if (!m_currentContentList) {
+		return;
+	}
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) {
+		return;
+	}
+	OBSScene scene = main->GetCurrentScene();
+	if (!scene) {
+		return;
+	}
+	// 收集当前在预览中选中的 sceneitem
+	SelectedSet selectedSet;
+	obs_scene_enum_items(scene, CollectSelected, &selectedSet);
+
+	// 根据选中项同步列表的选中状态
+	m_currentContentList->blockSignals(true);
+	int firstSelectedRow = -1;
+	for (int row = 0; row < m_currentContentList->count(); ++row) {
+		QListWidgetItem *listItem = m_currentContentList->item(row);
+		QWidget *w = m_currentContentList->itemWidget(listItem);
+		auto *itemWidget = qobject_cast<SourceListItemWidget *>(w);
+		if (!itemWidget) {
+			listItem->setSelected(false);
+			continue;
+		}
+		OBSSceneItem si = itemWidget->getSceneItem();
+		bool selected = (si && selectedSet.count(si.Get()) != 0);
+		listItem->setSelected(selected);
+		if (selected && firstSelectedRow < 0) {
+			firstSelectedRow = row;
+		}
+	}
+	if (firstSelectedRow >= 0) {
+		m_currentContentList->setCurrentRow(firstSelectedRow);
+	}
+	m_currentContentList->blockSignals(false);
 }
 
 void ScenePanel::OBSFrontendEvent(enum obs_frontend_event event, void *ptr)

@@ -774,6 +774,8 @@ void OBSBasicPreview::mouseReleaseEvent(QMouseEvent *event)
 		hoveredPreviewItems.clear();
 		hoveredPreviewItems.push_back(item);
 		selectedItems.clear();
+
+		emit sceneItemSelectionChanged();
 	}
 	OBSBasic *main = OBSBasic::Get();
 	OBSDataAutoRelease rwrapper = obs_scene_save_transform_states(main->GetCurrentScene(), true);
