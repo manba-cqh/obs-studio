@@ -6,7 +6,8 @@
 #include "moc_OBSBasicPreview.cpp"
 
 #define HANDLE_RADIUS 4.0f
-#define HANDLE_SEL_RADIUS (HANDLE_RADIUS * 1.5f)
+/* 手柄命中半径：放大后仍能可靠拖到缩放/旋转手柄，避免只能移动无法缩放 */
+#define HANDLE_SEL_RADIUS (HANDLE_RADIUS * 3.0f)
 #define HELPER_ROT_BREAKPOINT 45.0f
 
 /* TODO: make C++ math classes and clean up code here later */
