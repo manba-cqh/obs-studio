@@ -12,6 +12,9 @@
 #include <widgets/OBSBasic.hpp>
 #include <obs-frontend-api.h>
 #include <obs-source.h>
+#include <dialogs/NameDialog.hpp>
+#include <qt-wrappers.hpp>
+#include <QMessageBox>
 
 SourceListItemWidget::SourceListItemWidget(const QString &text, OBSSceneItem sceneitem, const char *sourceId, QWidget *parent, bool isGroup, bool indented)
     : QWidget(parent), 
@@ -251,15 +254,36 @@ void SourceListItemWidget::onRenameAction()
 	if (!m_sceneitem) {
 		return;
 	}
-	
-	OBSBasic *main = OBSBasic::Get();
-	if (!main) {
+	OBSSource source = obs_sceneitem_get_source(m_sceneitem);
+	if (!source) {
 		return;
 	}
-	
-	// 先选择当前源项，然后调用编辑名称
-	// 注意：需要确保源项在源树中被选中
-	main->EditSceneItemName();
+	const char *prevName = obs_source_get_name(source);
+	if (!prevName) {
+		return;
+	}
+	for (;;) {
+		std::string name;
+		bool accepted = NameDialog::AskForName(this, QTStr("Basic.Main.MixerRename.Title"),
+						       QTStr("Basic.Main.MixerRename.Text"), name, QT_UTF8(prevName));
+		if (!accepted) {
+			return;
+		}
+		if (name.empty()) {
+			QMessageBox::warning(this, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
+			continue;
+		}
+		OBSSourceAutoRelease sourceTest = obs_get_source_by_name(name.c_str());
+		if (sourceTest) {
+			QMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
+			continue;
+		}
+		obs_source_set_name(source, name.c_str());
+		m_text = QString::fromUtf8(name.c_str());
+		setText(m_text);
+		emit sourcesChanged();
+		break;
+	}
 }
 
 namespace {
