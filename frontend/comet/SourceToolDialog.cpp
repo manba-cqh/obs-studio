@@ -64,12 +64,16 @@ void SourceToolDialog::initUI()
 	
 	containerLayout->addWidget(titleBar);
 
-	// 内容区域
+	// 内容区域：单一网格，使各组第一列等垂直对齐
 	m_contentWidget = new QWidget(container);
 	m_contentWidget->setStyleSheet("background: transparent;");
-	m_mainLayout = new QVBoxLayout(m_contentWidget);
-	m_mainLayout->setContentsMargins(15, 15, 15, 15);
-	m_mainLayout->setSpacing(15);
+	QVBoxLayout *contentOuter = new QVBoxLayout(m_contentWidget);
+	contentOuter->setContentsMargins(15, 15, 15, 15);
+	contentOuter->setSpacing(0);
+	m_contentGrid = new QGridLayout();
+	m_contentGrid->setSpacing(15);
+	m_contentGrid->setContentsMargins(0, 0, 0, 0);
+	contentOuter->addLayout(m_contentGrid);
 	containerLayout->addWidget(m_contentWidget);
 	
 	// 设置对话框布局
@@ -133,32 +137,6 @@ void SourceToolDialog::setupCategories()
 	// 默认常用源
 	m_commonSourceIds = {"window_capture", "game_capture", "monitor_capture", "dshow_input", "browser_source"};
 	
-	// 创建常用工具区域
-	m_commonSection = new QWidget();
-	QVBoxLayout *commonLayout = new QVBoxLayout(m_commonSection);
-	commonLayout->setContentsMargins(0, 0, 0, 0);
-	commonLayout->setSpacing(0);
-	
-	QLabel *commonTitle = new QLabel("常用工具");
-	commonTitle->setProperty("label_15_medium", true);
-	commonLayout->addWidget(commonTitle);
-	commonLayout->addSpacing(10);
-
-	m_commonGrid = new QGridLayout();
-	m_commonGrid->setSpacing(15);
-	m_commonGrid->setContentsMargins(0, 0, 0, 0);
-	commonLayout->addLayout(m_commonGrid);
-	commonLayout->addSpacing(15);
-	
-	// 分隔线
-	QWidget *separator = new QWidget();
-	separator->setFixedHeight(1);
-	separator->setStyleSheet("background-color: #FFFFFF;");
-	commonLayout->addWidget(separator);
-	
-	m_mainLayout->addWidget(m_commonSection);
-	
-	// 添加其他类别
 	m_categories = {
 		{"画面捕捉", captureTools},
 		{"多媒体", mediaTools},
@@ -166,54 +144,70 @@ void SourceToolDialog::setupCategories()
 		{"其他", otherTools},
 	};
 	
-	for (const auto &category : m_categories) {
-		QWidget *section = createCategorySection(category.first, category.second);
-		m_mainLayout->addWidget(section);
+	// 统一 5 列，使每组第一列垂直对齐
+	for (int c = 0; c < GRID_COLS; c++) {
+		m_contentGrid->setColumnStretch(c, 1);
 	}
 	
-	m_mainLayout->addStretch();
+	// 第 0 行：常用工具标题
+	QLabel *commonTitle = new QLabel("常用工具");
+	commonTitle->setProperty("label_15_medium", true);
+	m_contentGrid->addWidget(commonTitle, 0, 0, 1, GRID_COLS);
+	
+	m_contentGridRows = addCommonAndCategoryRows(1);
 }
 
-QWidget* SourceToolDialog::createCategorySection(const QString &title, const QList<SourceTypeInfo> &sources)
+int SourceToolDialog::addCommonAndCategoryRows(int startRow)
 {
-	QWidget *section = new QWidget();
-	QVBoxLayout *layout = new QVBoxLayout(section);
-	layout->setContentsMargins(0, 0, 0, 0);
-	layout->setSpacing(10);
+	int row = startRow;
 	
-	QLabel *titleLabel = new QLabel(title);
-	titleLabel->setProperty("label_15_medium", true);
-	layout->addWidget(titleLabel);
-	
-	QGridLayout *grid = new QGridLayout();
-	grid->setSpacing(15);
-	grid->setContentsMargins(0, 0, 0, 0);
-	
+	// 常用工具按钮（5 列）
 	int col = 0;
-	int row = 0;
-	const int maxCols = 5;
+	for (const QString &sourceId : m_commonSourceIds) {
+		if (m_allSources.contains(sourceId)) {
+			QPushButton *btn = createSourceButton(m_allSources[sourceId], true);
+			m_contentGrid->addWidget(btn, row, col);
+			col++;
+			if (col >= GRID_COLS) {
+				col = 0;
+				row++;
+			}
+		}
+	}
+	if (col > 0) {
+		row++;
+	}
 	
-	for (const auto &source : sources) {
-		QPushButton *btn = createSourceButton(source, false);
-		grid->addWidget(btn, row, col);
+	// 分隔线（占一整行）
+	QWidget *separator = new QWidget();
+	separator->setFixedHeight(1);
+	separator->setStyleSheet("background-color: rgba(255,255,255,0.2);");
+	m_contentGrid->addWidget(separator, row, 0, 1, GRID_COLS);
+	row++;
+	
+	// 各分类：标题行 + 按钮行（同一网格，列对齐）
+	for (const auto &category : m_categories) {
+		QLabel *titleLabel = new QLabel(category.first);
+		titleLabel->setProperty("label_15_medium", true);
+		m_contentGrid->addWidget(titleLabel, row, 0, 1, GRID_COLS);
+		row++;
 		
-		col++;
-		if (col >= maxCols) {
-			col = 0;
+		col = 0;
+		for (const auto &source : category.second) {
+			QPushButton *btn = createSourceButton(source, false);
+			m_contentGrid->addWidget(btn, row, col);
+			col++;
+			if (col >= GRID_COLS) {
+				col = 0;
+				row++;
+			}
+		}
+		if (col > 0) {
 			row++;
 		}
 	}
 	
-	// 添加水平 stretch，填充剩余列
-	for (int c = col; c < maxCols; c++) {
-		grid->setColumnStretch(c, 1);
-	}
-	
-	// 添加垂直 stretch
-	grid->setRowStretch(row + 1, 1);
-	
-	layout->addLayout(grid);
-	return section;
+	return row;
 }
 
 QPushButton* SourceToolDialog::createSourceButton(const SourceTypeInfo &info, bool isCommon)
@@ -276,48 +270,20 @@ QPushButton* SourceToolDialog::createSourceButton(const SourceTypeInfo &info, bo
 
 void SourceToolDialog::updateCommonSection()
 {
-	// 清空现有按钮和 stretch
-	QLayoutItem *item;
-	while ((item = m_commonGrid->takeAt(0)) != nullptr) {
-		if (item->widget()) {
-			delete item->widget();
-		}
-		delete item;
-	}
-	
-	// 重置所有行列的 stretch
-	for (int i = 0; i < 5; i++) {
-		m_commonGrid->setColumnStretch(i, 0);
-	}
-	for (int i = 0; i < 10; i++) {
-		m_commonGrid->setRowStretch(i, 0);
-	}
-	
-	// 添加常用源按钮
-	int col = 0;
-	int row = 0;
-	const int maxCols = 5;
-	
-	for (const QString &sourceId : m_commonSourceIds) {
-		if (m_allSources.contains(sourceId)) {
-			QPushButton *btn = createSourceButton(m_allSources[sourceId], true);
-			m_commonGrid->addWidget(btn, row, col);
-			
-			col++;
-			if (col >= maxCols) {
-				col = 0;
-				row++;
+	// 从第 1 行起移除所有内容（保留第 0 行「常用工具」标题），再重新填充
+	for (int r = 1; r < m_contentGridRows; r++) {
+		for (int c = 0; c < GRID_COLS; c++) {
+			QLayoutItem *item = m_contentGrid->itemAtPosition(r, c);
+			if (item) {
+				if (QWidget *w = item->widget()) {
+					w->deleteLater();
+				}
+				m_contentGrid->removeItem(item);
+				delete item;
 			}
 		}
 	}
-	
-	// 添加水平 stretch，填充剩余列
-	for (int c = col; c < maxCols; c++) {
-		m_commonGrid->setColumnStretch(c, 1);
-	}
-	
-	// 添加垂直 stretch
-	m_commonGrid->setRowStretch(row + 1, 1);
+	m_contentGridRows = addCommonAndCategoryRows(1);
 }
 
 void SourceToolDialog::addToCommon(const QString &sourceId)

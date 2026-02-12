@@ -34,7 +34,8 @@ protected:
 private:
 	void initUI();
 	void setupCategories();
-	QWidget* createCategorySection(const QString &title, const QList<SourceTypeInfo> &sources);
+	/** 从指定行起填充常用按钮和所有分类（同一网格，列对齐）；返回下一空行 */
+	int addCommonAndCategoryRows(int startRow);
 	QPushButton* createSourceButton(const SourceTypeInfo &info, bool isCommon = false);
 	
 	void addToCommon(const QString &sourceId);
@@ -44,13 +45,12 @@ private:
 	void loadCommonSources();
 
 private:
-	QVBoxLayout *m_mainLayout;
+	static const int GRID_COLS = 5;
 	QWidget *m_contentWidget;
+	QGridLayout *m_contentGrid;
 	QPushButton *m_closeBtn;
-	
-	// 常用工具区域
-	QWidget *m_commonSection;
-	QGridLayout *m_commonGrid;
+	/** 内容网格行数（用于 updateCommonSection 时清除重填） */
+	int m_contentGridRows;
 	
 	// 所有源类型
 	QMap<QString, SourceTypeInfo> m_allSources;
