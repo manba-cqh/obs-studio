@@ -335,13 +335,13 @@ void SourceListItemWidget::populateMoveToGroupMenu()
 	obs_sceneitem_t *currentGroup = obs_sceneitem_get_group(enumScene, m_sceneitem);
 	const char *currentGroupName = currentGroup ? obs_source_get_name(obs_sceneitem_get_source(currentGroup)) : nullptr;
 	
+	// 始终在顶部提供「新建分组」，点击后创建新分组并将当前项移入
+	QAction *newGroupAction = m_moveToGroupMenu->addAction("新建分组...");
+	connect(newGroupAction, &QAction::triggered, this, &SourceListItemWidget::onMoveToNewGroup);
+	m_moveToGroupMenu->addSeparator();
+	
 	EnumGroupsData data = {this, currentGroupName};
 	obs_scene_enum_items(enumScene, enumGroupsCallback, &data);
-	
-	if (m_moveToGroupMenu->isEmpty()) {
-		QAction *none = m_moveToGroupMenu->addAction("(无分组)");
-		none->setEnabled(false);
-	}
 }
 
 void SourceListItemWidget::addMoveToGroupAction(const QString &groupName)
@@ -381,6 +381,47 @@ void SourceListItemWidget::onMoveToGroup(const QString &groupName)
 	}
 	
 	obs_sceneitem_group_add_item(groupItem, m_sceneitem);
+	emit sourcesChanged();
+}
+
+void SourceListItemWidget::onMoveToNewGroup()
+{
+	if (!m_sceneitem) {
+		return;
+	}
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) {
+		return;
+	}
+	OBSScene scene = main->GetCurrentScene();
+	if (!scene) {
+		return;
+	}
+	obs_scene_t *rootScene = obs_scene_from_source(obs_scene_get_source(scene));
+	QString defaultName = QStringLiteral("分组");
+	int i = 2;
+	while (obs_get_source_by_name(defaultName.toUtf8().constData())) {
+		defaultName = QStringLiteral("分组 %1").arg(i++);
+	}
+	std::string name;
+	bool accepted = NameDialog::AskForName(this, QStringLiteral("新建分组"),
+					       QStringLiteral("请输入分组名称"), name, defaultName.toUtf8().constData());
+	if (!accepted || name.empty()) {
+		return;
+	}
+	if (obs_get_source_by_name(name.c_str())) {
+		QMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
+		return;
+	}
+	obs_sceneitem_t *newGroup = obs_scene_add_group(rootScene, name.c_str());
+	if (!newGroup) {
+		return;
+	}
+	obs_sceneitem_t *currentGroup = obs_sceneitem_get_group(rootScene, m_sceneitem);
+	if (currentGroup) {
+		obs_sceneitem_group_remove_item(currentGroup, m_sceneitem);
+	}
+	obs_sceneitem_group_add_item(newGroup, m_sceneitem);
 	emit sourcesChanged();
 }
 

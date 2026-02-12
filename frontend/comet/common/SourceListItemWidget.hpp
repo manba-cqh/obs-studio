@@ -38,6 +38,7 @@ private:
 	void onMaskAction();
 	void onRenameAction();
 	void onMoveToGroup(const QString &groupName);
+	void onMoveToNewGroup();
 	void onDeleteAction();
 
 private:
