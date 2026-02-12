@@ -20,6 +20,16 @@
 #include <qt-wrappers.hpp>
 #include <cstring>
 
+#include "comet/common/MovableWidget.hpp"
+#include <QFile>
+#include <QPaintEvent>
+#include <QPainter>
+#include <QStyleOption>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+
 #include "moc_OBSBasicSourceSelect.cpp"
 
 struct AddSourceData {
@@ -372,9 +382,115 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_, un
 	  id(id_),
 	  undo_s(undo_s)
 {
-	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+	// setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+	setAttribute(Qt::WA_TranslucentBackground, false);
+	setAutoFillBackground(true);
+	setObjectName("OBSBasicSourceSelect");
+
+	QFile styleFile(":/property_styles.qss");
+	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
+		QString style = QString::fromUtf8(styleFile.readAll());
+		style.replace("OBSBasicProperties", "OBSBasicSourceSelect");
+		setStyleSheet(style);
+		styleFile.close();
+	}
+
+	QWidget *container = new QWidget(this);
+	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 0px; }");
+
+	QVBoxLayout *containerLayout = new QVBoxLayout(container);
+	containerLayout->setContentsMargins(0, 0, 0, 0);
+	containerLayout->setSpacing(0);
+
+	MovableWidget *titleBar = new MovableWidget(this, container);
+	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
+	titleBar->setFixedHeight(50);
+	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
+	titleLayout->setContentsMargins(15, 13, 15, 13);
+	titleLayout->setSpacing(0);
+
+	QLabel *titleLabel = new QLabel(titleBar);
+	titleLabel->setTextFormat(Qt::PlainText);
+	titleLabel->setText(QTStr("Basic.SourceSelect"));
+	titleLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
+	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
+	titleLayout->addStretch();
+
+	QPushButton *closeBtn = new QPushButton(titleBar);
+	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	closeBtn->setFixedSize(24, 24);
+	closeBtn->setCursor(Qt::PointingHandCursor);
+	closeBtn->setStyleSheet(
+		"QPushButton {"
+		"    border: none;"
+		"    background: transparent;"
+		"    background-image: url(:/images/close.svg);"
+		"    background-repeat: no-repeat;"
+		"    background-position: center;"
+		"}"
+		"QPushButton:hover {"
+		"    background-image: url(:/images/close_hover.svg);"
+		"}"
+		"QPushButton:pressed {"
+		"    background-image: url(:/images/close_pressed.svg);"
+		"}"
+	);
+	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
+	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
+	containerLayout->addWidget(titleBar);
 
 	ui->setupUi(this);
+
+	QVBoxLayout *originalLayout = qobject_cast<QVBoxLayout *>(layout());
+	if (originalLayout && originalLayout->count() >= 2) {
+		QVBoxLayout *contentLayout = new QVBoxLayout();
+		contentLayout->setContentsMargins(15, 15, 15, 15);
+		contentLayout->setSpacing(10);
+
+		QLayoutItem *item0 = originalLayout->takeAt(0);
+		if (item0 && item0->layout()) {
+			QVBoxLayout *innerLayout = qobject_cast<QVBoxLayout *>(item0->layout());
+			if (innerLayout) {
+				int index = 0;
+				while (innerLayout->count() > 0) {
+					QLayoutItem *child = innerLayout->takeAt(0);
+					if (child->widget()) {
+						QWidget *w = child->widget();
+						contentLayout->addWidget(w);
+						if (w == ui->sourceList) {
+							contentLayout->setStretch(contentLayout->count() - 1, 1);
+						}
+						index++;
+					} else if (child->layout()) {
+						contentLayout->addLayout(child->layout());
+					}
+					delete child;
+				}
+			}
+			delete item0;
+		} else if (item0) {
+			originalLayout->insertItem(0, item0);
+		}
+
+		QLayoutItem *item1 = originalLayout->takeAt(0);
+		if (item1 && item1->widget()) {
+			contentLayout->addWidget(item1->widget());
+			delete item1;
+		} else if (item1) {
+			originalLayout->insertItem(0, item1);
+		}
+
+		QLayoutItem *leftover;
+		while ((leftover = originalLayout->takeAt(0)) != nullptr)
+			delete leftover;
+		delete originalLayout;
+		containerLayout->addLayout(contentLayout);
+	}
+
+	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
+	dialogLayout->setContentsMargins(0, 0, 0, 0);
+	dialogLayout->addWidget(container);
 
 	ui->sourceList->setAttribute(Qt::WA_MacShowFocusRect, false);
 
@@ -446,4 +562,13 @@ void OBSBasicSourceSelect::SourcePaste(SourceCopyInfo &info, bool dup)
 		return;
 
 	AddExisting(source, info.visible, dup, &info.transform, &info.crop, &info.blend_method, &info.blend_mode);
+}
+
+void OBSBasicSourceSelect::paintEvent(QPaintEvent *event)
+{
+	QStyleOption opt;
+	opt.initFrom(this);
+	QPainter p(this);
+	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+	QDialog::paintEvent(event);
 }

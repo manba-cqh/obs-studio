@@ -22,6 +22,7 @@
 class QCheckBox;
 class QLabel;
 class QLineEdit;
+class QPaintEvent;
 class QString;
 
 class NameDialog : public QDialog {
@@ -29,6 +30,8 @@ class NameDialog : public QDialog {
 
 public:
 	NameDialog(QWidget *parent);
+
+	void setWindowTitle(const QString &title);
 
 	// Returns true if user clicks OK, false otherwise
 	// userTextInput returns string that user typed into dialog
@@ -42,7 +45,11 @@ public:
 					 std::string &userTextInput, const QString &optionLabel, bool &optionChecked,
 					 const QString &placeHolder = QString(""));
 
+protected:
+	void paintEvent(QPaintEvent *event) override;
+
 private:
+	QLabel *m_titleLabel;
 	QLabel *label;
 	QLineEdit *userText;
 	QCheckBox *checkbox;
