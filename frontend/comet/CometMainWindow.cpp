@@ -299,7 +299,10 @@ void CometMainWindow::createMainContent()
 	m_broadcastModePanelDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_broadcastModePanel = new BroadcastModePanel();
 	m_broadcastModePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播模式", m_broadcastModePanelDock);
+	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播与录制", m_broadcastModePanelDock);
+	QWidget *broadcastHeaderOper = m_broadcastModePanel->createHeaderOperButtons();
+	if (broadcastHeaderOper)
+		broadcastModeHeader->setHeaderOperWidget(broadcastHeaderOper);
 	connect(broadcastModeHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_broadcastModePanelDock->setFloating(floating);
 	});
@@ -313,7 +316,7 @@ void CometMainWindow::createMainContent()
 	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
 	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
-	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
+	resizeDocks(bottomDocks, {2, 3}, Qt::Horizontal);
 
 	// 右侧
 	// 插件面板

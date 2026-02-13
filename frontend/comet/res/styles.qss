@@ -237,6 +237,25 @@ QCheckBox::indicator:unchecked {
     image: url(:/images/unchecked.png);
 }
 
+/* QCheckBox 开关样式 */
+QCheckBox[switch_mode = true] {
+    spacing: 5px;
+    color: #EEEEFF;
+    font-size: 14px;
+    font-weight: medium;
+    background: transparent;
+    border: none;
+}
+QCheckBox[switch_mode = true]::indicator:checked {
+    background: transparent;
+    border: none;
+    image: url(:/images/switch_open.svg);
+}
+QCheckBox[switch_mode = true]::indicator:unchecked {
+    background: transparent;
+    border: none;
+    image: url(:/images/switch_close.svg);
+}
 
 /* QMessageBox 全局样式 */
 QMessageBox

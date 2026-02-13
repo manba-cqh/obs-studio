@@ -59,8 +59,8 @@ void PanelContainer::setContentWidget(QWidget *widget)
 {
 	m_contentWidget = widget;
 	if (m_contentWidget) {
-		m_mainLayout->addWidget(m_contentWidget);
-		m_mainLayout->addStretch();
+		m_contentWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+		m_mainLayout->addWidget(m_contentWidget, 1);
 		// 根据当前折叠状态设置可见性
 		m_contentWidget->setVisible(!m_collapsed);
 	}

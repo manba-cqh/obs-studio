@@ -43,6 +43,17 @@
     <file>images/unchecked.png</file>
     <file>images/popup_box_normal.png</file>
     <file>images/popup_box_small.png</file>
+    <file>images/not_started.svg</file>
+    <file>images/stop.svg</file>
+    <file>images/pause.svg</file>
+    <file>images/play.svg</file>
+    <file>images/recording.svg</file>
+    <file>images/switch_open.svg</file>
+    <file>images/switch_close.svg</file>
+    <file>images/stateless.svg</file>
+    <file>images/condition_good.svg</file>
+    <file>images/condition_bad.svg</file>
+    <file>images/condition_interruption.svg</file>
 
     <file>images/monitor_capture.svg</file>
     <file>images/display_capture.svg</file>
@@ -75,7 +86,6 @@
     <file>images/wasapi_input_capture.svg</file>
     <file>images/wasapi_output_capture.svg</file>
     <file>images/folder_open.svg</file>
-
 
   </qresource>
 </RCC>

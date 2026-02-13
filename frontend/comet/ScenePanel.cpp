@@ -128,7 +128,8 @@ void ScenePanel::createContentWidget()
     m_currentContentList = new QListWidget(listWidgetContainer);
     m_currentContentList->setSpacing(2);
     listLayout->addWidget(m_currentContentList);
-    contentLayout->addWidget(listWidgetContainer);
+    listWidgetContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    contentLayout->addWidget(listWidgetContainer, 1);
 
     setupSceneButtons();
 
