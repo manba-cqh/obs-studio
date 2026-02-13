@@ -103,7 +103,6 @@ void StreamItemWidget::initUI()
 	liveLayout->addWidget(m_liveTimeLabel);
 	liveLayout->addStretch();
 
-	m_liveRow->setVisible(false);
 	mainLayout->addWidget(m_liveRow);
 
 	m_liveTimer = new QTimer(this);
@@ -223,7 +222,7 @@ void StreamItemWidget::updateDisplay()
 	m_toggleButton->blockSignals(true);
 	m_toggleButton->setChecked(m_streaming);
 	m_toggleButton->blockSignals(false);
-	m_liveRow->setVisible(m_streaming);
+	m_liveRow->setVisible(true);
 	m_statsRow->setVisible(m_streaming);
 	setStyleSheet("StreamItemWidget { background-color: transparent; border: none; }");
 }
@@ -325,16 +324,37 @@ void BroadcastModePanel::initUI()
 	updateRecordingState();
 }
 
+namespace {
+const char *const kDefaultPlatformIcons[] = {"bilibili.svg", "douyin.svg", "douyu.svg", "kuaishou.svg"};
+const int kDefaultPlatformIconCount = 4;
+} // namespace
+
 void BroadcastModePanel::createStreamSection()
 {
 	QStringList platforms;
 	OBSBasic *main = OBSBasic::Get();
-	if (main) {
-		config_t *config = main->Config();
-		if (config) {
-			const char *platformsStr = config_get_string(config, "CometStream", "Platforms");
-			if (platformsStr && *platformsStr)
-				platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
+	config_t *config = main ? main->Config() : nullptr;
+	if (config) {
+		const char *platformsStr = config_get_string(config, "CometStream", "Platforms");
+		if (platformsStr && *platformsStr)
+			platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
+		if (!platforms.isEmpty()) {
+			bool needSave = false;
+			for (int i = 0; i < kDefaultPlatformIconCount && i < platforms.size(); ++i) {
+				QString key = QString::number(i) + "_Icon";
+				if (!config_has_user_value(config, "CometStream", QT_TO_UTF8((key)))) {
+					config_set_string(config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
+					needSave = true;
+				} else {
+					const char *v = config_get_string(config, "CometStream", QT_TO_UTF8((key)));
+					if (!v || !*v) {
+						config_set_string(config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
+						needSave = true;
+					}
+				}
+			}
+			if (needSave)
+				config_save(config);
 		}
 	}
 
@@ -349,7 +369,14 @@ void BroadcastModePanel::createStreamSection()
 
 	m_streamItems.clear();
 	for (int i = 0; i < platforms.size(); ++i) {
-		StreamItemWidget *item = new StreamItemWidget(platforms[i], "", i);
+		QString iconPath;
+		if (config) {
+			QString key = QString::number(i) + "_Icon";
+			const char *iconFile = config_get_string(config, "CometStream", QT_TO_UTF8((key)));
+			if (iconFile && *iconFile)
+				iconPath = QString(":/images/%1").arg(QString::fromUtf8(iconFile));
+		}
+		StreamItemWidget *item = new StreamItemWidget(platforms[i], iconPath, i);
 		item->setStreaming(false);
 		item->setLiveTime("00:00:00");
 		connect(item, &StreamItemWidget::toggleStreamRequested, this,

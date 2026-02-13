@@ -339,12 +339,47 @@ void StreamConfigWt::savePlatformConfig(int index)
 	config_save(m_config);
 }
 
+namespace {
+const char *const kDefaultPlatformNames[] = {"哔哩哔哩", "抖音", "斗鱼", "快手"};
+const char *const kDefaultPlatformIcons[] = {":/images/bilibili.svg", ":/images/douyin.svg", ":/images/douyu.svg", ":/images/kuaishou.svg"};
+const int kDefaultPlatformCount = 4;
+} // namespace
+
 void StreamConfigWt::loadStreamSettings()
 {
 	if (!m_config) return;
 	const char *platformsStr = config_get_string(m_config, "CometStream", "Platforms");
 	if (platformsStr && *platformsStr)
 		m_platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
+
+	if (m_platforms.isEmpty()) {
+		for (int i = 0; i < kDefaultPlatformCount; ++i)
+			m_platforms << QString::fromUtf8(kDefaultPlatformNames[i]);
+		config_set_string(m_config, "CometStream", "Platforms",
+				  QT_TO_UTF8(m_platforms.join("|")));
+		for (int i = 0; i < kDefaultPlatformCount; ++i) {
+			QString key = QString::number(i) + "_Icon";
+			config_set_string(m_config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
+		}
+		config_save(m_config);
+	} else {
+		bool needSave = false;
+		for (int i = 0; i < kDefaultPlatformCount && i < m_platforms.size(); ++i) {
+			QString key = QString::number(i) + "_Icon";
+			if (!config_has_user_value(m_config, "CometStream", QT_TO_UTF8((key)))) {
+				config_set_string(m_config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
+				needSave = true;
+			} else {
+				const char *v = config_get_string(m_config, "CometStream", QT_TO_UTF8((key)));
+				if (!v || !*v) {
+					config_set_string(m_config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
+					needSave = true;
+				}
+			}
+		}
+		if (needSave)
+			config_save(m_config);
+	}
 
 	if (m_platformCombo)
 		m_platformCombo->blockSignals(true);
