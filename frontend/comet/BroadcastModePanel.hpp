@@ -5,13 +5,14 @@
 #include <obs.hpp>
 #include <obs-frontend-api.h>
 
+#include <QTimer>
+#include <QVector>
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
-#include <QTimer>
 #include <QScrollArea>
 
 enum class LiveIndicatorState {
@@ -26,15 +27,24 @@ class StreamItemWidget : public QWidget
 	Q_OBJECT
 
 public:
-	StreamItemWidget(const QString &platformName, const QString &iconPath, QWidget *parent = nullptr);
+	StreamItemWidget(const QString &platformName, const QString &iconPath, int platformIndex, QWidget *parent = nullptr);
 
 	void setLiveTime(const QString &time);
 	void setStats(int droppedFrames, double dropPercent, int bitrate, int fps);
 	void setStreaming(bool streaming);
 	bool isStreaming() const { return m_streaming; }
 	void setLiveIndicatorState(LiveIndicatorState state);
+	int platformIndex() const { return m_platformIndex; }
+	void setToggleEnabled(bool enabled);
+
+signals:
+	void toggleStreamRequested(int platformIndex, bool start);
+
+private slots:
+	void updateLiveTime();
 
 private:
+	void onToggleToggled(bool checked);
 	void initUI();
 	void updateDisplay();
 	void updateLiveIndicatorIcon();
@@ -42,6 +52,7 @@ private:
 private:
 	QString m_platformName;
 	QString m_iconPath;
+	int m_platformIndex;
 	bool m_streaming;
 	LiveIndicatorState m_liveIndicatorState;
 
@@ -59,6 +70,9 @@ private:
 
 	QWidget *m_statsRow;
 	QWidget *m_liveRow;
+
+	QTimer *m_liveTimer = nullptr;
+	qint64 m_liveStartTime = 0;
 };
 
 class BroadcastModePanel : public PanelContainer
@@ -76,6 +90,10 @@ private slots:
 	void onPauseButtonClicked();
 	void onAutoRecordToggled(bool checked);
 	void updateRecordingTime();
+	void onStreamToggleRequested(int platformIndex, bool start);
+	void onStreamingStarted();
+	void onStreamingStopped();
+	void updateStreamIndicator();
 
 private:
 	void initUI();
@@ -89,6 +107,11 @@ private:
 	QVBoxLayout *m_streamLayout;
 	QScrollArea *m_streamScrollArea;
 	QWidget *m_streamContainer;
+	QVector<StreamItemWidget *> m_streamItems;
+	int m_streamingPlatformIndex = -1;
+	QTimer *m_streamStatsTimer = nullptr;
+	uint64_t m_lastStreamBytesSent = 0;
+	uint64_t m_lastStreamBytesTime = 0;
 
 	// 录制区域
 	QWidget *m_recordSection;

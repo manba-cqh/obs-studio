@@ -8,6 +8,8 @@
 
 #include <obs-frontend-api.h>
 #include <obs.hpp>
+#include <obs-data.h>
+#include <util/platform.h>
 
 #include <QDateTime>
 #include <QHBoxLayout>
@@ -21,10 +23,12 @@
 
 // ===== StreamItemWidget =====
 
-StreamItemWidget::StreamItemWidget(const QString &platformName, const QString &iconPath, QWidget *parent)
+StreamItemWidget::StreamItemWidget(const QString &platformName, const QString &iconPath, int platformIndex,
+				   QWidget *parent)
 	: QWidget(parent),
 	  m_platformName(platformName),
 	  m_iconPath(iconPath),
+	  m_platformIndex(platformIndex),
 	  m_streaming(false),
 	  m_liveIndicatorState(LiveIndicatorState::Stateless)
 {
@@ -62,6 +66,7 @@ void StreamItemWidget::initUI()
 	m_toggleButton = new QCheckBox(this);
 	m_toggleButton->setChecked(false);
 	m_toggleButton->setProperty("switch_mode", true);
+	connect(m_toggleButton, &QCheckBox::toggled, this, &StreamItemWidget::onToggleToggled);
 	topRow->addWidget(m_toggleButton);
 
 	m_moreButton = new QPushButton(this);
@@ -100,6 +105,9 @@ void StreamItemWidget::initUI()
 
 	m_liveRow->setVisible(false);
 	mainLayout->addWidget(m_liveRow);
+
+	m_liveTimer = new QTimer(this);
+	connect(m_liveTimer, &QTimer::timeout, this, &StreamItemWidget::updateLiveTime);
 
 	// 第三行：丢帧 | 码率 | 帧率
 	m_statsRow = new QWidget(this);
@@ -182,15 +190,52 @@ void StreamItemWidget::setStats(int droppedFrames, double dropPercent, int bitra
 void StreamItemWidget::setStreaming(bool streaming)
 {
 	m_streaming = streaming;
+	if (streaming) {
+		m_liveStartTime = QDateTime::currentMSecsSinceEpoch();
+		m_liveTimeLabel->setText("00:00:00");
+		m_liveTimer->start(500);
+	} else {
+		m_liveTimer->stop();
+		m_liveTimeLabel->setText("00:00:00");
+	}
 	updateDisplay();
+}
+
+void StreamItemWidget::updateLiveTime()
+{
+	if (!m_streaming || m_liveStartTime <= 0)
+		return;
+	qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_liveStartTime;
+	if (elapsed < 0)
+		elapsed = 0;
+	int totalSecs = static_cast<int>(elapsed / 1000);
+	int hours = totalSecs / 3600;
+	int mins = (totalSecs % 3600) / 60;
+	int secs = totalSecs % 60;
+	m_liveTimeLabel->setText(QString("%1:%2:%3")
+				 .arg(hours, 2, 10, QChar('0'))
+				 .arg(mins, 2, 10, QChar('0'))
+				 .arg(secs, 2, 10, QChar('0')));
 }
 
 void StreamItemWidget::updateDisplay()
 {
+	m_toggleButton->blockSignals(true);
 	m_toggleButton->setChecked(m_streaming);
+	m_toggleButton->blockSignals(false);
 	m_liveRow->setVisible(m_streaming);
 	m_statsRow->setVisible(m_streaming);
 	setStyleSheet("StreamItemWidget { background-color: transparent; border: none; }");
+}
+
+void StreamItemWidget::onToggleToggled(bool checked)
+{
+	emit toggleStreamRequested(m_platformIndex, checked);
+}
+
+void StreamItemWidget::setToggleEnabled(bool enabled)
+{
+	m_toggleButton->setEnabled(enabled);
 }
 
 // ===== BroadcastModePanel =====
@@ -294,17 +339,22 @@ void BroadcastModePanel::createStreamSection()
 	}
 
 	if (platforms.isEmpty()) {
-		StreamItemWidget *noneItem = new StreamItemWidget(QStringLiteral("无"), "");
+		StreamItemWidget *noneItem = new StreamItemWidget(QStringLiteral("无"), "", -1);
 		noneItem->setStreaming(false);
 		noneItem->setLiveTime("00:00:00");
+		noneItem->setToggleEnabled(false);
 		m_streamLayout->insertWidget(m_streamLayout->count() - 1, noneItem);
 		return;
 	}
 
-	for (const QString &name : platforms) {
-		StreamItemWidget *item = new StreamItemWidget(name, "");
+	m_streamItems.clear();
+	for (int i = 0; i < platforms.size(); ++i) {
+		StreamItemWidget *item = new StreamItemWidget(platforms[i], "", i);
 		item->setStreaming(false);
 		item->setLiveTime("00:00:00");
+		connect(item, &StreamItemWidget::toggleStreamRequested, this,
+			&BroadcastModePanel::onStreamToggleRequested);
+		m_streamItems.append(item);
 		m_streamLayout->insertWidget(m_streamLayout->count() - 1, item);
 	}
 }
@@ -387,6 +437,107 @@ void BroadcastModePanel::onAutoRecordToggled(bool checked)
 	// TODO: 保存设置，开播时自动启动录制
 }
 
+void BroadcastModePanel::onStreamToggleRequested(int platformIndex, bool start)
+{
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) return;
+	if (platformIndex < 0) return;
+
+	if (start) {
+		if (obs_frontend_streaming_active()) {
+			obs_frontend_streaming_stop();
+			m_streamingPlatformIndex = -1;
+			for (StreamItemWidget *w : m_streamItems)
+				w->setStreaming(false);
+		}
+		config_t *config = main->Config();
+		if (!config) return;
+		QString prefix = QString::number(platformIndex) + "_";
+		const char *server = config_get_string(config, "CometStream", QT_TO_UTF8((prefix + "Server")));
+		const char *key = config_get_string(config, "CometStream", QT_TO_UTF8((prefix + "StreamKey")));
+		if (!server || !key || !*server || !*key) {
+			return;
+		}
+		OBSDataAutoRelease settings = obs_data_create();
+		obs_data_set_string(settings, "server", server);
+		obs_data_set_string(settings, "key", key);
+		obs_service_t *oldSvc = main->GetService();
+		OBSDataAutoRelease hotkeyData = oldSvc ? obs_hotkeys_save_service(oldSvc) : nullptr;
+		OBSServiceAutoRelease newSvc =
+			obs_service_create("rtmp_custom", "default_service", settings, hotkeyData);
+		if (!newSvc) return;
+		main->SetService(newSvc);
+		main->SaveService();
+		m_streamingPlatformIndex = platformIndex;
+		obs_frontend_streaming_start();
+	} else {
+		if (m_streamingPlatformIndex == platformIndex && obs_frontend_streaming_active()) {
+			obs_frontend_streaming_stop();
+		}
+	}
+}
+
+void BroadcastModePanel::onStreamingStarted()
+{
+	if (m_streamingPlatformIndex >= 0 && m_streamingPlatformIndex < m_streamItems.size()) {
+		m_streamItems[m_streamingPlatformIndex]->setStreaming(true);
+	}
+	if (!m_streamStatsTimer) {
+		m_streamStatsTimer = new QTimer(this);
+		connect(m_streamStatsTimer, &QTimer::timeout, this, &BroadcastModePanel::updateStreamIndicator);
+	}
+	m_streamStatsTimer->start(1500);
+}
+
+void BroadcastModePanel::onStreamingStopped()
+{
+	if (m_streamStatsTimer)
+		m_streamStatsTimer->stop();
+	if (m_streamingPlatformIndex >= 0 && m_streamingPlatformIndex < m_streamItems.size())
+		m_streamItems[m_streamingPlatformIndex]->setLiveIndicatorState(LiveIndicatorState::Stateless);
+	m_streamingPlatformIndex = -1;
+	m_lastStreamBytesSent = 0;
+	m_lastStreamBytesTime = 0;
+	for (StreamItemWidget *w : m_streamItems)
+		w->setStreaming(false);
+}
+
+void BroadcastModePanel::updateStreamIndicator()
+{
+	if (m_streamingPlatformIndex < 0 || m_streamingPlatformIndex >= m_streamItems.size())
+		return;
+	obs_output_t *output = obs_frontend_get_streaming_output();
+	if (!output || !obs_output_active(output)) {
+		m_streamItems[m_streamingPlatformIndex]->setLiveIndicatorState(LiveIndicatorState::Stateless);
+		return;
+	}
+	float congestion = obs_output_get_congestion(output);
+	int dropped = obs_output_get_frames_dropped(output);
+	int total = obs_output_get_total_frames(output);
+	double dropPercent = (total > 0) ? (100.0 * dropped / total) : 0.0;
+
+	LiveIndicatorState state = LiveIndicatorState::Good;
+	if (congestion >= 0.3333f || dropPercent >= 1.0)
+		state = LiveIndicatorState::Bad;
+	m_streamItems[m_streamingPlatformIndex]->setLiveIndicatorState(state);
+
+	// 更新丢帧、码率、帧率
+	uint64_t bytesSent = obs_output_get_total_bytes(output);
+	uint64_t bytesTime = os_gettime_ns();
+	int kbps = 0;
+	if (m_lastStreamBytesTime > 0 && bytesTime > m_lastStreamBytesTime) {
+		uint64_t bitsBetween = (bytesSent > m_lastStreamBytesSent ? (bytesSent - m_lastStreamBytesSent) : 0) * 8;
+		double sec = (double)(bytesTime - m_lastStreamBytesTime) / 1e9;
+		if (sec > 0.0)
+			kbps = (int)((double)bitsBetween / sec / 1000.0);
+	}
+	m_lastStreamBytesSent = bytesSent;
+	m_lastStreamBytesTime = bytesTime;
+
+	float fps = obs_get_active_fps();
+	m_streamItems[m_streamingPlatformIndex]->setStats(dropped, dropPercent, kbps, (int)(fps + 0.5f));
+}
+
 void BroadcastModePanel::updateRecordingTime()
 {
 	if (!m_isRecording) {
@@ -444,6 +595,12 @@ void BroadcastModePanel::OBSFrontendEvent(enum obs_frontend_event event, void *p
 	if (!panel) return;
 
 	switch (event) {
+	case OBS_FRONTEND_EVENT_STREAMING_STARTED:
+		QMetaObject::invokeMethod(panel, &BroadcastModePanel::onStreamingStarted, Qt::QueuedConnection);
+		break;
+	case OBS_FRONTEND_EVENT_STREAMING_STOPPED:
+		QMetaObject::invokeMethod(panel, &BroadcastModePanel::onStreamingStopped, Qt::QueuedConnection);
+		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STARTING:
 		break;
 	case OBS_FRONTEND_EVENT_RECORDING_STARTED:

@@ -35,7 +35,6 @@ StreamConfigWt::StreamConfigWt(QWidget *parent)
 	OBSBasic *main = OBSBasic::Get();
 	if (main)
 		m_config = main->Config();
-	m_platforms << QStringLiteral("哔哩哔哩") << QStringLiteral("抖音");
 	initUI();
 	loadStreamSettings();
 }
@@ -79,18 +78,6 @@ void StreamConfigWt::initUI()
 	addPlatformBtn->setCursor(Qt::PointingHandCursor);
 	addPlatformBtn->setFixedHeight(36);
 	addPlatformBtn->setMinimumWidth(120);
-	addPlatformBtn->setStyleSheet(
-		"QPushButton {"
-		"    background-color: #5370FF;"
-		"    color: #FFFFFF;"
-		"    border: none;"
-		"    border-radius: 6px;"
-		"    font-size: 14px;"
-		"    font-weight: medium;"
-		"}"
-		"QPushButton:hover { background-color: #6B85FF; }"
-		"QPushButton:pressed { background-color: #4560E0; }"
-	);
 	connect(addPlatformBtn, &QPushButton::clicked, this, &StreamConfigWt::onAddPlatformClicked);
 	platformHeaderLayout->addWidget(addPlatformBtn);
 
@@ -358,8 +345,6 @@ void StreamConfigWt::loadStreamSettings()
 	const char *platformsStr = config_get_string(m_config, "CometStream", "Platforms");
 	if (platformsStr && *platformsStr)
 		m_platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
-	if (m_platforms.isEmpty())
-		m_platforms << QStringLiteral("哔哩哔哩") << QStringLiteral("抖音");
 
 	if (m_platformCombo)
 		m_platformCombo->blockSignals(true);
