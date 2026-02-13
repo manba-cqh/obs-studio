@@ -1,3 +1,4 @@
+#include <QCloseEvent>
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -19,6 +20,19 @@ ConfigWt::ConfigWt(QWidget *parent)
 
 ConfigWt::~ConfigWt()
 {
+}
+
+void ConfigWt::closeEvent(QCloseEvent *event)
+{
+	if (m_audioConfig)
+		m_audioConfig->saveSettings();
+	if (m_videoConfig)
+		m_videoConfig->saveSettings();
+	if (m_recordConfig)
+		m_recordConfig->saveSettings();
+	if (m_streamConfig)
+		m_streamConfig->saveSettings();
+	event->accept();
 }
 
 void ConfigWt::initUI()

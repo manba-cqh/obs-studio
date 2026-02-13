@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 
 #include "BaseConfigWt.hpp"
+#include <util/config-file.h>
 
 class CommonLineEdit;
 class CommonComboBox;
@@ -22,11 +23,20 @@ class StreamConfigWt : public BaseConfigWt
 public:
 	explicit StreamConfigWt(QWidget *parent = nullptr);
 
+	void saveSettings() override;
+
 private slots:
 	void onToggleStreamKey();
+	void onAddPlatformClicked();
+	void onPlatformChanged(int index);
+	void saveCurrentPlatformConfig();
 
 private:
 	void initUI();
+	void refreshPlatformCombo();
+	void loadStreamSettings();
+	void loadPlatformConfig(int index);
+	void savePlatformConfig(int index);
 
 private:
 	QScrollArea *m_scrollArea = nullptr;
@@ -58,5 +68,11 @@ private:
 	QCheckBox *m_adaptiveQuantCheckbox = nullptr;
 
 	bool m_streamKeyVisible = false;
+
+	config_t *m_config = nullptr;
+	int m_lastPlatformIndex = -1;
+	QStringList m_platforms;
+	CommonComboBox *m_platformCombo = nullptr;
+	QWidget *m_configFormContainer = nullptr;
 };
 

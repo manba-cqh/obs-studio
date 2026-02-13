@@ -46,7 +46,12 @@ private slots:
 	void onRescaleResolutionChanged();
 	void onSplitFileToggled(bool checked);
 	void onSplitTimeChanged(int value);
-	
+	void onRateControlChanged(int index);
+	void onStreamBitrateChanged(int index);
+	void onKeyframeIntervalChanged(int value);
+	void onPresetChanged(int index);
+	void onFfmpegOptionsFinished();
+
 private:
 	QScrollArea *m_scrollArea;
 	QWidget *m_contentWidget;

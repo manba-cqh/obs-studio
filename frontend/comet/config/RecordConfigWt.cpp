@@ -203,32 +203,41 @@ void RecordConfigWt::setupStreamSettings()
 	m_rateControlCombo->addItem("VBR", "VBR");
 	m_rateControlCombo->addItem("CRF", "CRF");
 	formLayout->addRow("速率控制:", m_rateControlCombo);
-	
+	connect(m_rateControlCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &RecordConfigWt::onRateControlChanged);
+
 	// 码率
 	m_bitrateCombo = new CommonComboBox();
 	for (int i = 1000; i <= 10000; i += 500) {
 		m_bitrateCombo->addItem(QString::number(i), i);
 	}
 	formLayout->addRow("码率:", m_bitrateCombo);
-	
+	connect(m_bitrateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &RecordConfigWt::onStreamBitrateChanged);
+
 	// 关键帧间隔
 	m_keyframeIntervalSpin = new QSpinBox();
 	m_keyframeIntervalSpin->setMinimum(0);
 	m_keyframeIntervalSpin->setMaximum(10);
 	m_keyframeIntervalSpin->setSuffix("s");
 	formLayout->addRow("关键帧间隔(秒,0=自动):", m_keyframeIntervalSpin);
-	
+	connect(m_keyframeIntervalSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+		this, &RecordConfigWt::onKeyframeIntervalChanged);
+
 	// 预设
 	m_presetCombo = new CommonComboBox();
 	m_presetCombo->addItem("CBR", "CBR");
 	formLayout->addRow("预设:", m_presetCombo);
-	
+	connect(m_presetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &RecordConfigWt::onPresetChanged);
+
 	// FFmpeg选项
 	m_ffmpegOptionsEdit = new CommonLineEdit();
 	formLayout->addRow("FFmpeg选项:", m_ffmpegOptionsEdit);
-	
+	connect(m_ffmpegOptionsEdit, &QLineEdit::editingFinished, this, &RecordConfigWt::onFfmpegOptionsFinished);
+
 	setFormLayoutLabelWidth(formLayout, 64);
-	
+
 	m_contentLayout->addWidget(streamGroup);
 }
 
@@ -367,6 +376,40 @@ void RecordConfigWt::loadRecordingSettings()
 	}
 	m_splitTimeSpin->setValue(splitTime);
 	onSplitFileToggled(splitFile);
+
+	// 直播设置：速率控制、码率、关键帧间隔、预设、FFmpeg选项
+	const char *rateControl = config_get_string(m_config, "CometRecord", "RateControl");
+	QString rateStr = rateControl ? QString::fromUtf8(rateControl) : QString("CBR");
+	int rateIdx = m_rateControlCombo->findData(rateStr);
+	if (rateIdx < 0) rateIdx = 0;
+	m_rateControlCombo->blockSignals(true);
+	m_rateControlCombo->setCurrentIndex(rateIdx);
+	m_rateControlCombo->blockSignals(false);
+
+	uint32_t vbitrate = config_get_uint(m_config, "SimpleOutput", "VBitrate");
+	if (vbitrate == 0) vbitrate = 2500;
+	int bitrateIdx = m_bitrateCombo->findData((int)vbitrate);
+	if (bitrateIdx < 0) bitrateIdx = 0;
+	m_bitrateCombo->blockSignals(true);
+	m_bitrateCombo->setCurrentIndex(bitrateIdx);
+	m_bitrateCombo->blockSignals(false);
+
+	int keyframe = (int)config_get_int(m_config, "CometRecord", "KeyframeInterval");
+	if (keyframe < 0) keyframe = 0;
+	m_keyframeIntervalSpin->blockSignals(true);
+	m_keyframeIntervalSpin->setValue(keyframe);
+	m_keyframeIntervalSpin->blockSignals(false);
+
+	const char *preset = config_get_string(m_config, "CometRecord", "Preset");
+	int presetIdx = preset ? m_presetCombo->findData(QString::fromUtf8(preset)) : -1;
+	if (presetIdx < 0) presetIdx = 0;
+	m_presetCombo->blockSignals(true);
+	m_presetCombo->setCurrentIndex(presetIdx);
+	m_presetCombo->blockSignals(false);
+
+	const char *ffopts = config_get_string(m_config, "SimpleOutput", "x264Settings");
+	if (ffopts)
+		m_ffmpegOptionsEdit->setText(QT_UTF8(ffopts));
 }
 
 void RecordConfigWt::saveRecordingSettings()
@@ -534,5 +577,43 @@ void RecordConfigWt::onSplitTimeChanged(int value)
 		config_set_int(m_config, "AdvOut", "RecSplitFileTime", value);
 		config_save(m_config);
 	}
+}
+
+void RecordConfigWt::onRateControlChanged(int index)
+{
+	if (index < 0 || !m_config) return;
+	QString val = m_rateControlCombo->itemData(index).toString();
+	config_set_string(m_config, "CometRecord", "RateControl", QT_TO_UTF8(val));
+	config_save(m_config);
+}
+
+void RecordConfigWt::onStreamBitrateChanged(int index)
+{
+	if (index < 0 || !m_config) return;
+	int kbps = m_bitrateCombo->itemData(index).toInt();
+	config_set_uint(m_config, "SimpleOutput", "VBitrate", (uint32_t)kbps);
+	config_save(m_config);
+}
+
+void RecordConfigWt::onKeyframeIntervalChanged(int value)
+{
+	if (!m_config) return;
+	config_set_int(m_config, "CometRecord", "KeyframeInterval", value);
+	config_save(m_config);
+}
+
+void RecordConfigWt::onPresetChanged(int index)
+{
+	if (index < 0 || !m_config) return;
+	QString val = m_presetCombo->itemData(index).toString();
+	config_set_string(m_config, "CometRecord", "Preset", QT_TO_UTF8(val));
+	config_save(m_config);
+}
+
+void RecordConfigWt::onFfmpegOptionsFinished()
+{
+	if (!m_config) return;
+	config_set_string(m_config, "SimpleOutput", "x264Settings", QT_TO_UTF8(m_ffmpegOptionsEdit->text()));
+	config_save(m_config);
 }
 

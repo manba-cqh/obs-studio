@@ -2,6 +2,10 @@
 #include "tools/tools.hpp"
 #include "common/CenterToolTipButton.hpp"
 
+#include <widgets/OBSBasic.hpp>
+#include <util/config-file.h>
+#include <qt-wrappers.hpp>
+
 #include <obs-frontend-api.h>
 #include <obs.hpp>
 
@@ -278,27 +282,40 @@ void BroadcastModePanel::initUI()
 
 void BroadcastModePanel::createStreamSection()
 {
-	// TODO 示例：哔哩哔哩
-	StreamItemWidget *bilibiliItem = new StreamItemWidget("哔哩哔哩", "");
-	bilibiliItem->setStreaming(true);
-	bilibiliItem->setLiveTime("03:45:20");
-	bilibiliItem->setStats(218, 29.3, 2881, 30);
-	m_streamLayout->insertWidget(m_streamLayout->count() - 1, bilibiliItem);
+	QStringList platforms;
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		config_t *config = main->Config();
+		if (config) {
+			const char *platformsStr = config_get_string(config, "CometStream", "Platforms");
+			if (platformsStr && *platformsStr)
+				platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
+		}
+	}
 
-	// TODO 示例：抖音
-	StreamItemWidget *douyinItem = new StreamItemWidget("抖音", "");
-	douyinItem->setStreaming(false);
-	douyinItem->setLiveTime("00:00:00");
-	m_streamLayout->insertWidget(m_streamLayout->count() - 1, douyinItem);
+	if (platforms.isEmpty()) {
+		StreamItemWidget *noneItem = new StreamItemWidget(QStringLiteral("无"), "");
+		noneItem->setStreaming(false);
+		noneItem->setLiveTime("00:00:00");
+		m_streamLayout->insertWidget(m_streamLayout->count() - 1, noneItem);
+		return;
+	}
+
+	for (const QString &name : platforms) {
+		StreamItemWidget *item = new StreamItemWidget(name, "");
+		item->setStreaming(false);
+		item->setLiveTime("00:00:00");
+		m_streamLayout->insertWidget(m_streamLayout->count() - 1, item);
+	}
 }
 
 void BroadcastModePanel::createRecordSection()
 {
 	m_recordSection = new QWidget();
 	m_recordSection->setFixedHeight(36);
-	m_recordSection->setStyleSheet("QWidget { background-color: #2C2C3C; border: none; }");
+	m_recordSection->setStyleSheet("QWidget { background-color: #2C2C3C; border: none; border-radius: 2px; }");
 	QHBoxLayout *recLayout = new QHBoxLayout(m_recordSection);
-	recLayout->setContentsMargins(0, 0, 0, 0);
+	recLayout->setContentsMargins(4, 0, 4, 0);
 	recLayout->setSpacing(0);
 
 	m_recordLabel = new QLabel("录制", m_recordSection);

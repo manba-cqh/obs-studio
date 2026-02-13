@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QCloseEvent>
 #include <QDialog>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -19,6 +20,9 @@ class ConfigWt : public QDialog
 public:
 	ConfigWt(QWidget *parent = nullptr);
 	~ConfigWt();
+
+protected:
+	void closeEvent(QCloseEvent *event) override;
 
 private:
 	void initUI();
