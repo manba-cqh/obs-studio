@@ -128,6 +128,8 @@ OBSAdvAudioCtrl::OBSAdvAudioCtrl(QGridLayout *, obs_source_t *source_) : source(
 
 	// 创建新的音量控制控件（包含音量条、滑块和数值显示）
 	volumeControlWidget = new QWidget();
+	volumeControlWidget->setMinimumWidth(300);
+	volumeControlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 	QVBoxLayout *volumeLayout = new QVBoxLayout(volumeControlWidget);
 	volumeLayout->setContentsMargins(0, 0, 0, 0);
 	volumeLayout->setSpacing(4);

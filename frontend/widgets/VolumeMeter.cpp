@@ -4,6 +4,7 @@
 #include <utility/VolumeMeterTimer.hpp>
 
 #include <QEvent>
+#include <QLinearGradient>
 #include <QMouseEvent>
 #include <QPainter>
 
@@ -390,14 +391,14 @@ VolumeMeter::VolumeMeter(QWidget *parent, obs_volmeter_t *obs_volmeter, bool ver
 {
 	setAttribute(Qt::WA_OpaquePaintEvent, true);
 
-	// Default meter settings, they only show if
-	// there is no stylesheet, do not remove.
-	backgroundNominalColor.setRgb(0x26, 0x7f, 0x26); // Dark green
-	backgroundWarningColor.setRgb(0x7f, 0x7f, 0x26); // Dark yellow
-	backgroundErrorColor.setRgb(0x7f, 0x26, 0x26);   // Dark red
-	foregroundNominalColor.setRgb(0x4c, 0xff, 0x4c); // Bright green
-	foregroundWarningColor.setRgb(0xff, 0xff, 0x4c); // Bright yellow
-	foregroundErrorColor.setRgb(0xff, 0x4c, 0x4c);   // Bright red
+	// Default meter colors matching CSS gradient:
+	// linear-gradient(180deg, rgba(255,0,4,1) 0%, rgba(255,204,0,1) 36.8%, rgba(21,255,0,1) 100%)
+	backgroundNominalColor.setRgb(7, 85, 0);     // Dark green
+	backgroundWarningColor.setRgb(85, 68, 0);    // Dark yellow
+	backgroundErrorColor.setRgb(85, 0, 1);       // Dark red
+	foregroundNominalColor.setRgb(21, 255, 0);   // Green
+	foregroundWarningColor.setRgb(255, 204, 0);  // Yellow
+	foregroundErrorColor.setRgb(255, 0, 4);      // Red
 
 	backgroundNominalColorDisabled.setRgb(90, 90, 90);
 	backgroundWarningColorDisabled.setRgb(117, 117, 117);
@@ -706,74 +707,73 @@ void VolumeMeter::paintHMeter(QPainter &painter, int x, int y, int width, int he
 	int magnitudePosition = x + width - convertToInt(magnitude * scale);
 	int peakPosition = x + width - convertToInt(peak * scale);
 	int peakHoldPosition = x + width - convertToInt(peakHold * scale);
-	int warningPosition = x + width - convertToInt(warningLevel * scale);
-	int errorPosition = x + width - convertToInt(errorLevel * scale);
-
-	int nominalLength = warningPosition - minimumPosition;
-	int warningLength = errorPosition - warningPosition;
-	int errorLength = maximumPosition - errorPosition;
 	locker.unlock();
 
 	if (clipping) {
 		peakPosition = maximumPosition;
 	}
 
-	if (peakPosition < minimumPosition) {
-		painter.fillRect(minimumPosition, y, nominalLength, height,
-				 muted ? backgroundNominalColorDisabled : backgroundNominalColor);
-		painter.fillRect(warningPosition, y, warningLength, height,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(errorPosition, y, errorLength, height,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < warningPosition) {
-		painter.fillRect(minimumPosition, y, peakPosition - minimumPosition, height,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(peakPosition, y, warningPosition - peakPosition, height,
-				 muted ? backgroundNominalColorDisabled : backgroundNominalColor);
-		painter.fillRect(warningPosition, y, warningLength, height,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(errorPosition, y, errorLength, height,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < errorPosition) {
-		painter.fillRect(minimumPosition, y, nominalLength, height,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(warningPosition, y, peakPosition - warningPosition, height,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-		painter.fillRect(peakPosition, y, errorPosition - peakPosition, height,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(errorPosition, y, errorLength, height,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < maximumPosition) {
-		painter.fillRect(minimumPosition, y, nominalLength, height,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(warningPosition, y, warningLength, height,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-		painter.fillRect(errorPosition, y, peakPosition - errorPosition, height,
-				 muted ? foregroundErrorColorDisabled : foregroundErrorColor);
-		painter.fillRect(peakPosition, y, maximumPosition - peakPosition, height,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
+	// Gradient stops: Green(left, 0.0) → Yellow(63.2%) → Red(right, 1.0)
+	// Matches CSS: linear-gradient(180deg, rgba(255,0,4,1) 0%, rgba(255,204,0,1) 36.8%, rgba(21,255,0,1) 100%)
+	const qreal yellowStop = 0.632;
+
+	QLinearGradient bgGradient(x, 0, x + width, 0);
+	QLinearGradient fgGradient(x, 0, x + width, 0);
+
+	if (muted) {
+		bgGradient.setColorAt(0.0, backgroundNominalColorDisabled);
+		bgGradient.setColorAt(yellowStop, backgroundWarningColorDisabled);
+		bgGradient.setColorAt(1.0, backgroundErrorColorDisabled);
+		fgGradient.setColorAt(0.0, foregroundNominalColorDisabled);
+		fgGradient.setColorAt(yellowStop, foregroundWarningColorDisabled);
+		fgGradient.setColorAt(1.0, foregroundErrorColorDisabled);
 	} else {
+		bgGradient.setColorAt(0.0, backgroundNominalColor);
+		bgGradient.setColorAt(yellowStop, backgroundWarningColor);
+		bgGradient.setColorAt(1.0, backgroundErrorColor);
+		fgGradient.setColorAt(0.0, foregroundNominalColor);
+		fgGradient.setColorAt(yellowStop, foregroundWarningColor);
+		fgGradient.setColorAt(1.0, foregroundErrorColor);
+	}
+
+	// Draw background gradient (full bar, dark/inactive)
+	painter.fillRect(x, y, width, height, bgGradient);
+
+	// Draw foreground gradient (bright/active) up to peak position
+	if (peakPosition >= maximumPosition) {
 		if (!clipping) {
 			QTimer::singleShot(CLIP_FLASH_DURATION_MS, this, [&]() { clipping = false; });
 			clipping = true;
 		}
-
-		int end = errorLength + warningLength + nominalLength;
-		painter.fillRect(minimumPosition, y, end, height,
-				 QBrush(muted ? foregroundErrorColorDisabled : foregroundErrorColor));
+		painter.fillRect(x, y, width, height, fgGradient);
+	} else if (peakPosition > minimumPosition) {
+		painter.save();
+		painter.setClipRect(x, y, peakPosition - x, height);
+		painter.fillRect(x, y, width, height, fgGradient);
+		painter.restore();
 	}
 
-	if (peakHoldPosition - 3 < minimumPosition)
-		; // Peak-hold below minimum, no drawing.
-	else if (peakHoldPosition < warningPosition)
-		painter.fillRect(peakHoldPosition - 3, y, 3, height,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-	else if (peakHoldPosition < errorPosition)
-		painter.fillRect(peakHoldPosition - 3, y, 3, height,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-	else
-		painter.fillRect(peakHoldPosition - 3, y, 3, height,
-				 muted ? foregroundErrorColorDisabled : foregroundErrorColor);
+	// Peak hold indicator (color sampled from gradient at hold position)
+	if (peakHoldPosition - 3 >= minimumPosition) {
+		float ratio = qBound(0.0f, (float)(peakHoldPosition - x) / (float)width, 1.0f);
+		QColor holdColor;
+		const QColor &fgNom = muted ? foregroundNominalColorDisabled : foregroundNominalColor;
+		const QColor &fgWarn = muted ? foregroundWarningColorDisabled : foregroundWarningColor;
+		const QColor &fgErr = muted ? foregroundErrorColorDisabled : foregroundErrorColor;
+
+		if (ratio <= (float)yellowStop) {
+			float t = ratio / (float)yellowStop;
+			holdColor.setRgb((int)(fgNom.red() * (1 - t) + fgWarn.red() * t),
+					 (int)(fgNom.green() * (1 - t) + fgWarn.green() * t),
+					 (int)(fgNom.blue() * (1 - t) + fgWarn.blue() * t));
+		} else {
+			float t = (ratio - (float)yellowStop) / (1.0f - (float)yellowStop);
+			holdColor.setRgb((int)(fgWarn.red() * (1 - t) + fgErr.red() * t),
+					 (int)(fgWarn.green() * (1 - t) + fgErr.green() * t),
+					 (int)(fgWarn.blue() * (1 - t) + fgErr.blue() * t));
+		}
+		painter.fillRect(peakHoldPosition - 3, y, 3, height, holdColor);
+	}
 
 	if (magnitudePosition - 3 >= minimumPosition)
 		painter.fillRect(magnitudePosition - 3, y, 3, height, magnitudeColor);
@@ -790,74 +790,73 @@ void VolumeMeter::paintVMeter(QPainter &painter, int x, int y, int width, int he
 	int magnitudePosition = y + height - convertToInt(magnitude * scale);
 	int peakPosition = y + height - convertToInt(peak * scale);
 	int peakHoldPosition = y + height - convertToInt(peakHold * scale);
-	int warningPosition = y + height - convertToInt(warningLevel * scale);
-	int errorPosition = y + height - convertToInt(errorLevel * scale);
-
-	int nominalLength = warningPosition - minimumPosition;
-	int warningLength = errorPosition - warningPosition;
-	int errorLength = maximumPosition - errorPosition;
 	locker.unlock();
 
 	if (clipping) {
 		peakPosition = maximumPosition;
 	}
 
-	if (peakPosition < minimumPosition) {
-		painter.fillRect(x, minimumPosition, width, nominalLength,
-				 muted ? backgroundNominalColorDisabled : backgroundNominalColor);
-		painter.fillRect(x, warningPosition, width, warningLength,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(x, errorPosition, width, errorLength,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < warningPosition) {
-		painter.fillRect(x, minimumPosition, width, peakPosition - minimumPosition,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(x, peakPosition, width, warningPosition - peakPosition,
-				 muted ? backgroundNominalColorDisabled : backgroundNominalColor);
-		painter.fillRect(x, warningPosition, width, warningLength,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(x, errorPosition, width, errorLength,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < errorPosition) {
-		painter.fillRect(x, minimumPosition, width, nominalLength,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(x, warningPosition, width, peakPosition - warningPosition,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-		painter.fillRect(x, peakPosition, width, errorPosition - peakPosition,
-				 muted ? backgroundWarningColorDisabled : backgroundWarningColor);
-		painter.fillRect(x, errorPosition, width, errorLength,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
-	} else if (peakPosition < maximumPosition) {
-		painter.fillRect(x, minimumPosition, width, nominalLength,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-		painter.fillRect(x, warningPosition, width, warningLength,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-		painter.fillRect(x, errorPosition, width, peakPosition - errorPosition,
-				 muted ? foregroundErrorColorDisabled : foregroundErrorColor);
-		painter.fillRect(x, peakPosition, width, maximumPosition - peakPosition,
-				 muted ? backgroundErrorColorDisabled : backgroundErrorColor);
+	// Vertical gradient: Green(bottom, y) → Yellow(63.2%) → Red(top, y+height)
+	// Note: paintEvent inverts Y axis, so y=0 is bottom and y=height is top
+	const qreal yellowStop = 0.632;
+
+	QLinearGradient bgGradient(0, y, 0, y + height);
+	QLinearGradient fgGradient(0, y, 0, y + height);
+
+	if (muted) {
+		bgGradient.setColorAt(0.0, backgroundNominalColorDisabled);
+		bgGradient.setColorAt(yellowStop, backgroundWarningColorDisabled);
+		bgGradient.setColorAt(1.0, backgroundErrorColorDisabled);
+		fgGradient.setColorAt(0.0, foregroundNominalColorDisabled);
+		fgGradient.setColorAt(yellowStop, foregroundWarningColorDisabled);
+		fgGradient.setColorAt(1.0, foregroundErrorColorDisabled);
 	} else {
+		bgGradient.setColorAt(0.0, backgroundNominalColor);
+		bgGradient.setColorAt(yellowStop, backgroundWarningColor);
+		bgGradient.setColorAt(1.0, backgroundErrorColor);
+		fgGradient.setColorAt(0.0, foregroundNominalColor);
+		fgGradient.setColorAt(yellowStop, foregroundWarningColor);
+		fgGradient.setColorAt(1.0, foregroundErrorColor);
+	}
+
+	// Draw background gradient (full bar, dark/inactive)
+	painter.fillRect(x, y, width, height, bgGradient);
+
+	// Draw foreground gradient (bright/active) up to peak position
+	if (peakPosition >= maximumPosition) {
 		if (!clipping) {
 			QTimer::singleShot(CLIP_FLASH_DURATION_MS, this, [&]() { clipping = false; });
 			clipping = true;
 		}
-
-		int end = errorLength + warningLength + nominalLength;
-		painter.fillRect(x, minimumPosition, width, end,
-				 QBrush(muted ? foregroundErrorColorDisabled : foregroundErrorColor));
+		painter.fillRect(x, y, width, height, fgGradient);
+	} else if (peakPosition > minimumPosition) {
+		painter.save();
+		painter.setClipRect(x, y, width, peakPosition - y);
+		painter.fillRect(x, y, width, height, fgGradient);
+		painter.restore();
 	}
 
-	if (peakHoldPosition - 3 < minimumPosition)
-		; // Peak-hold below minimum, no drawing.
-	else if (peakHoldPosition < warningPosition)
-		painter.fillRect(x, peakHoldPosition - 3, width, 3,
-				 muted ? foregroundNominalColorDisabled : foregroundNominalColor);
-	else if (peakHoldPosition < errorPosition)
-		painter.fillRect(x, peakHoldPosition - 3, width, 3,
-				 muted ? foregroundWarningColorDisabled : foregroundWarningColor);
-	else
-		painter.fillRect(x, peakHoldPosition - 3, width, 3,
-				 muted ? foregroundErrorColorDisabled : foregroundErrorColor);
+	// Peak hold indicator (color sampled from gradient at hold position)
+	if (peakHoldPosition - 3 >= minimumPosition) {
+		float ratio = qBound(0.0f, (float)(peakHoldPosition - y) / (float)height, 1.0f);
+		QColor holdColor;
+		const QColor &fgNom = muted ? foregroundNominalColorDisabled : foregroundNominalColor;
+		const QColor &fgWarn = muted ? foregroundWarningColorDisabled : foregroundWarningColor;
+		const QColor &fgErr = muted ? foregroundErrorColorDisabled : foregroundErrorColor;
+
+		if (ratio <= (float)yellowStop) {
+			float t = ratio / (float)yellowStop;
+			holdColor.setRgb((int)(fgNom.red() * (1 - t) + fgWarn.red() * t),
+					 (int)(fgNom.green() * (1 - t) + fgWarn.green() * t),
+					 (int)(fgNom.blue() * (1 - t) + fgWarn.blue() * t));
+		} else {
+			float t = (ratio - (float)yellowStop) / (1.0f - (float)yellowStop);
+			holdColor.setRgb((int)(fgWarn.red() * (1 - t) + fgErr.red() * t),
+					 (int)(fgWarn.green() * (1 - t) + fgErr.green() * t),
+					 (int)(fgWarn.blue() * (1 - t) + fgErr.blue() * t));
+		}
+		painter.fillRect(x, peakHoldPosition - 3, width, 3, holdColor);
+	}
 
 	if (magnitudePosition - 3 >= minimumPosition)
 		painter.fillRect(x, magnitudePosition - 3, width, 3, magnitudeColor);
