@@ -481,11 +481,14 @@ void OBSAdvAudioCtrl::SourceVolumeChanged(float value)
 	percent->blockSignals(false);
 	volume->blockSignals(false);
 	
-	// 更新滑块和数值标签
+	// 仅更新滑块和数值标签的 UI，不调用 obs_fader_set_db。
+	// obs_fader_set_db 会触发 obs_source_set_volume，进而再次发出 "volume" 信号，
+	// 导致 OBSSourceVolumeChanged -> SourceVolumeChanged 无限递归直至栈溢出崩溃。
+	// 使用 obs_fader_db_to_def 从已知 db 计算 deflection，避免依赖 fader 内部状态顺序。
 	if (volumeSlider && obs_fader) {
-		obs_fader_set_db(obs_fader, db);
 		volumeSlider->blockSignals(true);
-		float deflection = obs_fader_get_deflection(obs_fader);
+		obs_fader_conversion_t db_to_def = obs_fader_db_to_def(obs_fader);
+		float deflection = db_to_def(db);
 		volumeSlider->setValue((int)(deflection * FADER_PRECISION));
 		volumeSlider->blockSignals(false);
 		updateVolumeValueLabel();
