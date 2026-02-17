@@ -350,7 +350,7 @@ void ScenePanel::onAddSourceButtonClicked()
     SourceToolDialog *dialog = new SourceToolDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     
-    connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this](const QString &sourceId) {
+    connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this, dialog](const QString &sourceId) {
         OBSBasic *main = OBSBasic::Get();
         if (!main) {
             return;
@@ -372,8 +372,10 @@ void ScenePanel::onAddSourceButtonClicked()
                 updateCurrentSceneSources();
             }
         } else {
-            // 使用 OBS 添加指定类型的源
-            main->AddSource(sourceId.toUtf8().constData());
+            // 使用 OBS 添加指定类型的源，弹窗关闭前禁用 SourceToolDialog
+            dialog->setEnabled(false);
+            main->AddSource(sourceId.toUtf8().constData(), dialog);
+            dialog->setEnabled(true);
             emit sourcesChanged();
             updateCurrentSceneSources();
         }

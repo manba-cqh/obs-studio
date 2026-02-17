@@ -376,7 +376,7 @@ static inline const char *GetSourceDisplayName(const char *id)
 	return obs_source_get_display_name(v_id);
 }
 
-OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_, undo_stack &undo_s)
+OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, undo_stack &undo_s)
 	: QDialog(parent),
 	  ui(new Ui::OBSBasicSourceSelect),
 	  id(id_),
@@ -387,6 +387,9 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(OBSBasic *parent, const char *id_, un
 	setAttribute(Qt::WA_TranslucentBackground, false);
 	setAutoFillBackground(true);
 	setObjectName("OBSBasicSourceSelect");
+
+	setWindowModality(Qt::ApplicationModal);
+	setModal(true);
 
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {

@@ -1167,7 +1167,7 @@ public:
 	static void SourceAudioDeactivated(void *data, calldata_t *params);
 	static void SourceRenamed(void *data, calldata_t *params);
 
-	void AddSource(const char *id);
+	void AddSource(const char *id, QWidget *parent = nullptr);
 	QMenu *CreateAddSourcePopupMenu();
 
 public:

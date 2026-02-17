@@ -251,17 +251,14 @@ QPushButton* SourceToolDialog::createSourceButton(const SourceTypeInfo &info, bo
 	textLabel->setProperty("label_12_medium", true);
 	layout->addWidget(textLabel);
 	
-	// 点击事件
+	// 点击事件：发出信号添加源，不关闭对话框，以便用户继续选择
 	connect(btn, &QPushButton::clicked, this, [this, info, isCommon]() {
 		if (isCommon) {
 			// 常用区域点击 - 移除或添加源
-			// 这里暂时只发出信号添加源
 			emit sourceTypeSelected(info.id);
-			close();
 		} else {
 			// 其他区域点击 - 添加源
 			emit sourceTypeSelected(info.id);
-			close();
 		}
 	});
 	

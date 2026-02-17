@@ -131,8 +131,11 @@ void EmptySceneWidget::onAddBtnClicked()
 	SourceToolDialog *dialog = new SourceToolDialog(window());
 	dialog->setAttribute(Qt::WA_DeleteOnClose);
 	
-	connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this](const QString &sourceType) {
-		emit sourceTypeSelected(sourceType);
+	connect(dialog, &SourceToolDialog::sourceTypeSelected, this, [this, dialog](const QString &sourceType) {
+		// 弹窗关闭前禁用 SourceToolDialog
+		dialog->setEnabled(false);
+		emit sourceTypeSelected(sourceType, dialog);
+		dialog->setEnabled(true);
 	});
 	
 	// 居中显示对话框

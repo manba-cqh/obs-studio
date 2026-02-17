@@ -11,7 +11,7 @@ class EmptySceneWidget : public QWidget
 	Q_OBJECT
 
 signals:
-	void sourceTypeSelected(const QString &sourceType);
+	void sourceTypeSelected(const QString &sourceType, QWidget *sourceToolDialog = nullptr);
 
 public:
 	EmptySceneWidget(QWidget *parent = nullptr);

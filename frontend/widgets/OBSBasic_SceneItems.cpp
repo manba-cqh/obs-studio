@@ -767,10 +767,11 @@ static inline bool should_show_properties(obs_source_t *source, const char *id)
 	return true;
 }
 
-void OBSBasic::AddSource(const char *id)
+void OBSBasic::AddSource(const char *id, QWidget *parent)
 {
 	if (id && *id) {
-		OBSBasicSourceSelect sourceSelect(this, id, undo_s);
+		QWidget *dialogParent = parent ? parent : this;
+		OBSBasicSourceSelect sourceSelect(dialogParent, id, undo_s);
 		sourceSelect.exec();
 		if (should_show_properties(sourceSelect.newSource, id)) {
 			CreatePropertiesWindow(sourceSelect.newSource);

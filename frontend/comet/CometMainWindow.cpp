@@ -212,13 +212,13 @@ void CometMainWindow::createMainContent()
 	// 创建空场景界面
 	m_emptySceneWidget = new EmptySceneWidget(this);
 	m_emptySceneWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	connect(m_emptySceneWidget, &EmptySceneWidget::sourceTypeSelected, this, [this](const QString &sourceType) {
+	connect(m_emptySceneWidget, &EmptySceneWidget::sourceTypeSelected, this, [this](const QString &sourceType, QWidget *sourceToolDialog) {
 		OBSBasic *main = OBSBasic::Get();
 		if (!main)
 			return;
 
-		// OBS 原生：会弹出“选择/新建源”对话框，并在需要时打开属性窗口
-		main->AddSource(sourceType.toUtf8().constData());
+		// OBS 原生：会弹出“选择/新建源”对话框，父窗口为 SourceToolDialog（若由 SourceToolDialog 触发）
+		main->AddSource(sourceType.toUtf8().constData(), sourceToolDialog);
 
 		// 添加完成后刷新预览占位状态（可能从空变为有内容）
 		updatePreviewDisplay();
