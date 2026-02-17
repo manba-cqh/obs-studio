@@ -10,6 +10,7 @@
 #include <qt-wrappers.hpp>
 
 #include <QCheckBox>
+#include <QIcon>
 #include <QInputDialog>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -84,6 +85,7 @@ void StreamConfigWt::initUI()
 	m_platformCombo = new CommonComboBox();
 	m_platformCombo->setProperty("label_14_medium", true);
 	m_platformCombo->setMinimumWidth(160);
+	m_platformCombo->setIconSize(QSize(20, 20));
 	connect(m_platformCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::onPlatformChanged);
 	platformHeaderLayout->addWidget(m_platformCombo);
@@ -253,7 +255,19 @@ void StreamConfigWt::refreshPlatformCombo()
 	if (!m_platformCombo) return;
 	QString current = m_platformCombo->currentText();
 	m_platformCombo->clear();
-	m_platformCombo->addItems(m_platforms);
+	for (int i = 0; i < m_platforms.size(); ++i) {
+		QIcon icon;
+		if (m_config) {
+			QString key = QString::number(i) + "_Icon";
+			const char *iconPath = config_get_string(m_config, "CometStream", QT_TO_UTF8(key));
+			if (iconPath && *iconPath) {
+				QString path = QString::fromUtf8(iconPath);
+				path = path.startsWith(":/") ? path : QString(":/images/%1").arg(path);
+				icon = QIcon(path);
+			}
+		}
+		m_platformCombo->addItem(icon, m_platforms[i]);
+	}
 	int idx = m_platformCombo->findText(current);
 	if (idx >= 0)
 		m_platformCombo->setCurrentIndex(idx);

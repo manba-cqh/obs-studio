@@ -32,6 +32,7 @@ StreamItemWidget::StreamItemWidget(const QString &platformName, const QString &i
 	  m_streaming(false),
 	  m_liveIndicatorState(LiveIndicatorState::Stateless)
 {
+	qDebug() << "StreamItemWidget: " << platformName << " " << iconPath << " " << platformIndex;
 	initUI();
 }
 
@@ -52,9 +53,10 @@ void StreamItemWidget::initUI()
 	m_iconLabel = new QLabel(this);
 	m_iconLabel->setFixedSize(24, 24);
 	if (!m_iconPath.isEmpty()) {
-		QPixmap pix(m_iconPath);
+		QIcon icon(m_iconPath);
+		QPixmap pix = icon.pixmap(24, 24);
 		if (!pix.isNull())
-			m_iconLabel->setPixmap(pix.scaled(24, 24, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+			m_iconLabel->setPixmap(pix);
 	}
 	topRow->addWidget(m_iconLabel);
 
@@ -368,8 +370,11 @@ void BroadcastModePanel::createStreamSection()
 		if (config) {
 			QString key = QString::number(i) + "_Icon";
 			const char *iconFile = config_get_string(config, "CometStream", QT_TO_UTF8((key)));
-			if (iconFile && *iconFile)
-				iconPath = QString(":/images/%1").arg(QString::fromUtf8(iconFile));
+			if (iconFile && *iconFile) {
+				QString iconStr = QString::fromUtf8(iconFile);
+				// 配置可能存完整路径 ":/images/xxx.svg" 或仅文件名 "xxx.svg"
+				iconPath = iconStr.startsWith(":/") ? iconStr : QString(":/images/%1").arg(iconStr);
+			}
 		}
 		StreamItemWidget *item = new StreamItemWidget(platforms[i], iconPath, i);
 		item->setStreaming(false);
