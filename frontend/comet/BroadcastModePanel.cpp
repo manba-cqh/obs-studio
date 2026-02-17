@@ -359,11 +359,6 @@ void BroadcastModePanel::createStreamSection()
 	}
 
 	if (platforms.isEmpty()) {
-		StreamItemWidget *noneItem = new StreamItemWidget(QStringLiteral("无"), "", -1);
-		noneItem->setStreaming(false);
-		noneItem->setLiveTime("00:00:00");
-		noneItem->setToggleEnabled(false);
-		m_streamLayout->insertWidget(m_streamLayout->count() - 1, noneItem);
 		return;
 	}
 
