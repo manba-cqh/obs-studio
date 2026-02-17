@@ -163,6 +163,51 @@ void CometMainWindow::createMainContent()
 
 	m_previewHeader = new PreviewHeader();
 	mainContentLayout->addWidget(m_previewHeader);
+
+	// 横竖屏切换：交换基础分辨率和输出分辨率的宽高
+	connect(m_previewHeader, &PreviewHeader::orientationChanged, this, [this](bool landscape) {
+		OBSBasic *main = OBSBasic::Get();
+		if (!main) return;
+		config_t *config = main->Config();
+		if (!config) return;
+
+		uint32_t baseCX = config_get_uint(config, "Video", "BaseCX");
+		uint32_t baseCY = config_get_uint(config, "Video", "BaseCY");
+		uint32_t outputCX = config_get_uint(config, "Video", "OutputCX");
+		uint32_t outputCY = config_get_uint(config, "Video", "OutputCY");
+
+		bool currentLandscape = (baseCX >= baseCY);
+		if (landscape == currentLandscape) return;
+
+		// 交换宽高
+		config_set_uint(config, "Video", "BaseCX", baseCY);
+		config_set_uint(config, "Video", "BaseCY", baseCX);
+		config_set_uint(config, "Video", "OutputCX", outputCY);
+		config_set_uint(config, "Video", "OutputCY", outputCX);
+		config_save(config);
+
+		int ret = main->ResetVideo();
+		if (ret == OBS_VIDEO_SUCCESS) {
+			if (m_previewWidget) {
+				main->ResizePreviewForWidget(baseCY, baseCX, m_previewWidget);
+			}
+		}
+	});
+
+	// 设置按钮
+	connect(m_previewHeader, &PreviewHeader::settingsRequested, this, [this]() {
+		QTimer::singleShot(0, this, [this]() {
+			if (!m_configWt)
+				m_configWt = new ConfigWt(this);
+			m_configWt->exec();
+			if (m_audioMixPanel)
+				m_audioMixPanel->refreshAudioControls();
+		});
+	});
+
+	// 全屏预览
+	connect(m_previewHeader, &PreviewHeader::fullscreenRequested, this, [this]() {
+	});
 	
 	// 创建 QStackedWidget 来切换预览和空场景界面
 	m_previewStack = new QStackedWidget(this);
