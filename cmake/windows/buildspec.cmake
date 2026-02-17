@@ -28,6 +28,10 @@ function(_handle_qt_cross_compile architecture)
   string(TOLOWER "${CMAKE_VS_PLATFORM_NAME}" platform_name)
   string(REPLACE "ARCH" "${platform_name}" qt_arch_location "${directory}")
 
+  if(NOT EXISTS "${qt_arch_location}/mkspecs/qconfig.pri")
+    return()
+  endif()
+
   file(READ "${qt_arch_location}/mkspecs/qconfig.pri" qt_arch_config)
   string(REGEX MATCH ".+QT_TARGET_BUILDABI = (.+)\n.+" config_has_buildabi "${qt_arch_config}")
 
@@ -96,7 +100,7 @@ function(_check_dependencies_windows)
     set(dependencies_list prebuilt)
   else()
     string(TOLOWER "${CMAKE_VS_PLATFORM_NAME}" arch)
-    set(dependencies_list prebuilt qt6 cef)
+    set(dependencies_list prebuilt cef)
   endif()
   set(platform windows-${arch})
 

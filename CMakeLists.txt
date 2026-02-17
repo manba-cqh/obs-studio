@@ -11,6 +11,8 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
   endif()
 endif()
 
+option(OBS_USE_SYSTEM_QT "Use system-installed Qt instead of downloading pre-built Qt. Requires Qt in CMAKE_PREFIX_PATH." ON)
+
 include(compilerconfig)
 include(defaults)
 include(helpers)
