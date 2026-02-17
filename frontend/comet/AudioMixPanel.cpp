@@ -431,6 +431,65 @@ void AudioMixPanel::onDesktopDeviceChanged(int index)
     }
 }
 
+void AudioMixPanel::refreshAudioControls()
+{
+	// 桌面音频：断开旧信号，获取新源，重新连接并更新 UI
+	m_desktopAudio.sigs.clear();
+	if (m_desktopAudio.volumeSlider)
+		m_desktopAudio.volumeSlider->disconnect();
+	if (m_desktopAudio.muteButton)
+		m_desktopAudio.muteButton->disconnect();
+
+	OBSSource desktopSource = obs_get_output_source(m_desktopAudio.channel);
+	m_desktopAudio.source = desktopSource;
+	if (desktopSource) {
+		setupAudioSignals(m_desktopAudio);
+		updateDesktopVolume();
+		updateDesktopMute();
+		if (m_desktopAudio.volumeSlider)
+			m_desktopAudio.volumeSlider->setEnabled(true);
+		if (m_desktopAudio.muteButton)
+			m_desktopAudio.muteButton->setEnabled(true);
+	} else {
+		if (m_desktopAudio.volumeSlider) {
+			m_desktopAudio.volumeSlider->setEnabled(false);
+			m_desktopAudio.volumeSlider->setValue(0);
+		}
+		if (m_desktopAudio.volumeLabel)
+			m_desktopAudio.volumeLabel->setText("0%");
+		if (m_desktopAudio.muteButton)
+			m_desktopAudio.muteButton->setEnabled(false);
+	}
+
+	// 麦克风：同样处理
+	m_micAudio.sigs.clear();
+	if (m_micAudio.volumeSlider)
+		m_micAudio.volumeSlider->disconnect();
+	if (m_micAudio.muteButton)
+		m_micAudio.muteButton->disconnect();
+
+	OBSSource micSource = obs_get_output_source(m_micAudio.channel);
+	m_micAudio.source = micSource;
+	if (micSource) {
+		setupAudioSignals(m_micAudio);
+		updateMicVolume();
+		updateMicMute();
+		if (m_micAudio.volumeSlider)
+			m_micAudio.volumeSlider->setEnabled(true);
+		if (m_micAudio.muteButton)
+			m_micAudio.muteButton->setEnabled(true);
+	} else {
+		if (m_micAudio.volumeSlider) {
+			m_micAudio.volumeSlider->setEnabled(false);
+			m_micAudio.volumeSlider->setValue(0);
+		}
+		if (m_micAudio.volumeLabel)
+			m_micAudio.volumeLabel->setText("0%");
+		if (m_micAudio.muteButton)
+			m_micAudio.muteButton->setEnabled(false);
+	}
+}
+
 void AudioMixPanel::onMicDeviceChanged(int index)
 {
     // index 0 -> channel 3, index 1 -> channel 4, index 2 -> channel 5, index 3 -> channel 6

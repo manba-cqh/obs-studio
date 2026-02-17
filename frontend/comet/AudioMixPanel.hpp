@@ -37,6 +37,9 @@ public:
     
     QPushButton* getAudioSettingButton() const { return m_audioSettingButton; }
 
+    /** 刷新音频控件，同步 AudioConfigWt 保存后的设置 */
+    void refreshAudioControls();
+
 private slots:
     void onDesktopVolumeChanged(int value);
     void onMicVolumeChanged(int value);

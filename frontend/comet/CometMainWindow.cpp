@@ -35,7 +35,9 @@
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_isResizing(false)
-	, m_resizeEdge(EdgeNone)
+	, m_resizeEdge(EdgeNone),
+	m_configWt(nullptr),
+	m_audioMixPanel(nullptr)
 {
 	initUI();
 }
@@ -73,8 +75,11 @@ void CometMainWindow::initUI()
 	connect(m_topBar, &TopBar::sigRestore, this, &QMainWindow::showNormal);
 	connect(m_topBar, &TopBar::sigClose, this, &QMainWindow::close);
 	connect(m_topBar, &TopBar::sigSettings, this, [this]() {
-		m_configWt = new ConfigWt(this);
+		if (!m_configWt)
+			m_configWt = new ConfigWt(this);
 		m_configWt->exec();
+		if (m_audioMixPanel)
+			m_audioMixPanel->refreshAudioControls();
 	});
 
 	m_titleBarToolBar = new QToolBar(this);
