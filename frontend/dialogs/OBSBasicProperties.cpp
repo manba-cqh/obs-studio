@@ -108,19 +108,15 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 		"QPushButton {"
 		"    border: none;"
 		"    background: transparent;"
-		"    padding: 0px;"
-		"    margin: 0px;"
-		"    border-image: url(:/images/close.svg);"
+		"    background-image: url(:/images/close.svg);"
+		"    background-repeat: no-repeat;"
+		"    background-position: center;"
 		"}"
-		"QPushButton:hover {"
-		"    border-image: url(:/images/close_hover.svg);"
-		"}"
-		"QPushButton:pressed {"
-		"    border-image: url(:/images/close_pressed.svg);"
-		"}"
+		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
+		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }"
 	);
 	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
-	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter | Qt::AlignRight);
+	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
 	containerLayout->addWidget(titleBar);
 
 	// 设置 UI（这会创建原有的布局）
