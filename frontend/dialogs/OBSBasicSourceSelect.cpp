@@ -21,6 +21,7 @@
 #include <cstring>
 
 #include "comet/common/MovableWidget.hpp"
+#include "comet/tools/tools.hpp"
 #include <QFile>
 #include <QPaintEvent>
 #include <QPainter>
@@ -383,11 +384,9 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 	  undo_s(undo_s)
 {
 	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
-	// setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-	setAttribute(Qt::WA_TranslucentBackground, false);
-	setAutoFillBackground(true);
+	setAttribute(Qt::WA_TranslucentBackground);
+	setModal(true);
 	setObjectName("OBSBasicSourceSelect");
-
 	setWindowModality(Qt::ApplicationModal);
 	setModal(true);
 
@@ -400,24 +399,25 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 	}
 
 	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 0px; }");
+	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 5px; }");
 
 	QVBoxLayout *containerLayout = new QVBoxLayout(container);
 	containerLayout->setContentsMargins(0, 0, 0, 0);
 	containerLayout->setSpacing(0);
 
 	MovableWidget *titleBar = new MovableWidget(this, container);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
 	titleBar->setFixedHeight(50);
+	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; border-radius: 5px 5px 0 0; }");
 	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 13, 15, 13);
+	titleLayout->setContentsMargins(15, 0, 15, 0);
 	titleLayout->setSpacing(0);
 
 	QLabel *titleLabel = new QLabel(titleBar);
 	titleLabel->setTextFormat(Qt::PlainText);
 	titleLabel->setText(QTStr("Basic.SourceSelect"));
-	titleLabel->setStyleSheet("QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
-	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
+	titleLabel->setStyleSheet(
+		"QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
+	titleLayout->addWidget(titleLabel);
 	titleLayout->addStretch();
 
 	QPushButton *closeBtn = new QPushButton(titleBar);
@@ -432,12 +432,8 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 		"    background-repeat: no-repeat;"
 		"    background-position: center;"
 		"}"
-		"QPushButton:hover {"
-		"    background-image: url(:/images/close_hover.svg);"
-		"}"
-		"QPushButton:pressed {"
-		"    background-image: url(:/images/close_pressed.svg);"
-		"}"
+		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
+		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }"
 	);
 	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
 	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
@@ -573,5 +569,4 @@ void OBSBasicSourceSelect::paintEvent(QPaintEvent *event)
 	opt.initFrom(this);
 	QPainter p(this);
 	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-	QDialog::paintEvent(event);
 }
