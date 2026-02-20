@@ -1146,8 +1146,10 @@ void OBSBasic::OBSInit()
 #ifdef _WIN32
 	SetWin32DropStyle(this);
 
+#ifndef USE_COMET_UI
 	if (!hideWindowOnStart)
 		show();
+#endif
 #endif
 
 	bool alwaysOnTop = config_get_bool(App()->GetUserConfig(), "BasicWindow", "AlwaysOnTop");
@@ -1169,8 +1171,10 @@ void OBSBasic::OBSInit()
 	}
 
 #ifndef _WIN32
+#ifndef USE_COMET_UI
 	if (!hideWindowOnStart)
 		show();
+#endif
 #endif
 
 	/* setup stats dock */
