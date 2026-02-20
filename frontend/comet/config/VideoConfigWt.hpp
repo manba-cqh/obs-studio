@@ -18,7 +18,9 @@ class VideoConfigWt : public BaseConfigWt
 public:
 	VideoConfigWt(QWidget *parent = nullptr);
 	~VideoConfigWt();
-	
+
+	void saveSettings() override;
+
 private:
 	void initUI();
 	void setupVideoSettings();

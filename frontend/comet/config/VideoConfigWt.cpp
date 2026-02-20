@@ -265,15 +265,17 @@ void VideoConfigWt::loadVideoSettings()
 	m_fpsCombo->blockSignals(false);
 }
 
+void VideoConfigWt::saveSettings()
+{
+	saveVideoSettings();
+}
+
 void VideoConfigWt::saveVideoSettings()
 {
-	if (!m_config) {
+	if (!m_config)
 		return;
-	}
-	
-	// 保存分辨率在各自的槽函数中处理
-	// 保存缩小算法在 onDownscaleFilterChanged 中处理
-	// 保存帧率在 onFPSChanged 中处理
+
+	config_save(m_config);
 }
 
 QString VideoConfigWt::formatResolution(uint32_t width, uint32_t height)

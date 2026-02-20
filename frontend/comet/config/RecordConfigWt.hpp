@@ -23,7 +23,9 @@ class RecordConfigWt : public BaseConfigWt
 public:
 	RecordConfigWt(QWidget *parent = nullptr);
 	~RecordConfigWt();
-	
+
+	void saveSettings() override;
+
 private:
 	void initUI();
 	void setupRecordingSettings();

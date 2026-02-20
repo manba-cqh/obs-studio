@@ -79,6 +79,15 @@ void RecordConfigWt::setupRecordingSettings()
 	savePathLayout->addWidget(m_savePathButton);
 	formLayout->addRow("保存位置:", savePathLayout);
 	connect(m_savePathButton, &QPushButton::clicked, this, &RecordConfigWt::onSavePathButtonClicked);
+	connect(m_savePathEdit, &QLineEdit::editingFinished, this, [this]() {
+		if (m_config) {
+			QString path = m_savePathEdit->text();
+			if (!path.isEmpty()) {
+				config_set_string(m_config, "AdvOut", "RecFilePath", QT_TO_UTF8(path));
+				config_save(m_config);
+			}
+		}
+	});
 	
 	// 录像格式
 	m_recordingFormatCombo = new CommonComboBox();
@@ -412,13 +421,17 @@ void RecordConfigWt::loadRecordingSettings()
 		m_ffmpegOptionsEdit->setText(QT_UTF8(ffopts));
 }
 
+void RecordConfigWt::saveSettings()
+{
+	saveRecordingSettings();
+}
+
 void RecordConfigWt::saveRecordingSettings()
 {
-	if (!m_config) {
+	if (!m_config)
 		return;
-	}
-	
-	// 保存位置、格式、编码器等在各自的槽函数中处理
+
+	config_save(m_config);
 }
 
 void RecordConfigWt::loadEncoderList()
