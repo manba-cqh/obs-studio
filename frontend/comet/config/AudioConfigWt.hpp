@@ -20,7 +20,9 @@ class AudioConfigWt : public BaseConfigWt
 public:
 	AudioConfigWt(QWidget *parent = nullptr);
 	~AudioConfigWt();
-	
+
+	void saveSettings() override;
+
 private:
 	void initUI();
 	void setupMicrophoneSettings();
@@ -57,7 +59,14 @@ private slots:
 	void onSpeakerBalanceChanged(int value);
 	
 	void onAudioBitrateChanged(int index);
-	
+
+	void onOtherDeviceChanged(int index);
+	void onOtherVolumeChanged(int value);
+	void onOtherMonitorChanged(int index);
+	void onOtherChannelChanged(int index);
+	void onOtherOffsetChanged(int value);
+	void onOtherBalanceChanged(int value);
+
 private:
 	QScrollArea *m_scrollArea;
 	QWidget *m_contentWidget;
@@ -89,9 +98,9 @@ private:
 	QLabel *m_speakerBalanceLeftLabel;
 	QLabel *m_speakerBalanceRightLabel;
 	
-	// 其他音频源
+	// 其他音频源（桌面音频2，channel 2）
 	QGroupBox *m_otherSourcesGroup;
-	QPushButton *m_windowCaptureBtn;
+	CommonComboBox *m_otherDeviceCombo;
 	QSlider *m_otherVolumeSlider;
 	QLabel *m_otherVolumeLabel;
 	CommonComboBox *m_otherMonitorCombo;
@@ -108,5 +117,6 @@ private:
 	// 当前音频源引用
 	OBSSource m_micSource;
 	OBSSource m_speakerSource;
+	OBSSource m_otherSource;
 };
 

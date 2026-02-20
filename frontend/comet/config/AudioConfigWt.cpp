@@ -25,6 +25,7 @@ AudioConfigWt::AudioConfigWt(QWidget *parent)
 	initUI();
 	loadMicrophoneSettings();
 	loadSpeakerSettings();
+	loadOtherAudioSources();
 	loadGlobalSettings();
 }
 
@@ -237,16 +238,16 @@ void AudioConfigWt::setupSpeakerSettings()
 
 void AudioConfigWt::setupOtherAudioSources()
 {
-	m_otherSourcesGroup = new QGroupBox("其他音频源", this);
+	m_otherSourcesGroup = new QGroupBox("桌面音频2", this);
 	QFormLayout *otherLayout = new QFormLayout(m_otherSourcesGroup);
 	otherLayout->setSpacing(15);
 	otherLayout->setLabelAlignment(Qt::AlignRight);
-	
-	// 窗口采集按钮
-	m_windowCaptureBtn = new QPushButton("窗口采集");
-	otherLayout->addRow("", m_windowCaptureBtn);
-	
-	// 输出音量
+
+	m_otherDeviceCombo = new CommonComboBox();
+	otherLayout->addRow("选择设备:", m_otherDeviceCombo);
+	connect(m_otherDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &AudioConfigWt::onOtherDeviceChanged);
+
 	QHBoxLayout *otherVolumeLayout = new QHBoxLayout();
 	otherVolumeLayout->setContentsMargins(0, 0, 14, 0);
 	otherVolumeLayout->setSpacing(6);
@@ -259,28 +260,31 @@ void AudioConfigWt::setupOtherAudioSources()
 	otherVolumeLayout->addWidget(m_otherVolumeSlider);
 	otherVolumeLayout->addWidget(m_otherVolumeLabel);
 	otherLayout->addRow("输出音量:", otherVolumeLayout);
-	
-	// 监听
+	connect(m_otherVolumeSlider, &QSlider::valueChanged, this, &AudioConfigWt::onOtherVolumeChanged);
+
 	m_otherMonitorCombo = new CommonComboBox();
-	m_otherMonitorCombo->addItem("不监听,声音输出到流", (int)OBS_MONITORING_TYPE_NONE);
+	m_otherMonitorCombo->addItem("关闭监听", (int)OBS_MONITORING_TYPE_NONE);
 	m_otherMonitorCombo->addItem("仅监听(输出静音)", (int)OBS_MONITORING_TYPE_MONITOR_ONLY);
 	m_otherMonitorCombo->addItem("监听并输出", (int)OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
 	otherLayout->addRow("监听:", m_otherMonitorCombo);
-	
-	// 声道
+	connect(m_otherMonitorCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &AudioConfigWt::onOtherMonitorChanged);
+
 	m_otherChannelCombo = new CommonComboBox();
 	m_otherChannelCombo->addItem("单声道", "Mono");
 	m_otherChannelCombo->addItem("立体声", "Stereo");
 	otherLayout->addRow("声道:", m_otherChannelCombo);
-	
-	// 偏移
+	connect(m_otherChannelCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &AudioConfigWt::onOtherChannelChanged);
+
 	m_otherOffsetSpin = new QSpinBox();
 	m_otherOffsetSpin->setRange(-950, 20000);
 	m_otherOffsetSpin->setSuffix(" ms");
 	m_otherOffsetSpin->setValue(0);
 	otherLayout->addRow("偏移:", m_otherOffsetSpin);
-	
-	// 平衡
+	connect(m_otherOffsetSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+		this, &AudioConfigWt::onOtherOffsetChanged);
+
 	QHBoxLayout *otherBalanceLayout = new QHBoxLayout();
 	otherBalanceLayout->setContentsMargins(0, 0, 14, 0);
 	otherBalanceLayout->setSpacing(3);
@@ -295,9 +299,10 @@ void AudioConfigWt::setupOtherAudioSources()
 	otherBalanceLayout->addWidget(m_otherBalanceSlider);
 	otherBalanceLayout->addWidget(m_otherBalanceRightLabel);
 	otherLayout->addRow("平衡:", otherBalanceLayout);
-	
+	connect(m_otherBalanceSlider, &QSlider::valueChanged, this, &AudioConfigWt::onOtherBalanceChanged);
+
 	setFormLayoutLabelWidth(otherLayout, 64);
-	
+
 	m_contentLayout->addWidget(m_otherSourcesGroup);
 }
 
@@ -468,7 +473,55 @@ void AudioConfigWt::loadSpeakerSettings()
 
 void AudioConfigWt::loadOtherAudioSources()
 {
-	// TODO: 实现其他音频源的加载
+	const char *outputId = App()->OutputAudioSource();
+	loadAudioDeviceList(m_otherDeviceCombo, outputId, 2);
+
+	m_otherSource = obs_get_output_source(2);
+	if (!m_otherSource) {
+		m_otherVolumeSlider->setValue(100);
+		m_otherVolumeLabel->setText("100%");
+		m_otherMonitorCombo->setCurrentIndex(0);
+		m_otherChannelCombo->setCurrentIndex(1);
+		m_otherOffsetSpin->setValue(0);
+		m_otherBalanceSlider->setValue(50);
+		return;
+	}
+
+	float volume = obs_source_get_volume(m_otherSource);
+	int volumePercent = (int)(volume * 100.0f);
+	m_otherVolumeSlider->setValue(volumePercent);
+	m_otherVolumeLabel->setText(QString::number(volumePercent) + "%");
+
+	obs_monitoring_type monitoring = obs_source_get_monitoring_type(m_otherSource);
+	for (int i = 0; i < m_otherMonitorCombo->count(); i++) {
+		if (m_otherMonitorCombo->itemData(i).toInt() == (int)monitoring) {
+			m_otherMonitorCombo->setCurrentIndex(i);
+			break;
+		}
+	}
+
+	uint32_t flags = obs_source_get_flags(m_otherSource);
+	bool isMono = (flags & OBS_SOURCE_FLAG_FORCE_MONO) != 0;
+	m_otherChannelCombo->setCurrentIndex(isMono ? 0 : 1);
+
+	int64_t offset = obs_source_get_sync_offset(m_otherSource);
+	m_otherOffsetSpin->setValue((int)(offset / NSEC_PER_MSEC));
+
+	float balance = obs_source_get_balance_value(m_otherSource);
+	m_otherBalanceSlider->setValue((int)(balance * 100.0f));
+}
+
+void AudioConfigWt::saveSettings()
+{
+	saveMicrophoneSettings();
+	saveSpeakerSettings();
+	saveOtherAudioSources();
+	saveGlobalSettings();
+
+	// 持久化麦克风/扬声器源设置到场景集合
+	OBSBasic *main = OBSBasic::Get();
+	if (main)
+		main->SaveProject();
 }
 
 void AudioConfigWt::loadGlobalSettings()
@@ -491,18 +544,18 @@ void AudioConfigWt::loadGlobalSettings()
 void AudioConfigWt::saveMicrophoneSettings()
 {
 	// 设备切换在 onMicrophoneDeviceChanged 中处理
-	// 其他设置在各自的槽函数中实时保存
+	// 音量、监听、声道、偏移、平衡已在槽函数中应用到 obs_source，由 saveSettings 统一调用 SaveProject
 }
 
 void AudioConfigWt::saveSpeakerSettings()
 {
 	// 设备切换在 onSpeakerDeviceChanged 中处理
-	// 其他设置在各自的槽函数中实时保存
+	// 音量、监听、声道、偏移、平衡已在槽函数中应用到 obs_source，由 saveSettings 统一调用 SaveProject
 }
 
 void AudioConfigWt::saveOtherAudioSources()
 {
-	// TODO: 实现其他音频源的保存
+	// 音量、监听、声道、偏移、平衡已在槽函数中应用到 obs_source，由 saveSettings 统一调用 SaveProject
 }
 
 void AudioConfigWt::saveGlobalSettings()
@@ -740,6 +793,102 @@ void AudioConfigWt::onSpeakerBalanceChanged(int value)
 	
 	float balance = value / 100.0f;
 	obs_source_set_balance_value(m_speakerSource, balance);
+}
+
+// 桌面音频2槽函数
+void AudioConfigWt::onOtherDeviceChanged(int index)
+{
+	if (index < 0) return;
+
+	QString deviceId = m_otherDeviceCombo->itemData(index).toString();
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		main->ResetAudioDevice(App()->OutputAudioSource(),
+			QT_TO_UTF8(deviceId), "Basic.DesktopDevice2", 2);
+		main->SaveProject();
+
+		m_otherSource = obs_get_output_source(2);
+		if (m_otherSource) {
+			float volume = obs_source_get_volume(m_otherSource);
+			int volumePercent = (int)(volume * 100.0f);
+			m_otherVolumeSlider->blockSignals(true);
+			m_otherVolumeSlider->setValue(volumePercent);
+			m_otherVolumeSlider->blockSignals(false);
+			m_otherVolumeLabel->setText(QString::number(volumePercent) + "%");
+
+			obs_monitoring_type monitoring = obs_source_get_monitoring_type(m_otherSource);
+			for (int i = 0; i < m_otherMonitorCombo->count(); i++) {
+				if (m_otherMonitorCombo->itemData(i).toInt() == (int)monitoring) {
+					m_otherMonitorCombo->blockSignals(true);
+					m_otherMonitorCombo->setCurrentIndex(i);
+					m_otherMonitorCombo->blockSignals(false);
+					break;
+				}
+			}
+
+			uint32_t flags = obs_source_get_flags(m_otherSource);
+			bool isMono = (flags & OBS_SOURCE_FLAG_FORCE_MONO) != 0;
+			m_otherChannelCombo->blockSignals(true);
+			m_otherChannelCombo->setCurrentIndex(isMono ? 0 : 1);
+			m_otherChannelCombo->blockSignals(false);
+			m_otherBalanceSlider->setEnabled(!isMono);
+
+			int64_t offset = obs_source_get_sync_offset(m_otherSource);
+			m_otherOffsetSpin->blockSignals(true);
+			m_otherOffsetSpin->setValue((int)(offset / NSEC_PER_MSEC));
+			m_otherOffsetSpin->blockSignals(false);
+
+			float balance = obs_source_get_balance_value(m_otherSource);
+			m_otherBalanceSlider->blockSignals(true);
+			m_otherBalanceSlider->setValue((int)(balance * 100.0f));
+			m_otherBalanceSlider->blockSignals(false);
+		}
+	}
+}
+
+void AudioConfigWt::onOtherVolumeChanged(int value)
+{
+	m_otherVolumeLabel->setText(QString::number(value) + "%");
+	if (m_otherSource)
+		obs_source_set_volume(m_otherSource, value / 100.0f);
+}
+
+void AudioConfigWt::onOtherMonitorChanged(int index)
+{
+	if (index < 0 || !m_otherSource) return;
+	obs_monitoring_type monitoring = (obs_monitoring_type)m_otherMonitorCombo->itemData(index).toInt();
+	obs_source_set_monitoring_type(m_otherSource, monitoring);
+}
+
+void AudioConfigWt::onOtherChannelChanged(int index)
+{
+	if (index < 0 || !m_otherSource) return;
+	uint32_t flags = obs_source_get_flags(m_otherSource);
+	bool isMono = (index == 0);
+	if (isMono)
+		flags |= OBS_SOURCE_FLAG_FORCE_MONO;
+	else
+		flags &= ~OBS_SOURCE_FLAG_FORCE_MONO;
+	obs_source_set_flags(m_otherSource, flags);
+	m_otherBalanceSlider->setEnabled(!isMono);
+}
+
+void AudioConfigWt::onOtherOffsetChanged(int value)
+{
+	if (!m_otherSource) return;
+	obs_source_set_sync_offset(m_otherSource, (int64_t)value * NSEC_PER_MSEC);
+}
+
+void AudioConfigWt::onOtherBalanceChanged(int value)
+{
+	if (!m_otherSource) return;
+	if (value >= 45 && value <= 55) {
+		m_otherBalanceSlider->blockSignals(true);
+		m_otherBalanceSlider->setValue(50);
+		value = 50;
+		m_otherBalanceSlider->blockSignals(false);
+	}
+	obs_source_set_balance_value(m_otherSource, value / 100.0f);
 }
 
 // 全局设置槽函数
