@@ -332,31 +332,33 @@ void AudioConfigWt::setupGlobalAdvancedSettings()
 void AudioConfigWt::loadAudioDeviceList(QComboBox *combo, const char *sourceId, int channel)
 {
 	combo->clear();
-	
+
 	obs_properties_t *props = obs_get_source_properties(sourceId);
 	if (!props) {
 		return;
 	}
-	
+
 	obs_property_t *deviceProp = obs_properties_get(props, "device_id");
 	if (!deviceProp) {
 		obs_properties_destroy(props);
 		return;
 	}
-	
-	// 获取当前设备
+
+	// 获取当前设备 ID（拷贝字符串，避免 settings 释放后悬垂指针）
+	QString currentDeviceId;
 	OBSSourceAutoRelease source = obs_get_output_source(channel);
-	const char *currentDeviceId = nullptr;
 	if (source) {
 		OBSDataAutoRelease settings = obs_source_get_settings(source);
 		if (settings) {
-			currentDeviceId = obs_data_get_string(settings, "device_id");
+			const char *devId = obs_data_get_string(settings, "device_id");
+			if (devId)
+				currentDeviceId = QString::fromUtf8(devId);
 		}
 	}
-	
+
 	// 添加"禁用"选项
 	combo->addItem("禁用", "disabled");
-	
+
 	// 添加设备列表
 	size_t count = obs_property_list_item_count(deviceProp);
 	for (size_t i = 0; i < count; i++) {
@@ -364,19 +366,25 @@ void AudioConfigWt::loadAudioDeviceList(QComboBox *combo, const char *sourceId, 
 		const char *val = obs_property_list_item_string(deviceProp, i);
 		combo->addItem(QT_UTF8(name), QT_UTF8(val));
 	}
-	
-	// 设置当前选中的设备（阻止信号触发，避免递归调用）
-	if (currentDeviceId) {
-		QVariant var(QT_UTF8(currentDeviceId));
-		int idx = combo->findData(var);
-		if (idx != -1) {
-			combo->blockSignals(true);
-			combo->setCurrentIndex(idx);
-			combo->blockSignals(false);
-		}
-	}
-	
+
 	obs_properties_destroy(props);
+
+	// 设置当前选中的设备
+	combo->blockSignals(true);
+	if (!currentDeviceId.isEmpty()) {
+		int idx = combo->findData(currentDeviceId);
+		if (idx != -1) {
+			combo->setCurrentIndex(idx);
+		} else if (currentDeviceId == "default" && combo->count() > 1) {
+			// "default" 表示系统默认设备，选中第一个真实设备
+			combo->setCurrentIndex(1);
+		}
+	} else if (source) {
+		// 有源但无 device_id（极少见），选第一个真实设备
+		if (combo->count() > 1)
+			combo->setCurrentIndex(1);
+	}
+	combo->blockSignals(false);
 }
 
 void AudioConfigWt::loadMicrophoneSettings()
