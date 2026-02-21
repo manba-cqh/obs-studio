@@ -32,7 +32,6 @@ StreamItemWidget::StreamItemWidget(const QString &platformName, const QString &i
 	  m_streaming(false),
 	  m_liveIndicatorState(LiveIndicatorState::Stateless)
 {
-	qDebug() << "StreamItemWidget: " << platformName << " " << iconPath << " " << platformIndex;
 	initUI();
 }
 
@@ -402,7 +401,17 @@ void BroadcastModePanel::createRecordSection()
 
 	// 开播自动录制
 	m_autoRecordToggle = new QCheckBox("开播自动录制", m_recordSection);
-	m_autoRecordToggle->setChecked(false);
+	bool autoRecordEnabled = false;
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		config_t *config = main->Config();
+		if (config)
+			autoRecordEnabled = config_get_bool(config, "Output", "AutoRecordWhenStreaming");
+	}
+	{
+		QSignalBlocker blocker(m_autoRecordToggle);
+		m_autoRecordToggle->setChecked(autoRecordEnabled);
+	}
 	connect(m_autoRecordToggle, &QCheckBox::toggled, this, &BroadcastModePanel::onAutoRecordToggled);
 	recLayout->addWidget(m_autoRecordToggle);
 
@@ -460,8 +469,14 @@ void BroadcastModePanel::onPauseButtonClicked()
 
 void BroadcastModePanel::onAutoRecordToggled(bool checked)
 {
-	Q_UNUSED(checked);
-	// TODO: 保存设置，开播时自动启动录制
+	OBSBasic *main = OBSBasic::Get();
+	if (!main)
+		return;
+	config_t *config = main->Config();
+	if (!config)
+		return;
+	config_set_bool(config, "Output", "AutoRecordWhenStreaming", checked);
+	config_save(config);
 }
 
 void BroadcastModePanel::onStreamToggleRequested(int platformIndex, bool start)
@@ -509,6 +524,15 @@ void BroadcastModePanel::onStreamingStarted()
 	if (m_streamingPlatformIndex >= 0 && m_streamingPlatformIndex < m_streamItems.size()) {
 		m_streamItems[m_streamingPlatformIndex]->setStreaming(true);
 	}
+
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		config_t *config = main->Config();
+		if (config && config_get_bool(config, "Output", "AutoRecordWhenStreaming")) {
+			if (!obs_frontend_recording_active())
+				obs_frontend_recording_start();
+		}
+	}
 	if (!m_streamStatsTimer) {
 		m_streamStatsTimer = new QTimer(this);
 		connect(m_streamStatsTimer, &QTimer::timeout, this, &BroadcastModePanel::updateStreamIndicator);
@@ -527,6 +551,15 @@ void BroadcastModePanel::onStreamingStopped()
 	m_lastStreamBytesTime = 0;
 	for (StreamItemWidget *w : m_streamItems)
 		w->setStreaming(false);
+
+	OBSBasic *main = OBSBasic::Get();
+	if (main) {
+		config_t *config = main->Config();
+		if (config && config_get_bool(config, "Output", "AutoRecordWhenStreaming")) {
+			if (obs_frontend_recording_active())
+				obs_frontend_recording_stop();
+		}
+	}
 }
 
 void BroadcastModePanel::updateStreamIndicator()
