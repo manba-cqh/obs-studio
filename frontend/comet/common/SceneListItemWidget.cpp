@@ -48,7 +48,7 @@ void SceneListItemWidget::initUI()
 	setMouseTracking(true); // 启用鼠标跟踪以支持悬停效果
 
 	m_layout = new QHBoxLayout(this);
-	m_layout->setContentsMargins(4, 0, 4, 0);
+	m_layout->setContentsMargins(8, 0, 4, 0);
 	m_layout->setSpacing(4);
 
 	m_textLabel = new QLabel(this);

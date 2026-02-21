@@ -38,6 +38,7 @@ protected:
 	virtual void mouseMoveEvent(QMouseEvent *event) override;
 	virtual void mouseReleaseEvent(QMouseEvent *event) override;
 	virtual bool eventFilter(QObject *obj, QEvent *event) override;
+	virtual bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
 	virtual QMenu *createPopupMenu() override;
 
 private slots:
@@ -105,4 +106,5 @@ private:
 	ResizeEdge m_resizeEdge;
 	QPoint m_resizeStartPos;
 	QRect m_resizeStartGeometry;
+	Qt::WindowStates m_stateBeforeMinimize;
 };

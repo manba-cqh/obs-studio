@@ -32,12 +32,20 @@
 #include <QShortcut>
 #include <QMenu>
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_isResizing(false)
 	, m_resizeEdge(EdgeNone),
 	m_configWt(nullptr),
-	m_audioMixPanel(nullptr)
+	m_audioMixPanel(nullptr),
+	m_stateBeforeMinimize(Qt::WindowNoState)
 {
 	initUI();
 }
@@ -61,7 +69,7 @@ CometMainWindow::~CometMainWindow()
 void CometMainWindow::initUI()
 {
 	setMouseTracking(true);
-	setWindowFlags(Qt::FramelessWindowHint);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint);
 	setProperty("main_widget", true);
 	setMouseTracking(true);
 	setContentsMargins(15, 0, 15, 15);
@@ -529,10 +537,44 @@ void CometMainWindow::changeEvent(QEvent *event)
 {
 	if (event->type() == QEvent::WindowStateChange) {
 		QWindowStateChangeEvent *stateEvent = static_cast<QWindowStateChangeEvent *>(event);
+		if (windowState() & Qt::WindowMinimized) {
+			m_stateBeforeMinimize = stateEvent->oldState();
+		}
 		bool isMaximized = (windowState() & Qt::WindowMaximized) != 0;
 		m_topBar->updateMaximizeButton(isMaximized);
 	}
 	QMainWindow::changeEvent(event);
+}
+
+bool CometMainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+{
+#ifdef _WIN32
+	const MSG &msg = *static_cast<MSG *>(message);
+	if (msg.message == WM_SYSCOMMAND) {
+		const WPARAM cmd = msg.wParam & 0xfff0;
+		if (cmd == SC_MINIMIZE) {
+			m_stateBeforeMinimize = windowState();
+			showMinimized();
+			if (result) {
+				*result = 0;
+			}
+			return true;
+		}
+		if (cmd == SC_RESTORE) {
+			if (m_stateBeforeMinimize & Qt::WindowMaximized) {
+				showMaximized();
+			} else {
+				showNormal();
+			}
+			activateWindow();
+			if (result) {
+				*result = 0;
+			}
+			return true;
+		}
+	}
+#endif
+	return QMainWindow::nativeEvent(eventType, message, result);
 }
 
 ResizeEdge CometMainWindow::getResizeEdge(const QPoint &pos) const
