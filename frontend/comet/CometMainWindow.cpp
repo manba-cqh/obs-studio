@@ -150,7 +150,7 @@ void CometMainWindow::createMainContent()
 	addDockWidget(Qt::LeftDockWidgetArea, m_interactPanelDock);
 	splitDockWidget(m_scenePanelDock, m_interactPanelDock, Qt::Vertical);
 	QList<QDockWidget*> leftDocks{m_scenePanelDock, m_interactPanelDock};
-	resizeDocks(leftDocks, {1, 1}, Qt::Vertical);
+	resizeDocks(leftDocks, {2, 1}, Qt::Vertical);
 
 	// 主内容
 	m_mainContent = new QWidget();
@@ -366,7 +366,7 @@ void CometMainWindow::createMainContent()
 	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
 	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
-	resizeDocks(bottomDocks, {2, 3}, Qt::Horizontal);
+	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
 
 	// 右侧
 	// 插件面板
@@ -407,7 +407,7 @@ void CometMainWindow::createMainContent()
 	addDockWidget(Qt::RightDockWidgetArea, m_danmuPanelDock);
 	splitDockWidget(m_pluginPanelDock, m_danmuPanelDock, Qt::Vertical);
 	QList<QDockWidget*> rightDocks{m_pluginPanelDock, m_danmuPanelDock};
-	resizeDocks(rightDocks, {1, 1}, Qt::Vertical);
+	resizeDocks(rightDocks, {2, 1}, Qt::Vertical);
 
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
