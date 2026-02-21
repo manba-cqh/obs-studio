@@ -1,5 +1,6 @@
 #include "SceneListItemWidget.hpp"
 #include <QPushButton>
+#include <QVBoxLayout>
 #include <QIcon>
 #include <QPixmap>
 #include <QMenu>
@@ -8,6 +9,9 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QEnterEvent>
+#include <QFontMetrics>
+#include <QResizeEvent>
+#include <QSizePolicy>
 #include <cstring>
 
 #include "tools/tools.hpp"
@@ -44,12 +48,16 @@ void SceneListItemWidget::initUI()
 	setMouseTracking(true); // 启用鼠标跟踪以支持悬停效果
 
 	m_layout = new QHBoxLayout(this);
-	m_layout->setContentsMargins(12, 8, 8, 8);
-	m_layout->setSpacing(8);
+	m_layout->setContentsMargins(4, 0, 4, 0);
+	m_layout->setSpacing(4);
 
 	m_textLabel = new QLabel(this);
 	m_textLabel->setText(m_text);
 	m_textLabel->setStyleSheet("font-size: 14px; font-weight: medium; color: rgba(238, 239, 255, 1);");
+	m_textLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+	m_textLabel->setMinimumWidth(0);
+	updateElidedText();
+	
 	m_layout->addWidget(m_textLabel);
 
 	m_layout->addStretch();
@@ -59,7 +67,14 @@ void SceneListItemWidget::initUI()
 	m_moreButton->setCursor(Qt::PointingHandCursor);
 	m_moreButton->setStyleSheet(BUTTON_QSS_STYLE("display_more.png", "display_more_hover.png", "display_more_hover.png"));
 	connect(m_moreButton, &QPushButton::clicked, this, &SceneListItemWidget::onMoreButtonClicked);
-	m_layout->addWidget(m_moreButton);
+	QWidget *btnContainer = new QWidget(this);
+	QVBoxLayout *btnLayout = new QVBoxLayout(btnContainer);
+	btnLayout->setContentsMargins(0, 0, 0, 0);
+	btnLayout->addStretch();
+	btnLayout->addWidget(m_moreButton);
+	btnLayout->addStretch();
+	m_layout->addWidget(btnContainer);
+	m_layout->addStretch();
 	
 	// 为三个点按钮安装事件过滤器，防止点击事件冒泡
 	m_moreButton->installEventFilter(this);
@@ -75,13 +90,13 @@ void SceneListItemWidget::setText(const QString &text)
 {
 	m_text = text;
 	if (m_textLabel) {
-		m_textLabel->setText(text);
+		updateElidedText();
 	}
 }
 
 QString SceneListItemWidget::text() const
 {
-	return m_textLabel ? m_textLabel->text() : QString();
+	return m_text;
 }
 
 void SceneListItemWidget::setChecked(bool checked)
@@ -151,6 +166,12 @@ void SceneListItemWidget::leaveEvent(QEvent *event)
 	QWidget::leaveEvent(event);
 }
 
+void SceneListItemWidget::resizeEvent(QResizeEvent *event)
+{
+	QWidget::resizeEvent(event);
+	updateElidedText();
+}
+
 bool SceneListItemWidget::isChecked() const
 {
 	return m_checked;
@@ -163,9 +184,25 @@ void SceneListItemWidget::updateSceneName()
 		if (sceneName) {
 			m_text = QString::fromUtf8(sceneName);
 			if (m_textLabel) {
-				m_textLabel->setText(m_text);
+				updateElidedText();
 			}
 		}
+	}
+}
+
+void SceneListItemWidget::updateElidedText()
+{
+	if (!m_textLabel)
+		return;
+	QFontMetrics fm(m_textLabel->font());
+	int available = m_textLabel->width();
+	if (available > 0) {
+		QString elided = fm.elidedText(m_text, Qt::ElideRight, available);
+		m_textLabel->setText(elided);
+		m_textLabel->setToolTip(m_text);
+	} else {
+		m_textLabel->setText(m_text);
+		m_textLabel->setToolTip(QString());
 	}
 }
 

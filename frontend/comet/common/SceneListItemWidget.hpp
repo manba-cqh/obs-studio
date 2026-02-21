@@ -30,11 +30,13 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 	void enterEvent(QEnterEvent *event) override;
 	void leaveEvent(QEvent *event) override;
+	void resizeEvent(QResizeEvent *event) override;
 
 private:
 	void initUI();
 	void onMoreButtonClicked();
 	void createContextMenu();
+	void updateElidedText();
 	
 	// 菜单项槽函数
 	void onRenameAction();
