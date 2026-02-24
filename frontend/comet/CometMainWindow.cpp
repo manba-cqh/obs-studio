@@ -202,21 +202,17 @@ void CometMainWindow::createMainContent()
 		}
 	});
 
-	// 设置按钮
-	connect(m_previewHeader, &PreviewHeader::settingsRequested, this, [this]() {
-		QTimer::singleShot(0, this, [this]() {
-			if (!m_configWt)
-				m_configWt = new ConfigWt(this);
-			m_configWt->exec();
-			if (m_audioMixPanel)
-				m_audioMixPanel->refreshAudioControls();
-		});
+	// 设置按钮，index: 0音频 1视频 2录制 3推流，-1 默认第一项
+	connect(m_previewHeader, &PreviewHeader::settingsRequested, this, [this](int index) {
+		if (!m_configWt)
+			m_configWt = new ConfigWt(this);
+		if (index >= 0)
+			m_configWt->setCurrentTab(index);
+		m_configWt->exec();
+		if (m_audioMixPanel)
+			m_audioMixPanel->refreshAudioControls();
 	});
 
-	// 全屏预览
-	connect(m_previewHeader, &PreviewHeader::fullscreenRequested, this, [this]() {
-	});
-	
 	// 创建 QStackedWidget 来切换预览和空场景界面
 	m_previewStack = new QStackedWidget(this);
 	m_previewStack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

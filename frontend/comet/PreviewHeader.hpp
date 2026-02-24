@@ -19,8 +19,7 @@ public:
 
 signals:
 	void orientationChanged(bool landscape);
-	void settingsRequested();
-	void fullscreenRequested();
+	void settingsRequested(int index = -1);  // index: 0音频 1视频 2录制 3推流，-1 默认第一项
 
 private:
 	void initUI();
@@ -36,11 +35,10 @@ private:
 	QLabel *m_statusLabel;
 	QPushButton *m_streamSettingBtn;
 
-	// 右侧：横竖屏切换 + 设置 + 全屏
+	// 右侧：横竖屏切换 + 设置
 	QPushButton *m_landscapeBtn;
 	QPushButton *m_portraitBtn;
 	QPushButton *m_settingBtn;
-	QPushButton *m_fullscreenBtn;
 
 	bool m_isLandscape = true;
 };

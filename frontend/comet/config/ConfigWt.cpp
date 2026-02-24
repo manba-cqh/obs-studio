@@ -131,6 +131,13 @@ void ConfigWt::setupNavigation()
 	connect(m_navList, &QListWidget::currentRowChanged, this, &ConfigWt::switchPage);
 }
 
+void ConfigWt::setCurrentTab(int index)
+{
+	if (index >= 0 && index < m_navList->count()) {
+		m_navList->setCurrentRow(index);
+	}
+}
+
 void ConfigWt::switchPage(int index)
 {
 	if (index >= 0 && index < m_stackedWidget->count()) {

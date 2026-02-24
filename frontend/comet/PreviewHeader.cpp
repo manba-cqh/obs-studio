@@ -29,8 +29,11 @@ void PreviewHeader::initUI()
 	m_layout->setSpacing(0);
 
 	// ===== 左侧：平台图标 + 状态点 + 状态文字 + 设置按钮 =====
-	QHBoxLayout *leftLayout = new QHBoxLayout();
-	leftLayout->setContentsMargins(0, 0, 0, 0);
+	QWidget *leftWidget = new QWidget(this);
+	leftWidget->setFixedHeight(42);
+	leftWidget->setStyleSheet("QWidget { background: #222232; border-radius: 5px; }");
+	QHBoxLayout *leftLayout = new QHBoxLayout(leftWidget);
+	leftLayout->setContentsMargins(5, 0, 5, 0);
 	leftLayout->setSpacing(6);
 
 	m_platformIcon = new QLabel(this);
@@ -57,15 +60,18 @@ void PreviewHeader::initUI()
 	m_streamSettingBtn->setFixedSize(20, 20);
 	m_streamSettingBtn->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
 	m_streamSettingBtn->setToolTip("推流设置");
-	connect(m_streamSettingBtn, &QPushButton::clicked, this, &PreviewHeader::settingsRequested);
+	connect(m_streamSettingBtn, &QPushButton::clicked, this, [this]() { emit settingsRequested(3); });
 	leftLayout->addWidget(m_streamSettingBtn);
 
-	m_layout->addLayout(leftLayout);
+	m_layout->addWidget(leftWidget);
 	m_layout->addStretch();
 
 	// ===== 右侧：横屏/竖屏切换 + 分隔符 + 设置 + 全屏 =====
-	QHBoxLayout *rightLayout = new QHBoxLayout();
-	rightLayout->setContentsMargins(0, 0, 0, 0);
+	QWidget *rightWidget = new QWidget(this);
+	rightWidget->setFixedHeight(42);
+	rightWidget->setStyleSheet("QWidget { background: #222232; border-radius: 5px; }");
+	QHBoxLayout *rightLayout = new QHBoxLayout(rightWidget);
+	rightLayout->setContentsMargins(5, 0, 5, 0);
 	rightLayout->setSpacing(0);
 
 	// 横屏按钮
@@ -113,26 +119,10 @@ void PreviewHeader::initUI()
 	m_settingBtn->setFixedSize(20, 20);
 	m_settingBtn->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
 	m_settingBtn->setToolTip("设置");
-	connect(m_settingBtn, &QPushButton::clicked, this, &PreviewHeader::settingsRequested);
+	connect(m_settingBtn, &QPushButton::clicked, this, [this]() { emit settingsRequested(1); });
 	rightLayout->addWidget(m_settingBtn);
 
-	rightLayout->addSpacing(8);
-
-	// 全屏按钮
-	m_fullscreenBtn = new QPushButton(this);
-	m_fullscreenBtn->setFixedSize(20, 20);
-	m_fullscreenBtn->setToolTip("全屏预览");
-	m_fullscreenBtn->setStyleSheet(
-		"QPushButton {"
-		"    border: none; background: transparent;"
-		"    color: #AAABB8; font-size: 16px; font-weight: bold;"
-		"}"
-		"QPushButton:hover { color: #FFFFFF; }");
-	m_fullscreenBtn->setText("⛶");
-	connect(m_fullscreenBtn, &QPushButton::clicked, this, &PreviewHeader::fullscreenRequested);
-	rightLayout->addWidget(m_fullscreenBtn);
-
-	m_layout->addLayout(rightLayout);
+	m_layout->addWidget(rightWidget);
 }
 
 void PreviewHeader::updateOrientationButtons()
