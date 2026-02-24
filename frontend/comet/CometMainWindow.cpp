@@ -43,7 +43,6 @@ CometMainWindow::CometMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, m_isResizing(false)
 	, m_resizeEdge(EdgeNone),
-	m_configWt(nullptr),
 	m_audioMixPanel(nullptr),
 	m_stateBeforeMinimize(Qt::WindowNoState)
 {
@@ -83,8 +82,7 @@ void CometMainWindow::initUI()
 	connect(m_topBar, &TopBar::sigRestore, this, &QMainWindow::showNormal);
 	connect(m_topBar, &TopBar::sigClose, this, &QMainWindow::close);
 	connect(m_topBar, &TopBar::sigSettings, this, [this]() {
-		if (!m_configWt)
-			m_configWt = new ConfigWt(this);
+		m_configWt = new ConfigWt(this);
 		m_configWt->exec();
 		if (m_audioMixPanel)
 			m_audioMixPanel->refreshAudioControls();
@@ -99,6 +97,8 @@ void CometMainWindow::initUI()
 	m_titleBarToolBar->setContextMenuPolicy(Qt::NoContextMenu);
 	m_titleBarToolBar->addWidget(m_topBar);
 	addToolBar(Qt::TopToolBarArea, m_titleBarToolBar);
+
+	m_configWt = new ConfigWt(this);
 
 	// 主内容
 	createMainContent();
@@ -204,8 +204,7 @@ void CometMainWindow::createMainContent()
 
 	// 设置按钮，index: 0音频 1视频 2录制 3推流，-1 默认第一项
 	connect(m_previewHeader, &PreviewHeader::settingsRequested, this, [this](int index) {
-		if (!m_configWt)
-			m_configWt = new ConfigWt(this);
+		m_configWt = new ConfigWt(this);
 		if (index >= 0)
 			m_configWt->setCurrentTab(index);
 		m_configWt->exec();

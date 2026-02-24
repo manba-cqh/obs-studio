@@ -326,8 +326,8 @@ void BroadcastModePanel::initUI()
 }
 
 namespace {
-const char *const kDefaultPlatformIcons[] = {"bilibili.svg", "douyin.svg", "douyu.svg", "kuaishou.svg"};
-const int kDefaultPlatformIconCount = 4;
+const char *const kDefaultPlatformIcons[] = {"bilibili.svg", "douyin.svg", "douyu.svg", "kuaishou.svg", "huya.svg", "huajiao.svg", "video_wechat.svg", "xiaohongshu.svg"};
+const int kDefaultPlatformIconCount = 8;
 } // namespace
 
 void BroadcastModePanel::createStreamSection()

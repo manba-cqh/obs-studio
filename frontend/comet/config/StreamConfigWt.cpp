@@ -354,9 +354,9 @@ void StreamConfigWt::savePlatformConfig(int index)
 }
 
 namespace {
-const char *const kDefaultPlatformNames[] = {"哔哩哔哩", "抖音", "斗鱼", "快手"};
-const char *const kDefaultPlatformIcons[] = {":/images/bilibili.svg", ":/images/douyin.svg", ":/images/douyu.svg", ":/images/kuaishou.svg"};
-const int kDefaultPlatformCount = 4;
+const char *const kDefaultPlatformNames[] = {"哔哩哔哩", "抖音", "斗鱼", "快手", "虎牙", "花椒", "视频号", "小红书"};
+const char *const kDefaultPlatformIcons[] = {":/images/bilibili.svg", ":/images/douyin.svg", ":/images/douyu.svg", ":/images/kuaishou.svg", ":/images/huya.svg", ":/images/huajiao.svg", ":/images/video_wechat.svg", ":/images/xiaohongshu.svg"};
+const int kDefaultPlatformCount = 8;
 } // namespace
 
 void StreamConfigWt::loadStreamSettings()
