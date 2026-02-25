@@ -20,8 +20,8 @@ class ConfigWt : public QDialog
 public:
 	ConfigWt(QWidget *parent = nullptr);
 	~ConfigWt();
-	/** 定位到指定 tab，index: 0音频 1视频 2录制 3推流，-1 使用当前/默认 */
-	void setCurrentTab(int index);
+	/** 定位到指定 tab，index: 0音频 1视频 2录制 3推流，-1 使用当前/默认；streamPlatformIndex 仅当 index==3 时有效，指定推流平台索引 */
+	void setCurrentTab(int index, int streamPlatformIndex = -1);
 
 protected:
 	void closeEvent(QCloseEvent *event) override;

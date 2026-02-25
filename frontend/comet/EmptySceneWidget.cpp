@@ -36,7 +36,7 @@ void EmptySceneWidget::initUI()
 	
 	m_addBtn = new QPushButton();
 	m_addBtn->setFixedSize(64, 64);
-	m_addBtn->setStyleSheet(BUTTON_QSS_STYLE("add_big.png", "add_big_hover.png", "add_big_hover.png"));
+	m_addBtn->setStyleSheet(BUTTON_QSS_STYLE("add_big.svg", "add_big_hover.svg", "add_big_hover.svg"));
 	connect(m_addBtn, &QPushButton::clicked, this, &EmptySceneWidget::onAddBtnClicked);
 	addLayout->addWidget(m_addBtn);
 	

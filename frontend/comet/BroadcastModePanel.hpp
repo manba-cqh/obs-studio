@@ -36,15 +36,19 @@ public:
 	void setLiveIndicatorState(LiveIndicatorState state);
 	int platformIndex() const { return m_platformIndex; }
 	void setToggleEnabled(bool enabled);
+	void setCompactMode(bool compact);
 
 signals:
 	void toggleStreamRequested(int platformIndex, bool start);
+	void editRequested(int platformIndex);
+	void deleteRequested(int platformIndex);
 
 private slots:
 	void updateLiveTime();
 
 private:
 	void onToggleToggled(bool checked);
+	void onMoreButtonClicked();
 	void initUI();
 	void updateDisplay();
 	void updateLiveIndicatorIcon();
@@ -73,6 +77,7 @@ private:
 
 	QTimer *m_liveTimer = nullptr;
 	qint64 m_liveStartTime = 0;
+	bool m_compactMode = false;
 };
 
 class BroadcastModePanel : public PanelContainer
@@ -84,6 +89,10 @@ public:
 	~BroadcastModePanel();
 
 	QWidget *createHeaderOperButtons();
+	void refreshStreamList();
+
+signals:
+	void openStreamSettingsRequested(int tabIndex, int platformIndex);
 
 private slots:
 	void onRecordButtonClicked();
@@ -94,10 +103,15 @@ private slots:
 	void onStreamingStarted();
 	void onStreamingStopped();
 	void updateStreamIndicator();
+	void onVirtualCamToggled(bool checked);
+	void updateVirtualCamState();
+	void onStreamEditRequested(int platformIndex);
+	void onStreamDeleteRequested(int platformIndex);
 
 private:
 	void initUI();
 	void createStreamSection();
+	void createVirtualCamSection();
 	void createRecordSection();
 	void updateRecordingState();
 	static void OBSFrontendEvent(enum obs_frontend_event event, void *ptr);
@@ -112,6 +126,10 @@ private:
 	QTimer *m_streamStatsTimer = nullptr;
 	uint64_t m_lastStreamBytesSent = 0;
 	uint64_t m_lastStreamBytesTime = 0;
+
+	// 虚拟摄像头
+	QWidget *m_virtualCamSection = nullptr;
+	StreamItemWidget *m_virtualCamItem = nullptr;
 
 	// 录制区域
 	QWidget *m_recordSection;

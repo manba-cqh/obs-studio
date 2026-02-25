@@ -24,6 +24,7 @@ public:
 	explicit StreamConfigWt(QWidget *parent = nullptr);
 
 	void saveSettings() override;
+	void setCurrentPlatform(int index);
 
 private slots:
 	void onToggleStreamKey();

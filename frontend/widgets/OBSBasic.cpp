@@ -1,4 +1,4 @@
-/******************************************************************************
+Ôªø/******************************************************************************
     Copyright (C) 2023 by Lain Bailey <lain@obsproject.com>
                           Zachary Lund <admin@computerquip.com>
                           Philippe Groarke <philippe.groarke@gmail.com>
@@ -1254,7 +1254,7 @@ void OBSBasic::OBSInit()
 		config_save_safe(App()->GetUserConfig(), "tmp", nullptr);
 	}
 
-	// TODO ≤ªœ‘ æ◊‘∂Ø≈‰÷√œÚµº“≥√Ê
+	// Skip auto-config wizard (comet does not need it)
 	// if (!first_run && !has_last_version && !Active())
 	// 	QMetaObject::invokeMethod(this, "on_autoConfigure_triggered", Qt::QueuedConnection);
 

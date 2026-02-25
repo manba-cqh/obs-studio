@@ -11,6 +11,9 @@
 #include "RecordConfigWt.hpp"
 #include "StreamConfigWt.hpp"
 #include "tools.hpp"
+#include "BroadcastModePanel.hpp"
+
+#include <QApplication>
 
 ConfigWt::ConfigWt(QWidget *parent)
 	: QDialog(parent)
@@ -32,6 +35,15 @@ void ConfigWt::closeEvent(QCloseEvent *event)
 		m_recordConfig->saveSettings();
 	if (m_streamConfig)
 		m_streamConfig->saveSettings();
+
+	for (QWidget *w : QApplication::topLevelWidgets()) {
+		auto *panel = w->findChild<BroadcastModePanel *>();
+		if (panel) {
+			panel->refreshStreamList();
+			break;
+		}
+	}
+
 	event->accept();
 }
 
@@ -131,10 +143,12 @@ void ConfigWt::setupNavigation()
 	connect(m_navList, &QListWidget::currentRowChanged, this, &ConfigWt::switchPage);
 }
 
-void ConfigWt::setCurrentTab(int index)
+void ConfigWt::setCurrentTab(int index, int streamPlatformIndex)
 {
 	if (index >= 0 && index < m_navList->count()) {
 		m_navList->setCurrentRow(index);
+		if (index == 3 && m_streamConfig && streamPlatformIndex >= 0)
+			m_streamConfig->setCurrentPlatform(streamPlatformIndex);
 	}
 }
 

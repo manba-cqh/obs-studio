@@ -23,7 +23,8 @@
     <file>images/director.svg</file>
     <file>images/director_hover.svg</file>
     <file>images/add_big.png</file>
-    <file>images/add_big_hover.png</file>
+    <file>images/add_big.svg</file>
+    <file>images/add_big_hover.svg</file>
     <file>images/display.png</file>
     <file>images/display_hover.png</file>
     <file>images/display_unlock.png</file>
@@ -63,6 +64,7 @@
     <file>images/huajiao.svg</file>
     <file>images/video_wechat.svg</file>
     <file>images/xiaohongshu.svg</file>
+    <file>images/virtual_camera.svg</file>
 
     <file>images/monitor_capture.svg</file>
     <file>images/display_capture.svg</file>

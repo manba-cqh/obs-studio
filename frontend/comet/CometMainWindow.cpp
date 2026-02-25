@@ -366,6 +366,14 @@ void CometMainWindow::createMainContent()
 	});
 	m_broadcastModePanelDock->setTitleBarWidget(broadcastModeHeader);
 	m_broadcastModePanelDock->setWidget(m_broadcastModePanel);
+	connect(m_broadcastModePanel, &BroadcastModePanel::openStreamSettingsRequested,
+		this, [this](int tabIndex, int platformIndex) {
+			m_configWt = new ConfigWt(this);
+			m_configWt->setCurrentTab(tabIndex, platformIndex);
+			m_configWt->exec();
+			if (m_audioMixPanel)
+				m_audioMixPanel->refreshAudioControls();
+		});
 	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
 	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};

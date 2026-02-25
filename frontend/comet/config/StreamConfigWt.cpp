@@ -1,5 +1,7 @@
 #include "StreamConfigWt.hpp"
 
+#include "BroadcastModePanel.hpp"
+
 #include "CommonButton.hpp"
 #include "CommonComboBox.hpp"
 #include "CommonLineEdit.hpp"
@@ -9,6 +11,7 @@
 #include <util/config-file.h>
 #include <qt-wrappers.hpp>
 
+#include <QApplication>
 #include <QCheckBox>
 #include <QIcon>
 #include <QInputDialog>
@@ -277,13 +280,24 @@ void StreamConfigWt::refreshPlatformCombo()
 
 void StreamConfigWt::onAddPlatformClicked()
 {
-	QString name = QInputDialog::getText(this, QStringLiteral("新增平台"), QStringLiteral("平台名称："));
-	QString trimmed = name.trimmed();
-	if (trimmed.isEmpty()) return;
-	if (m_platforms.contains(trimmed)) return;
-	m_platforms.append(trimmed);
-	refreshPlatformCombo();
-	m_platformCombo->setCurrentIndex(m_platformCombo->findText(trimmed));
+	if (!m_config || !m_platformCombo)
+		return;
+
+	int idx = m_platformCombo->currentIndex();
+	if (idx < 0 || idx >= m_platforms.size())
+		return;
+
+	QString keyStr = QString::number(idx) + "_Enabled";
+	config_set_int(m_config, "CometStream", QT_TO_UTF8(keyStr), 1);
+	config_save(m_config);
+
+	for (QWidget *w : QApplication::topLevelWidgets()) {
+		auto *panel = w->findChild<BroadcastModePanel *>();
+		if (panel) {
+			panel->refreshStreamList();
+			break;
+		}
+	}
 }
 
 void StreamConfigWt::onToggleStreamKey()
@@ -307,6 +321,13 @@ void StreamConfigWt::saveSettings()
 	config_set_int(m_config, "CometStream", "CurrentPlatform",
 		      m_platformCombo ? m_platformCombo->currentIndex() : 0);
 	config_save(m_config);
+}
+
+void StreamConfigWt::setCurrentPlatform(int index)
+{
+	if (!m_platformCombo || index < 0 || index >= m_platformCombo->count())
+		return;
+	m_platformCombo->setCurrentIndex(index);
 }
 
 void StreamConfigWt::onPlatformChanged(int index)

@@ -11,8 +11,10 @@
 #include <obs-data.h>
 #include <util/platform.h>
 
+#include <QAction>
 #include <QDateTime>
 #include <QHBoxLayout>
+#include <QMenu>
 #include <QIcon>
 #include <QLabel>
 #include <QPainter>
@@ -80,6 +82,8 @@ void StreamItemWidget::initUI()
 		"QPushButton:hover { color: #FFFFFF; }"
 	);
 	m_moreButton->setText("⋮");
+	m_moreButton->setVisible(m_platformIndex >= 0);
+	connect(m_moreButton, &QPushButton::clicked, this, &StreamItemWidget::onMoreButtonClicked);
 	topRow->addWidget(m_moreButton);
 
 	mainLayout->addLayout(topRow);
@@ -223,8 +227,8 @@ void StreamItemWidget::updateDisplay()
 	m_toggleButton->blockSignals(true);
 	m_toggleButton->setChecked(m_streaming);
 	m_toggleButton->blockSignals(false);
-	m_liveRow->setVisible(true);
-	m_statsRow->setVisible(m_streaming);
+	m_liveRow->setVisible(!m_compactMode);
+	m_statsRow->setVisible(!m_compactMode && m_streaming);
 	setStyleSheet("StreamItemWidget { background-color: transparent; border: none; }");
 }
 
@@ -233,9 +237,38 @@ void StreamItemWidget::onToggleToggled(bool checked)
 	emit toggleStreamRequested(m_platformIndex, checked);
 }
 
+void StreamItemWidget::onMoreButtonClicked()
+{
+	if (m_platformIndex < 0)
+		return;
+
+	QMenu menu(this);
+	QAction *editAction = menu.addAction(QStringLiteral("编辑"));
+	QAction *deleteAction = menu.addAction(QStringLiteral("删除"));
+
+	menu.setStyleSheet(
+		"QMenu { background-color: #2C2C3C; border: 1px solid #3C3C4C; border-radius: 4px; padding: 4px 0; }"
+		"QMenu::item { color: #EEEEFF; padding: 8px 24px; min-width: 80px; }"
+		"QMenu::item:selected { background-color: #4A4A6A; }"
+	);
+
+	QAction *triggered = menu.exec(m_moreButton->mapToGlobal(QPoint(0, m_moreButton->height())));
+	if (triggered == editAction)
+		emit editRequested(m_platformIndex);
+	else if (triggered == deleteAction)
+		emit deleteRequested(m_platformIndex);
+}
+
 void StreamItemWidget::setToggleEnabled(bool enabled)
 {
 	m_toggleButton->setEnabled(enabled);
+}
+
+void StreamItemWidget::setCompactMode(bool compact)
+{
+	m_compactMode = compact;
+	m_liveRow->setVisible(!compact);
+	m_statsRow->setVisible(!compact && m_streaming);
 }
 
 // ===== BroadcastModePanel =====
@@ -311,6 +344,10 @@ void BroadcastModePanel::initUI()
 	// 创建推流示例条目
 	createStreamSection();
 
+	// 虚拟摄像头（位于推流列表最下方）
+	createVirtualCamSection();
+	m_streamLayout->insertWidget(m_streamLayout->count() - 1, m_virtualCamSection);
+
 	// 录制区域
 	createRecordSection();
 	contentLayout->addWidget(m_recordSection);
@@ -339,39 +376,24 @@ void BroadcastModePanel::createStreamSection()
 		const char *platformsStr = config_get_string(config, "CometStream", "Platforms");
 		if (platformsStr && *platformsStr)
 			platforms = QString::fromUtf8(platformsStr).split('|', Qt::SkipEmptyParts);
-		if (!platforms.isEmpty()) {
-			bool needSave = false;
-			for (int i = 0; i < kDefaultPlatformIconCount && i < platforms.size(); ++i) {
-				QString key = QString::number(i) + "_Icon";
-				if (!config_has_user_value(config, "CometStream", QT_TO_UTF8((key)))) {
-					config_set_string(config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
-					needSave = true;
-				} else {
-					const char *v = config_get_string(config, "CometStream", QT_TO_UTF8((key)));
-					if (!v || !*v) {
-						config_set_string(config, "CometStream", QT_TO_UTF8((key)), kDefaultPlatformIcons[i]);
-						needSave = true;
-					}
-				}
-			}
-			if (needSave)
-				config_save(config);
-		}
 	}
 
-	if (platforms.isEmpty()) {
+	if (platforms.isEmpty())
 		return;
-	}
 
 	m_streamItems.clear();
 	for (int i = 0; i < platforms.size(); ++i) {
+		QString enabledKey = QString::number(i) + "_Enabled";
+		bool enabled = config ? (config_get_int(config, "CometStream", QT_TO_UTF8(enabledKey)) != 0) : false;
+		if (!enabled)
+			continue;
+
 		QString iconPath;
 		if (config) {
 			QString key = QString::number(i) + "_Icon";
-			const char *iconFile = config_get_string(config, "CometStream", QT_TO_UTF8((key)));
+			const char *iconFile = config_get_string(config, "CometStream", QT_TO_UTF8(key));
 			if (iconFile && *iconFile) {
 				QString iconStr = QString::fromUtf8(iconFile);
-				// 配置可能存完整路径 ":/images/xxx.svg" 或仅文件名 "xxx.svg"
 				iconPath = iconStr.startsWith(":/") ? iconStr : QString(":/images/%1").arg(iconStr);
 			}
 		}
@@ -380,9 +402,60 @@ void BroadcastModePanel::createStreamSection()
 		item->setLiveTime("00:00:00");
 		connect(item, &StreamItemWidget::toggleStreamRequested, this,
 			&BroadcastModePanel::onStreamToggleRequested);
+		connect(item, &StreamItemWidget::editRequested, this,
+			&BroadcastModePanel::onStreamEditRequested);
+		connect(item, &StreamItemWidget::deleteRequested, this,
+			&BroadcastModePanel::onStreamDeleteRequested);
 		m_streamItems.append(item);
 		m_streamLayout->insertWidget(m_streamLayout->count() - 1, item);
 	}
+}
+
+void BroadcastModePanel::refreshStreamList()
+{
+	for (auto *item : m_streamItems) {
+		m_streamLayout->removeWidget(item);
+		item->deleteLater();
+	}
+	m_streamItems.clear();
+
+	if (m_virtualCamSection)
+		m_streamLayout->removeWidget(m_virtualCamSection);
+
+	createStreamSection();
+
+	if (m_virtualCamSection)
+		m_streamLayout->insertWidget(m_streamLayout->count() - 1, m_virtualCamSection);
+}
+
+void BroadcastModePanel::createVirtualCamSection()
+{
+	m_virtualCamItem = new StreamItemWidget(
+		QStringLiteral("虚拟摄像头"),
+		QStringLiteral(":/images/virtual_camera.svg"),
+		-1);
+	m_virtualCamItem->setCompactMode(true);
+	m_virtualCamItem->setStreaming(obs_frontend_virtualcam_active());
+	connect(m_virtualCamItem, &StreamItemWidget::toggleStreamRequested, this,
+		[this](int, bool start) { onVirtualCamToggled(start); });
+	m_virtualCamSection = m_virtualCamItem;
+}
+
+void BroadcastModePanel::onVirtualCamToggled(bool checked)
+{
+	if (checked) {
+		if (!obs_frontend_virtualcam_active())
+			obs_frontend_start_virtualcam();
+	} else {
+		if (obs_frontend_virtualcam_active())
+			obs_frontend_stop_virtualcam();
+	}
+}
+
+void BroadcastModePanel::updateVirtualCamState()
+{
+	if (m_virtualCamItem)
+		m_virtualCamItem->setStreaming(obs_frontend_virtualcam_active());
 }
 
 void BroadcastModePanel::createRecordSection()
@@ -517,6 +590,30 @@ void BroadcastModePanel::onStreamToggleRequested(int platformIndex, bool start)
 			obs_frontend_streaming_stop();
 		}
 	}
+}
+
+void BroadcastModePanel::onStreamEditRequested(int platformIndex)
+{
+	emit openStreamSettingsRequested(3, platformIndex);
+}
+
+void BroadcastModePanel::onStreamDeleteRequested(int platformIndex)
+{
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) return;
+
+	config_t *config = main->Config();
+	if (!config) return;
+
+	if (m_streamingPlatformIndex == platformIndex && obs_frontend_streaming_active())
+		obs_frontend_streaming_stop();
+	m_streamingPlatformIndex = -1;
+
+	QString keyStr = QString::number(platformIndex) + "_Enabled";
+	config_set_int(config, "CometStream", QT_TO_UTF8(keyStr), 0);
+	config_save(config);
+
+	refreshStreamList();
 }
 
 void BroadcastModePanel::onStreamingStarted()
@@ -698,6 +795,10 @@ void BroadcastModePanel::OBSFrontendEvent(enum obs_frontend_event event, void *p
 			panel->m_isPaused = false;
 			panel->updateRecordingState();
 		}, Qt::QueuedConnection);
+		break;
+	case OBS_FRONTEND_EVENT_VIRTUALCAM_STARTED:
+	case OBS_FRONTEND_EVENT_VIRTUALCAM_STOPPED:
+		QMetaObject::invokeMethod(panel, &BroadcastModePanel::updateVirtualCamState, Qt::QueuedConnection);
 		break;
 	default:
 		break;
