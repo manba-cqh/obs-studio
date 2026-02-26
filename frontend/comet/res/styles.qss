@@ -237,6 +237,26 @@ QCheckBox::indicator:unchecked {
     image: url(:/images/unchecked.png);
 }
 
+/* QRadioButton 通用样式（与 QCheckBox 相同的图片） */
+QRadioButton {
+    spacing: 5px;
+    color: #EEEEFF;
+    font-size: 14px;
+    font-weight: medium;
+    background: transparent;
+    border: none;
+}
+QRadioButton::indicator:checked {
+    background: transparent;
+    border: none;
+    image: url(:/images/radio_checked.svg);
+}
+QRadioButton::indicator:unchecked {
+    background: transparent;
+    border: none;
+    image: url(:/images/radio_unchecked.svg);
+}
+
 /* QCheckBox 开关样式 */
 QCheckBox[switch_mode = true] {
     spacing: 5px;

@@ -130,8 +130,9 @@ void StreamConfigWt::initUI()
 	m_videoSourceCombo->addItems(QStringList{"场景", "场景 - 画面一", "场景 - 画面二"});
 	connect(m_videoSourceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
-	formLayout->addWidget(createSectionTitle("直播设置"));
 	formLayout->addLayout(createRow("画面源", m_videoSourceCombo));
+
+	formLayout->addWidget(createSectionTitle("直播设置"));
 
 	QWidget *trackContainer = new QWidget();
 	QHBoxLayout *trackButtonsLayout = new QHBoxLayout(trackContainer);

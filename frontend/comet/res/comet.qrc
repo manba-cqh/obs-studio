@@ -43,6 +43,8 @@
     <file>images/setting_hover.svg</file>
     <file>images/checked.png</file>
     <file>images/unchecked.png</file>
+    <file>images/radio_checked.svg</file>
+    <file>images/radio_unchecked.svg</file>
     <file>images/popup_box_normal.png</file>
     <file>images/popup_box_small.png</file>
     <file>images/not_started.svg</file>
