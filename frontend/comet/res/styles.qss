@@ -416,19 +416,3 @@ QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal {
     background: transparent;
 }
-
-QToolTip,
-QTipLabel
-{
-    background-color: transparent;
-    border-image: url(:/images/popup_box_small.png);
-    border: none;
-    border-radius: 4px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 6px;
-    padding-bottom: 2px;
-    color: #EEEEFF;
-    font-size: 12px;
-    font-weight: medium;
-}

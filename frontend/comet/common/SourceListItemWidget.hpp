@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QMenu>
 #include <obs.hpp>
+#include "CenterToolTipButton.hpp"
 
 class SourceListItemWidget : public QWidget
 {
@@ -46,9 +47,9 @@ private:
 
     QLabel *m_iconLabel;
     QLabel *m_textLabel;
-	QPushButton *m_hideButton;
-	QPushButton *m_lockButton;
-	QPushButton *m_moreButton;
+	CenterToolTipButton *m_hideButton;
+	CenterToolTipButton *m_lockButton;
+	CenterToolTipButton *m_moreButton;
 	QMenu *m_contextMenu;
 	QMenu *m_moveToGroupMenu;
 	

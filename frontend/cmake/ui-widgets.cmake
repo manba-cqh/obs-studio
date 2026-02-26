@@ -94,6 +94,8 @@ target_sources(
     comet/common/SceneListItemWidget.hpp
     comet/common/CenterToolTipButton.cpp
     comet/common/CenterToolTipButton.hpp
+    comet/common/CustomToolTip.cpp
+    comet/common/CustomToolTip.hpp
     comet/common/CommonComboBox.hpp
     comet/common/CommonLineEdit.hpp
     comet/common/CommonButton.hpp
