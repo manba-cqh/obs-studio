@@ -1,18 +1,15 @@
 #include "PanelHeaderWidget.hpp"
 #include "tools.hpp"
-#include <QWidget>
+#include <QPainter>
+#include <QPainterPath>
 #include <QLabel>
-#include <QColor>
-#include <QPalette>
+#include <QWidget>
 
 PanelHeaderWidget::PanelHeaderWidget(const QString &title, QWidget *parent)
 	: QWidget(parent)
 	, m_title(title)
 {
-	setAutoFillBackground(true);
-	QPalette pal = palette();
-	pal.setColor(QPalette::Window, QColor(34, 34, 50, 255*0.8));
-	setPalette(pal);
+	setAutoFillBackground(false);
 
 	m_headerLayout = new QHBoxLayout(this);
 	m_headerLayout->setContentsMargins(15, 0, 15, 0);
@@ -122,5 +119,28 @@ void PanelHeaderWidget::onFloatingButtonClicked()
 	if (m_floatingButton) {
 		emit sigFloating(m_floatingButton->isChecked());
 	}
+}
+
+void PanelHeaderWidget::paintEvent(QPaintEvent *event)
+{
+	Q_UNUSED(event);
+	QPainter p(this);
+	p.setRenderHint(QPainter::Antialiasing);
+	p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+	const int radius = 4;
+	QRect r = rect();
+
+	// 左上/右上圆角路径，不绘制下边框（向下延伸1px与下方内容无缝衔接）
+	QPainterPath path;
+	path.moveTo(r.x(), r.bottom() + 1);
+	path.lineTo(r.x(), r.y() + radius);
+	path.quadTo(r.x(), r.y(), r.x() + radius, r.y());
+	path.lineTo(r.right() - radius, r.y());
+	path.quadTo(r.right(), r.y(), r.right(), r.y() + radius);
+	path.lineTo(r.right(), r.bottom() + 1);
+	path.closeSubpath();
+
+	p.fillPath(path, QColor(34, 34, 50, static_cast<int>(255 * 0.8)));
 }
 

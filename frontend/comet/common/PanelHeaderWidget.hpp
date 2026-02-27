@@ -26,6 +26,9 @@ public:
 	void setHeaderOperWidget(QWidget *widget);
 	void setCollapseButtonChecked(bool checked);
 
+protected:
+	void paintEvent(QPaintEvent *event) override;
+
 private slots:
 	void onCollapseButtonClicked(bool checked);
 	void onFloatingButtonClicked();

@@ -1,5 +1,5 @@
 #include <QPainter>
-#include <QStyleOption>
+#include <QPainterPath>
 
 #include <util/base.h>
 #include "PanelContainer.hpp"
@@ -17,7 +17,7 @@ PanelContainer::~PanelContainer()
 
 void PanelContainer::initUI()
 {
-	setProperty("pannel_widget", true);
+	setAutoFillBackground(false);
 
 	m_mainLayout = new QVBoxLayout(this);
 	m_mainLayout->setContentsMargins(12, 0, 12, 8);
@@ -68,8 +68,24 @@ void PanelContainer::setContentWidget(QWidget *widget)
 
 void PanelContainer::paintEvent(QPaintEvent *event)
 {
-    QStyleOption opt;
-    opt.initFrom(this);
-    QPainter p(this);
-    style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+	Q_UNUSED(event);
+	QPainter p(this);
+	p.setRenderHint(QPainter::Antialiasing);
+	p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+	const int radius = 4;
+	QRect r = rect();
+
+	// 左下/右下圆角路径，不绘制上边框（向上延伸1px与上方内容无缝衔接）
+	QPainterPath path;
+	path.moveTo(r.x(), r.y() - 1);
+	path.lineTo(r.right(), r.y() - 1);
+	path.lineTo(r.right(), r.bottom() - radius);
+	path.quadTo(r.right(), r.bottom(), r.right() - radius, r.bottom());
+	path.lineTo(r.x() + radius, r.bottom());
+	path.quadTo(r.x(), r.bottom(), r.x(), r.bottom() - radius);
+	path.lineTo(r.x(), r.y() - 1);
+	path.closeSubpath();
+
+	p.fillPath(path, QColor(34, 34, 50, static_cast<int>(255 * 0.8)));
 }
