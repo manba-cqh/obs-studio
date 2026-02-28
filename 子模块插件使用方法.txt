@@ -1,0 +1,4 @@
+git submodule update --init plugins/obs-browser
+git submodule update --init plugins/obs-websocket
+
+手动下载browser依赖 https://cdn-fastly.obsproject.com/downloads/cef_binary_6533_windows_x64_v2.zip 到.deps目录并解压。
