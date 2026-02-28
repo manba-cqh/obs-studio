@@ -56,7 +56,7 @@ add_obs_plugin(mac-videotoolbox PLATFORMS MACOS)
 add_obs_plugin(mac-virtualcam PLATFORMS MACOS)
 add_obs_plugin(nv-filters PLATFORMS WINDOWS)
 
-# check_obs_browser()
+check_obs_browser()
 
 add_obs_plugin(obs-ffmpeg)
 add_obs_plugin(obs-filters)
@@ -77,9 +77,9 @@ add_obs_plugin(
 )
 add_obs_plugin(obs-webrtc)
 
-# check_obs_websocket()
+check_obs_websocket()
 
-add_obs_plugin(obs-x264)
+# add_obs_plugin(obs-x264)
 add_obs_plugin(oss-audio PLATFORMS FREEBSD OPENBSD)
 add_obs_plugin(rtmp-services)
 add_obs_plugin(sndio PLATFORMS LINUX FREEBSD OPENBSD)

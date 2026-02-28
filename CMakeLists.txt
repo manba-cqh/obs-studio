@@ -12,6 +12,8 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 endif()
 
 option(OBS_USE_SYSTEM_QT "Use system-installed Qt instead of downloading pre-built Qt. Requires Qt in CMAKE_PREFIX_PATH." ON)
+option(ENABLE_BROWSER "Enable browser source plugin (requires Chromium Embedded Framework)" ON)
+option(ENABLE_WEBSOCKET "Enable building OBS with websocket plugin" ON)
 
 include(compilerconfig)
 include(defaults)
