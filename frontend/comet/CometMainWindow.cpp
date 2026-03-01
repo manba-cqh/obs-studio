@@ -545,6 +545,8 @@ void CometMainWindow::changeEvent(QEvent *event)
 		}
 		bool isMaximized = (windowState() & Qt::WindowMaximized) != 0;
 		m_topBar->updateMaximizeButton(isMaximized);
+		if (m_broadcastModePanel)
+			m_broadcastModePanel->onWindowMaximizedChanged(isMaximized);
 	}
 	QMainWindow::changeEvent(event);
 }

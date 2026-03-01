@@ -717,10 +717,24 @@ void BroadcastModePanel::updateRecordingTime()
 	int hours = totalSecs / 3600;
 	int mins = (totalSecs % 3600) / 60;
 	int secs = totalSecs % 60;
-	m_recordTimeLabel->setText(QString("%1:%2:%3")
+	QString newText = QString("%1:%2:%3")
 		.arg(hours, 2, 10, QChar('0'))
 		.arg(mins, 2, 10, QChar('0'))
-		.arg(secs, 2, 10, QChar('0')));
+		.arg(secs, 2, 10, QChar('0'));
+	if (m_recordTimeLabel->text() != newText)
+		m_recordTimeLabel->setText(newText);
+}
+
+void BroadcastModePanel::onWindowMaximizedChanged(bool maximized)
+{
+	if (maximized) {
+		m_recordTimer->stop();
+	} else {
+		if (m_isRecording) {
+			m_recordTimer->start(500);
+			QTimer::singleShot(100, this, [this]() { updateRecordingTime(); });
+		}
+	}
 }
 
 void BroadcastModePanel::updateRecordingState()
@@ -738,7 +752,8 @@ void BroadcastModePanel::updateRecordingState()
 	m_pauseButton->setToolTip(paused ? "继续录制" : "暂停录制");
 
 	if (recording) {
-		m_recordTimer->start(500);
+		if (!window() || !window()->isMaximized())
+			m_recordTimer->start(500);
 	} else {
 		m_recordTimer->stop();
 		m_recordTimeLabel->setText("00:00:00");

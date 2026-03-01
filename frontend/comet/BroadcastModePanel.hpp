@@ -108,6 +108,10 @@ private slots:
 	void onStreamEditRequested(int platformIndex);
 	void onStreamDeleteRequested(int platformIndex);
 
+public slots:
+	/** 主窗口最大化/恢复时调用，避免 m_recordTimeLabel->setText 在 maximized 状态下触发布局问题 */
+	void onWindowMaximizedChanged(bool maximized);
+
 private:
 	void initUI();
 	void createStreamSection();
