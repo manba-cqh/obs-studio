@@ -27,7 +27,15 @@
 #include <properties-view.hpp>
 #include <qt-wrappers.hpp>
 
+#include "comet/common/MovableWidget.hpp"
+
+#include <QFile>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QLineEdit>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QWidget>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -55,15 +63,64 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 {
 	main = OBSBasic::Get();
 
-	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+	setAttribute(Qt::WA_TranslucentBackground, false);
+	setAutoFillBackground(true);
+	setObjectName("OBSBasicFilters");
+
+	// 加载 Comet 样式表
+	QFile styleFile(":/property_styles.qss");
+	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
+		setStyleSheet(QString::fromUtf8(styleFile.readAll()));
+		styleFile.close();
+	}
 
 	ui->setupUi(this);
 
-	ui->asyncFilters->setItemDelegate(new VisibilityItemDelegate(ui->asyncFilters));
-	ui->effectFilters->setItemDelegate(new VisibilityItemDelegate(ui->effectFilters));
+	// 在原有布局顶部插入 MovableWidget 标题栏（不迁移内容，保持 setupUi 的完整布局）
+	MovableWidget *titleBar = new MovableWidget(this, this);
+	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
+	titleBar->setFixedHeight(50);
+	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
+	titleLayout->setContentsMargins(15, 13, 15, 13);
+	titleLayout->setSpacing(0);
+	titleLabel = new QLabel(titleBar);
+	titleLabel->setTextFormat(Qt::PlainText);
+	titleLabel->setStyleSheet(
+		"QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
+	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
+	titleLayout->addStretch();
+	QPushButton *closeBtn = new QPushButton(titleBar);
+	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	closeBtn->setFixedSize(24, 24);
+	closeBtn->setCursor(Qt::PointingHandCursor);
+	closeBtn->setStyleSheet(
+		"QPushButton {"
+		"    border: none;"
+		"    background: transparent;"
+		"    background-image: url(:/images/close.svg);"
+		"    background-repeat: no-repeat;"
+		"    background-position: center;"
+		"}"
+		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
+		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }");
+	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
+	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
+
+	QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(this->layout());
+	if (mainLayout) {
+		mainLayout->setContentsMargins(0, 0, 0, 0);
+		mainLayout->setSpacing(0);
+		mainLayout->insertWidget(0, titleBar, 0, Qt::AlignTop);
+	}
 
 	const char *name = obs_source_get_name(source);
-	setWindowTitle(QTStr("Basic.Filters.Title").arg(QT_UTF8(name)));
+	QString windowTitle = QTStr("Basic.Filters.Title").arg(QT_UTF8(name));
+	titleLabel->setText(windowTitle);
+	setWindowTitle(windowTitle);
+
+	ui->asyncFilters->setItemDelegate(new VisibilityItemDelegate(ui->asyncFilters));
+	ui->effectFilters->setItemDelegate(new VisibilityItemDelegate(ui->effectFilters));
 
 #ifndef QT_NO_SHORTCUT
 	ui->actionRemoveFilter->setShortcut(QApplication::translate("OBSBasicFilters", "Del", nullptr));
@@ -88,6 +145,21 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 
 	connect(ui->buttonBox->button(QDialogButtonBox::RestoreDefaults), &QPushButton::clicked, this,
 		&OBSBasicFilters::ResetFilters);
+
+	ui->buttonBox->setStyleSheet(
+		"QPushButton {"
+		"    background-color: #3C3C4D;"
+		"    color: #FFFFFF;"
+		"    border: none;"
+		"    border-radius: 5px;"
+		"    font-size: 14px;"
+		"    font-weight: medium;"
+		"    min-height: 34px;"
+		"    padding: 0px 15px;"
+		"}"
+		"QPushButton:hover { background-color: #5370FF; }"
+		"QPushButton:pressed { background-color: #5370FF; }"
+	);
 
 	connect(ui->asyncFilters->model(), &QAbstractItemModel::rowsMoved, this, &OBSBasicFilters::FiltersMoved);
 	connect(ui->effectFilters->model(), &QAbstractItemModel::rowsMoved, this, &OBSBasicFilters::FiltersMoved);
@@ -649,7 +721,14 @@ void OBSBasicFilters::SourceRenamed(void *param, calldata_t *data)
 	const char *name = calldata_string(data, "new_name");
 	QString title = QTStr("Basic.Filters.Title").arg(QT_UTF8(name));
 
-	QMetaObject::invokeMethod(static_cast<OBSBasicFilters *>(param), "setWindowTitle", Q_ARG(QString, title));
+	QMetaObject::invokeMethod(static_cast<OBSBasicFilters *>(param), "UpdateTitle", Q_ARG(QString, title));
+}
+
+void OBSBasicFilters::UpdateTitle(const QString &title)
+{
+	setWindowTitle(title);
+	if (titleLabel)
+		titleLabel->setText(title);
 }
 
 void OBSBasicFilters::DrawPreview(void *data, uint32_t cx, uint32_t cy)

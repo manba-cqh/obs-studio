@@ -4,20 +4,27 @@ OBSBasicProperties:scope {
     border-radius: 5px;
 }
 
+/* 滤镜窗口基础样式 */
+OBSBasicFilters {
+    background-color: #1F1F2C;
+}
+
 /* MovableWidget 标题栏样式 */
 OBSBasicProperties MovableWidget {
     background-color: #2C2C3C;
     border-radius: 5px 5px 0px 0px;
 }
 
-OBSBasicProperties QCheckBox {
+OBSBasicProperties QCheckBox,
+OBSBasicFilters QCheckBox {
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
     spacing: 8px;
 }
 
-OBSBasicProperties QCheckBox::indicator {
+OBSBasicProperties QCheckBox::indicator,
+OBSBasicFilters QCheckBox::indicator {
     width: 18px;
     height: 18px;
     border: 1px solid #454558;
@@ -25,28 +32,33 @@ OBSBasicProperties QCheckBox::indicator {
     background-color: #3C3C4D;
 }
 
-OBSBasicProperties QCheckBox::indicator:hover {
+OBSBasicProperties QCheckBox::indicator:hover,
+OBSBasicFilters QCheckBox::indicator:hover {
     border: 1px solid #5370FF;
     background-color: #454558;
 }
 
-OBSBasicProperties QCheckBox::indicator:checked {
+OBSBasicProperties QCheckBox::indicator:checked,
+OBSBasicFilters QCheckBox::indicator:checked {
     background-color: #5370FF;
     border: 1px solid #5370FF;
 }
 
-OBSBasicProperties QCheckBox::indicator:checked:hover {
+OBSBasicProperties QCheckBox::indicator:checked:hover,
+OBSBasicFilters QCheckBox::indicator:checked:hover {
     background-color: #6B85FF;
     border: 1px solid #6B85FF;
 }
 
-OBSBasicProperties QFrame {
+OBSBasicProperties QFrame,
+OBSBasicFilters QFrame {
     background-color: #2C2C3C;
     border: none;
 }
 
 /* 可编辑列表（如幻灯片图像文件列表） */
-OBSBasicProperties QListWidget {
+OBSBasicProperties QListWidget,
+OBSBasicFilters QListWidget {
     background-color: #3C3C4D;
     color: #FFFFFF;
     border: 1px solid #454558;
@@ -56,39 +68,48 @@ OBSBasicProperties QListWidget {
     outline: none;
 }
 
-OBSBasicProperties QListWidget::item {
+OBSBasicProperties QListWidget::item,
+OBSBasicFilters QListWidget::item {
     padding: 6px 10px;
     min-height: 24px;
     border-radius: 3px;
 }
 
-OBSBasicProperties QListWidget::item:hover {
+OBSBasicProperties QListWidget::item:hover,
+OBSBasicFilters QListWidget::item:hover {
     background-color: #454558;
 }
 
-OBSBasicProperties QListWidget::item:selected {
+OBSBasicProperties QListWidget::item:selected,
+OBSBasicFilters QListWidget::item:selected {
     background-color: #5370FF;
     color: #FFFFFF;
 }
 
-OBSBasicProperties QListWidget::item:selected:hover {
+OBSBasicProperties QListWidget::item:selected:hover,
+OBSBasicFilters QListWidget::item:selected:hover {
     background-color: #6B85FF;
 }
 
-OBSBasicProperties QListWidget:disabled {
+OBSBasicProperties QListWidget:disabled,
+OBSBasicFilters QListWidget:disabled {
     color: rgba(255, 255, 255, 120);
     border: 1px solid rgba(69, 69, 88, 120);
     background-color: rgba(60, 60, 77, 120);
 }
 
-OBSBasicProperties QLabel {
+OBSBasicProperties QLabel,
+OBSBasicFilters QLabel {
     color: #FFFFFFFF;
     font-size: 14px;
     font-weight: medium;
+    background: transparent;
 }
 
 OBSBasicProperties QSpinBox,
-OBSBasicProperties QDoubleSpinBox {
+OBSBasicProperties QDoubleSpinBox,
+OBSBasicFilters QSpinBox,
+OBSBasicFilters QDoubleSpinBox {
     background-color: #3C3C4D;
     color: #FFFFFFFF;
     border: 1px solid #454558;
@@ -99,18 +120,24 @@ OBSBasicProperties QDoubleSpinBox {
 }
 
 OBSBasicProperties QSpinBox:hover,
-OBSBasicProperties QDoubleSpinBox:hover {
+OBSBasicProperties QDoubleSpinBox:hover,
+OBSBasicFilters QSpinBox:hover,
+OBSBasicFilters QDoubleSpinBox:hover {
     border: 1px solid #5370FF;
 }
 
 OBSBasicProperties QSpinBox:focus,
-OBSBasicProperties QDoubleSpinBox:focus {
+OBSBasicProperties QDoubleSpinBox:focus,
+OBSBasicFilters QSpinBox:focus,
+OBSBasicFilters QDoubleSpinBox:focus {
     border: 1px solid #5370FF;
     outline: none;
 }
 
 OBSBasicProperties QTextEdit,
-OBSBasicProperties QPlainTextEdit {
+OBSBasicProperties QPlainTextEdit,
+OBSBasicFilters QTextEdit,
+OBSBasicFilters QPlainTextEdit {
     background-color: #3C3C4D;
     color: #FFFFFFFF;
     border: 1px solid #454558;
@@ -120,18 +147,23 @@ OBSBasicProperties QPlainTextEdit {
 }
 
 OBSBasicProperties QTextEdit:hover,
-OBSBasicProperties QPlainTextEdit:hover {
+OBSBasicProperties QPlainTextEdit:hover,
+OBSBasicFilters QTextEdit:hover,
+OBSBasicFilters QPlainTextEdit:hover {
     border: 1px solid #5370FF;
 }
 
 OBSBasicProperties QTextEdit:focus,
-OBSBasicProperties QPlainTextEdit:focus {
+OBSBasicProperties QPlainTextEdit:focus,
+OBSBasicFilters QTextEdit:focus,
+OBSBasicFilters QPlainTextEdit:focus {
     border: 1px solid #5370FF;
     outline: none;
 }
 
 /* 文件/目录选择（路径属性）相关控件样式 */
-OBSBasicProperties QLineEdit {
+OBSBasicProperties QLineEdit,
+OBSBasicFilters QLineEdit {
     background-color: #3C3C4D;
     color: #FFFFFFFF;
     border: 1px solid #454558;
@@ -141,21 +173,25 @@ OBSBasicProperties QLineEdit {
     min-height: 28px;
 }
 
-OBSBasicProperties QLineEdit:hover {
+OBSBasicProperties QLineEdit:hover,
+OBSBasicFilters QLineEdit:hover {
     border: 1px solid #5370FF;
 }
 
-OBSBasicProperties QLineEdit:focus {
+OBSBasicProperties QLineEdit:focus,
+OBSBasicFilters QLineEdit:focus {
     border: 1px solid #5370FF;
     outline: none;
 }
 
-OBSBasicProperties QLineEdit:read-only {
+OBSBasicProperties QLineEdit:read-only,
+OBSBasicFilters QLineEdit:read-only {
     background-color: #3C3C4D;
     color: #FFFFFFFF;
 }
 
-OBSBasicProperties QLineEdit:disabled {
+OBSBasicProperties QLineEdit:disabled,
+OBSBasicFilters QLineEdit:disabled {
     color: rgba(255, 255, 255, 120);
     border: 1px solid rgba(69, 69, 88, 120);
     background-color: rgba(60, 60, 77, 120);
@@ -163,7 +199,9 @@ OBSBasicProperties QLineEdit:disabled {
 
 /* 属性窗口内按钮（如路径选择 Browse、列表添加等） */
 OBSBasicProperties QPushButton,
-OBSBasicProperties CommonButton {
+OBSBasicProperties CommonButton,
+OBSBasicFilters QPushButton,
+OBSBasicFilters CommonButton {
     background-color: #3C3C4D;
     color: #FFFFFF;
     border: 1px solid #454558;
@@ -175,73 +213,91 @@ OBSBasicProperties CommonButton {
 }
 
 OBSBasicProperties QPushButton:hover,
-OBSBasicProperties CommonButton:hover {
+OBSBasicProperties CommonButton:hover,
+OBSBasicFilters QPushButton:hover,
+OBSBasicFilters CommonButton:hover {
     background-color: #5370FF;
     border: 1px solid #5370FF;
 }
 
 OBSBasicProperties QPushButton:pressed,
-OBSBasicProperties CommonButton:pressed {
+OBSBasicProperties CommonButton:pressed,
+OBSBasicFilters QPushButton:pressed,
+OBSBasicFilters CommonButton:pressed {
     background-color: #4260E6;
     border: 1px solid #4260E6;
 }
 
 OBSBasicProperties QPushButton:disabled,
-OBSBasicProperties CommonButton:disabled {
+OBSBasicProperties CommonButton:disabled,
+OBSBasicFilters QPushButton:disabled,
+OBSBasicFilters CommonButton:disabled {
     color: rgba(255, 255, 255, 120);
     border: 1px solid rgba(69, 69, 88, 120);
     background-color: rgba(60, 60, 77, 120);
 }
 
 /* 可编辑列表右侧工具栏按钮（幻灯片图像列表的加号/删除/设置/上移/下移），需显示图标（通过 class 属性匹配） */
-OBSBasicProperties QPushButton[class*="btn-tool"] {
+OBSBasicProperties QPushButton[class*="btn-tool"],
+OBSBasicFilters QPushButton[class*="btn-tool"] {
     padding: 6px;
     min-width: 28px;
     min-height: 28px;
 }
-OBSBasicProperties QPushButton[class*="icon-plus"] {
+OBSBasicProperties QPushButton[class*="icon-plus"],
+OBSBasicFilters QPushButton[class*="icon-plus"] {
     qproperty-icon: url(:/res/images/plus.svg);
 }
-OBSBasicProperties QPushButton[class*="icon-trash"] {
+OBSBasicProperties QPushButton[class*="icon-trash"],
+OBSBasicFilters QPushButton[class*="icon-trash"] {
     qproperty-icon: url(:/res/images/trash.svg);
 }
-OBSBasicProperties QPushButton[class*="icon-gear"] {
+OBSBasicProperties QPushButton[class*="icon-gear"],
+OBSBasicFilters QPushButton[class*="icon-gear"] {
     qproperty-icon: url(:/res/images/settings/general.svg);
 }
-OBSBasicProperties QPushButton[class*="icon-up"] {
+OBSBasicProperties QPushButton[class*="icon-up"],
+OBSBasicFilters QPushButton[class*="icon-up"] {
     qproperty-icon: url(:/res/images/up.svg);
 }
-OBSBasicProperties QPushButton[class*="icon-down"] {
+OBSBasicProperties QPushButton[class*="icon-down"],
+OBSBasicFilters QPushButton[class*="icon-down"] {
     qproperty-icon: url(:/res/images/down.svg);
 }
 
 /* QScrollArea 滚动区域样式 */
-OBSBasicProperties QScrollArea {
+OBSBasicProperties QScrollArea,
+OBSBasicFilters QScrollArea {
     background-color: transparent;
     border: none;
 }
 
-OBSBasicProperties QScrollArea > QWidget > QWidget {
+OBSBasicProperties QScrollArea > QWidget > QWidget,
+OBSBasicFilters QScrollArea > QWidget > QWidget {
     background-color: transparent;
 }
 
 /* QScrollBar 滚动条样式 */
-OBSBasicProperties QScrollBar {
+OBSBasicProperties QScrollBar,
+OBSBasicFilters QScrollBar {
     background-color: #2C2C3C;
     border: none;
     border-radius: 4px;
     margin: 0px;
 }
 
-OBSBasicProperties QScrollBar:vertical {
+OBSBasicProperties QScrollBar:vertical,
+OBSBasicFilters QScrollBar:vertical {
     width: 12px;
 }
 
-OBSBasicProperties QScrollBar:horizontal {
+OBSBasicProperties QScrollBar:horizontal,
+OBSBasicFilters QScrollBar:horizontal {
     height: 12px;
 }
 
-OBSBasicProperties QScrollBar::handle {
+OBSBasicProperties QScrollBar::handle,
+OBSBasicFilters QScrollBar::handle {
     background-color: #454558;
     border-radius: 6px;
     min-height: 20px;
@@ -249,16 +305,20 @@ OBSBasicProperties QScrollBar::handle {
     margin: 2px;
 }
 
-OBSBasicProperties QScrollBar::handle:hover {
+OBSBasicProperties QScrollBar::handle:hover,
+OBSBasicFilters QScrollBar::handle:hover {
     background-color: #5370FF;
 }
 
-OBSBasicProperties QScrollBar::handle:pressed {
+OBSBasicProperties QScrollBar::handle:pressed,
+OBSBasicFilters QScrollBar::handle:pressed {
     background-color: #4260E6;
 }
 
 OBSBasicProperties QScrollBar::add-line,
-OBSBasicProperties QScrollBar::sub-line {
+OBSBasicProperties QScrollBar::sub-line,
+OBSBasicFilters QScrollBar::add-line,
+OBSBasicFilters QScrollBar::sub-line {
     border: none;
     background: none;
     height: 0px;
@@ -266,14 +326,20 @@ OBSBasicProperties QScrollBar::sub-line {
 }
 
 OBSBasicProperties QScrollBar::add-page,
-OBSBasicProperties QScrollBar::sub-page {
+OBSBasicProperties QScrollBar::sub-page,
+OBSBasicFilters QScrollBar::add-page,
+OBSBasicFilters QScrollBar::sub-page {
     background: none;
 }
 
 OBSBasicProperties QScrollBar::up-arrow,
 OBSBasicProperties QScrollBar::down-arrow,
 OBSBasicProperties QScrollBar::left-arrow,
-OBSBasicProperties QScrollBar::right-arrow {
+OBSBasicProperties QScrollBar::right-arrow,
+OBSBasicFilters QScrollBar::up-arrow,
+OBSBasicFilters QScrollBar::down-arrow,
+OBSBasicFilters QScrollBar::left-arrow,
+OBSBasicFilters QScrollBar::right-arrow {
     border: none;
     background: none;
     width: 0px;

@@ -20,6 +20,7 @@
 #include "ui_OBSBasicFilters.h"
 
 #include <QDialog>
+#include <QLabel>
 
 class OBSBasic;
 class OBSPropertiesView;
@@ -76,7 +77,11 @@ private:
 
 	bool editActive = false;
 
+	QLabel *titleLabel = nullptr;
+
 private slots:
+	void UpdateTitle(const QString &title);
+
 	void AddFilter(OBSSource filter, bool focus = true);
 	void RemoveFilter(OBSSource filter);
 	void ReorderFilters();
