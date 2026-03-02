@@ -126,6 +126,74 @@ QListWidget[config_nav_list=true]::item:selected:hover
 }
 
 
+/* ===== SpinBox 主体 ===== */
+QSpinBox,
+QDoubleSpinBox {
+    background-color: #454558;
+    color: #FFFFFF;
+    border: 1px solid #454558;
+    border-radius: 5px;
+    padding: 6px 28px 6px 10px;   /* ← 关键：右侧必须留空间给按钮 */
+    font-size: 14px;
+}
+/* hover / focus 边框 */
+QSpinBox:hover,
+QDoubleSpinBox:hover,
+QSpinBox:focus,
+QDoubleSpinBox:focus {
+    border: 1px solid #5370FF;
+}
+/* ===== 内部输入框必须透明 ===== */
+QSpinBox QLineEdit,
+QDoubleSpinBox QLineEdit {
+    background: transparent;   /* ← 不能再自己画背景 */
+    border: none;
+    color: #FFFFFF;
+}
+/* ===== 按钮布局（核心修复点）===== */
+QSpinBox::up-button,
+QDoubleSpinBox::up-button,
+QSpinBox::down-button,
+QDoubleSpinBox::down-button {
+    subcontrol-origin: padding;        /* ← 必须改成 padding */
+    width: 18px;                       /* ← 必须固定宽度 */
+    border: none;
+    background-color: #454558;
+}
+/* 上按钮位置 */
+QSpinBox::up-button,
+QDoubleSpinBox::up-button {
+    subcontrol-position: top right;
+    margin: 0;
+}
+/* 下按钮位置 */
+QSpinBox::down-button,
+QDoubleSpinBox::down-button {
+    subcontrol-position: bottom right;
+    margin: 0;
+}
+/* hover 高亮 */
+QSpinBox::up-button:hover,
+QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover,
+QDoubleSpinBox::down-button:hover {
+    background: #5370FF;
+    border-radius: 0;
+}
+/* 箭头 */
+QSpinBox::up-arrow,
+QDoubleSpinBox::up-arrow {
+    image: url(:/images/drop_up.svg);
+    width: 14px;
+    height: 12px;
+}
+QSpinBox::down-arrow,
+QDoubleSpinBox::down-arrow {
+    image: url(:/images/drop_down.svg);
+    width: 14px;
+    height: 12px;
+}
+
 /* QSlider 通用样式 */
 QSlider {
     height: 18px;
