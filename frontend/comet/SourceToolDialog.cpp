@@ -223,6 +223,7 @@ QPushButton* SourceToolDialog::createSourceButton(const SourceTypeInfo &info, bo
 		"    background-color: transparent;"
 		"    border: none;"
 		"    border-radius: 5px;"
+		"    color: #BBBDDBFF;"
 		"}"
 		"QPushButton:hover {"
 		"    background-color: rgba(125, 125, 154, 0.3)"
