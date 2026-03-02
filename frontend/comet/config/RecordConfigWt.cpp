@@ -74,6 +74,7 @@ void RecordConfigWt::setupRecordingSettings()
 	QHBoxLayout *savePathLayout = new QHBoxLayout();
 	m_savePathEdit = new CommonLineEdit();
 	m_savePathButton = new QPushButton("选择");
+	m_savePathButton->setObjectName("savePathButton");
 	m_savePathButton->setFixedWidth(60);
 	savePathLayout->addWidget(m_savePathEdit);
 	savePathLayout->addWidget(m_savePathButton);

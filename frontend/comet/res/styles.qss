@@ -59,6 +59,24 @@ QPushButton[scene_btn=true]:checked
     border-radius: 4px;
 }
 
+/* 路径选择按钮样式（如保存位置“选择”按钮） */
+QPushButton#savePathButton {
+    background-color: #3C3C4D;
+    color: #EEEEFF;
+    border: 1px solid #454558;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: medium;
+    min-height: 28px;
+}
+QPushButton#savePathButton:hover {
+    background-color: #5370FF;
+    border: 1px solid #5370FF;
+}
+QPushButton#savePathButton:pressed {
+    background-color: #4558CC;
+}
+
 
 QListWidget
 {
@@ -338,6 +356,15 @@ QCheckBox[switch_mode = true]::indicator:unchecked {
     background: transparent;
     border: none;
     image: url(:/images/switch_close.svg);
+}
+
+/* CollapsibleGroupBox 折叠/展开组样式 */
+QFrame#collapsibleGroupBoxHeader {
+    background: transparent;
+    border: none;
+}
+QFrame#collapsibleGroupBoxHeader:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* QMessageBox 全局样式 */

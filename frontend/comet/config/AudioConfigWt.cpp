@@ -100,10 +100,9 @@ void AudioConfigWt::setupMicrophoneSettings()
 		this, &AudioConfigWt::onMicrophoneMonitorChanged);
 	
 	// 高级设置
-	m_micAdvancedGroup = new QGroupBox("高级设置");
-	m_micAdvancedGroup->setCheckable(true);
-	m_micAdvancedGroup->setChecked(false);
-	QFormLayout *micAdvancedLayout = new QFormLayout(m_micAdvancedGroup);
+	m_micAdvancedGroup = new CollapsibleGroupBox("高级设置");
+	QWidget *micAdvancedWidget = new QWidget();
+	QFormLayout *micAdvancedLayout = new QFormLayout(micAdvancedWidget);
 	micAdvancedLayout->setSpacing(10);
 	micAdvancedLayout->setLabelAlignment(Qt::AlignRight);
 	
@@ -141,6 +140,7 @@ void AudioConfigWt::setupMicrophoneSettings()
 	micAdvancedLayout->addRow("平衡:", micBalanceLayout);
 	connect(m_micBalanceSlider, &QSlider::valueChanged, this, &AudioConfigWt::onMicrophoneBalanceChanged);
 	
+	m_micAdvancedGroup->contentLayout()->addWidget(micAdvancedWidget);
 	micLayout->addRow(m_micAdvancedGroup);
 	
 	setFormLayoutLabelWidth(micLayout, 64);
@@ -187,10 +187,9 @@ void AudioConfigWt::setupSpeakerSettings()
 		this, &AudioConfigWt::onSpeakerMonitorChanged);
 	
 	// 高级设置
-	m_speakerAdvancedGroup = new QGroupBox("高级设置");
-	m_speakerAdvancedGroup->setCheckable(true);
-	m_speakerAdvancedGroup->setChecked(false);
-	QFormLayout *speakerAdvancedLayout = new QFormLayout(m_speakerAdvancedGroup);
+	m_speakerAdvancedGroup = new CollapsibleGroupBox("高级设置");
+	QWidget *speakerAdvancedWidget = new QWidget();
+	QFormLayout *speakerAdvancedLayout = new QFormLayout(speakerAdvancedWidget);
 	speakerAdvancedLayout->setSpacing(10);
 	speakerAdvancedLayout->setLabelAlignment(Qt::AlignRight);
 	
@@ -228,6 +227,7 @@ void AudioConfigWt::setupSpeakerSettings()
 	speakerAdvancedLayout->addRow("平衡:", speakerBalanceLayout);
 	connect(m_speakerBalanceSlider, &QSlider::valueChanged, this, &AudioConfigWt::onSpeakerBalanceChanged);
 	
+	m_speakerAdvancedGroup->contentLayout()->addWidget(speakerAdvancedWidget);
 	speakerLayout->addRow(m_speakerAdvancedGroup);
 	
 	setFormLayoutLabelWidth(speakerLayout, 64);
@@ -308,8 +308,9 @@ void AudioConfigWt::setupOtherAudioSources()
 
 void AudioConfigWt::setupGlobalAdvancedSettings()
 {
-	m_globalAdvancedGroup = new QGroupBox("高级设置", this);
-	QFormLayout *globalLayout = new QFormLayout(m_globalAdvancedGroup);
+	m_globalAdvancedGroup = new CollapsibleGroupBox("高级设置", this);
+	QWidget *globalAdvancedWidget = new QWidget();
+	QFormLayout *globalLayout = new QFormLayout(globalAdvancedWidget);
 	globalLayout->setSpacing(15);
 	globalLayout->setLabelAlignment(Qt::AlignRight);
 	
@@ -326,6 +327,7 @@ void AudioConfigWt::setupGlobalAdvancedSettings()
 	
 	setFormLayoutLabelWidth(globalLayout, 64);
 	
+	m_globalAdvancedGroup->contentLayout()->addWidget(globalAdvancedWidget);
 	m_contentLayout->addWidget(m_globalAdvancedGroup);
 }
 

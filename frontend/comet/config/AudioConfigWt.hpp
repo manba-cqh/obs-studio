@@ -12,6 +12,7 @@
 
 #include "BaseConfigWt.hpp"
 #include "CommonComboBox.hpp"
+#include "common/CollapsibleGroupBox.hpp"
 
 class AudioConfigWt : public BaseConfigWt
 {
@@ -78,7 +79,7 @@ private:
 	QSlider *m_micVolumeSlider;
 	QLabel *m_micVolumeLabel;
 	CommonComboBox *m_micMonitorCombo;
-	QGroupBox *m_micAdvancedGroup;
+	CollapsibleGroupBox *m_micAdvancedGroup;
 	CommonComboBox *m_micChannelCombo;
 	QSpinBox *m_micOffsetSpin;
 	QSlider *m_micBalanceSlider;
@@ -91,7 +92,7 @@ private:
 	QSlider *m_speakerVolumeSlider;
 	QLabel *m_speakerVolumeLabel;
 	CommonComboBox *m_speakerMonitorCombo;
-	QGroupBox *m_speakerAdvancedGroup;
+	CollapsibleGroupBox *m_speakerAdvancedGroup;
 	CommonComboBox *m_speakerChannelCombo;
 	QSpinBox *m_speakerOffsetSpin;
 	QSlider *m_speakerBalanceSlider;
@@ -111,7 +112,7 @@ private:
 	QLabel *m_otherBalanceRightLabel;
 	
 	// 全局高级设置
-	QGroupBox *m_globalAdvancedGroup;
+	CollapsibleGroupBox *m_globalAdvancedGroup;
 	CommonComboBox *m_audioBitrateCombo;
 	
 	// 当前音频源引用

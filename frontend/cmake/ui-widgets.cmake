@@ -84,6 +84,8 @@ target_sources(
     comet/DanmuPanel.hpp
     comet/PluginPanel.cpp
     comet/PluginPanel.hpp
+    comet/common/CollapsibleGroupBox.cpp
+    comet/common/CollapsibleGroupBox.hpp
     comet/common/PanelContainer.cpp
     comet/common/PanelContainer.hpp
     comet/common/PanelHeaderWidget.cpp
