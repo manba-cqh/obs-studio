@@ -513,7 +513,7 @@ void BroadcastModePanel::createRecordSection()
 	m_pauseButton->setToolTip("暂停录制");
 	m_pauseButton->setCheckable(true);
 	m_pauseButton->setChecked(false);
-	m_pauseButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("pause.svg", "pause.svg", "pause.svg", "play.svg", "play.svg", "play.svg"));
+	m_pauseButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("pause.png", "pause.png", "pause.png", "play.svg", "play.svg", "play.svg"));
 	connect(m_pauseButton, &QPushButton::clicked, this, &BroadcastModePanel::onPauseButtonClicked);
 	m_pauseButton->setVisible(false);
 	recLayout->addWidget(m_pauseButton);
