@@ -1,4 +1,5 @@
 #include "PreviewHeader.hpp"
+#include "common/CenterToolTipButton.hpp"
 #include "tools/tools.hpp"
 
 #include <widgets/OBSBasic.hpp>
@@ -56,10 +57,9 @@ void PreviewHeader::initUI()
 	m_statusLabel->setStyleSheet("QLabel { color: #AAABB8; font-size: 14px; background: transparent; border: none; }");
 	leftLayout->addWidget(m_statusLabel);
 
-	m_streamSettingBtn = new QPushButton(this);
+	m_streamSettingBtn = new CenterToolTipButton("推流设置", this);
 	m_streamSettingBtn->setFixedSize(20, 20);
 	m_streamSettingBtn->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
-	m_streamSettingBtn->setToolTip("推流设置");
 	connect(m_streamSettingBtn, &QPushButton::clicked, this, [this]() { emit settingsRequested(3); });
 	leftLayout->addWidget(m_streamSettingBtn);
 
@@ -115,10 +115,9 @@ void PreviewHeader::initUI()
 	rightLayout->addSpacing(8);
 
 	// 设置按钮
-	m_settingBtn = new QPushButton(this);
+	m_settingBtn = new CenterToolTipButton("设置", this);
 	m_settingBtn->setFixedSize(20, 20);
 	m_settingBtn->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
-	m_settingBtn->setToolTip("设置");
 	connect(m_settingBtn, &QPushButton::clicked, this, [this]() { emit settingsRequested(1); });
 	rightLayout->addWidget(m_settingBtn);
 

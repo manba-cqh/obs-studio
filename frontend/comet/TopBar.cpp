@@ -1,6 +1,7 @@
 #include "def.h"
 #include "tools.hpp"
 #include "TopBar.hpp"
+#include "common/CenterToolTipButton.hpp"
 #include <QHBoxLayout>
 #include <QStyle>
 #include <QMouseEvent>
@@ -34,7 +35,8 @@ void TopBar::initUI()
 
 	topBarLayout->addStretch();
 
-	m_settingsButton = new QPushButton("设置", this);
+	m_settingsButton = new CenterToolTipButton("设置", this);
+	m_settingsButton->setText("设置");
 	m_settingsButton->setFixedWidth(30);
 	m_settingsButton->setStyleSheet(BUTTON_TRANSPARENT_QSS_STYLE(12));
 	topBarLayout->addWidget(m_settingsButton);

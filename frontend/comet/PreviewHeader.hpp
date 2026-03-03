@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QPushButton>
 
+class CenterToolTipButton;
+
 class PreviewHeader : public QWidget
 {
 	Q_OBJECT
@@ -33,12 +35,12 @@ private:
 	QLabel *m_platformIcon;
 	QLabel *m_statusDot;
 	QLabel *m_statusLabel;
-	QPushButton *m_streamSettingBtn;
+	CenterToolTipButton *m_streamSettingBtn;
 
 	// 右侧：横竖屏切换 + 设置
 	QPushButton *m_landscapeBtn;
 	QPushButton *m_portraitBtn;
-	QPushButton *m_settingBtn;
+	CenterToolTipButton *m_settingBtn;
 
 	bool m_isLandscape = true;
 };

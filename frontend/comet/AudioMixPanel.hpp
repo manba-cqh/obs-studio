@@ -11,6 +11,7 @@
 #include <QComboBox>
 
 #include "PanelContainer.hpp"
+#include "common/CenterToolTipButton.hpp"
 
 class AudioMixPanel;  // 前向声明
 
@@ -68,5 +69,5 @@ private:
     AudioControlItem m_desktopAudio;
     AudioControlItem m_micAudio;
 
-    QPushButton *m_audioSettingButton;
+    CenterToolTipButton *m_audioSettingButton;
 };

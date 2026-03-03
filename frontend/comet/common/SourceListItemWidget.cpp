@@ -65,7 +65,6 @@ void SourceListItemWidget::initUI(bool isGroup, bool indented)
     m_hideButton->setFixedSize(24, 24);
     m_hideButton->setCheckable(true);
     m_hideButton->setChecked(false);
-	m_hideButton->setToolTipPosition(CenterToolTipButton::ToolTipPosition::Below);
     m_hideButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display.png", "display_hover.png", "display_hover.png", "hide.png", "hide_hover.png", "hide_hover.png"));
     connect(m_hideButton, &QPushButton::clicked, this, &SourceListItemWidget::onHideButtonClicked);
     m_layout->addWidget(m_hideButton);
@@ -74,14 +73,12 @@ void SourceListItemWidget::initUI(bool isGroup, bool indented)
     m_lockButton->setFixedSize(24, 24);
     m_lockButton->setCheckable(true);
     m_lockButton->setChecked(false);
-	m_lockButton->setToolTipPosition(CenterToolTipButton::ToolTipPosition::Below);
     m_lockButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("display_unlock.png", "display_unlock_hover.png", "display_unlock_hover.png", "display_lock.png", "display_lock_hover.png", "display_lock_hover.png"));
     connect(m_lockButton, &QPushButton::clicked, this, &SourceListItemWidget::onLockButtonClicked);
     m_layout->addWidget(m_lockButton);
 
     m_moreButton = new CenterToolTipButton("更多操作", this);
     m_moreButton->setFixedSize(24, 24);
-	m_moreButton->setToolTipPosition(CenterToolTipButton::ToolTipPosition::Below);
     m_moreButton->setStyleSheet(BUTTON_QSS_STYLE("display_more.png", "display_more_hover.png", "display_more_hover.png"));
     connect(m_moreButton, &QPushButton::clicked, this, &SourceListItemWidget::onMoreButtonClicked);
     m_layout->addWidget(m_moreButton);

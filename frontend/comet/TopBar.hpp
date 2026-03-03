@@ -6,6 +6,7 @@
 #include "common/MovableWidget.hpp"
 
 class QMouseEvent;
+class CenterToolTipButton;
 
 class TopBar : public MovableWidget
 {
@@ -41,7 +42,7 @@ private:
 	QMainWindow *m_mainWindow;
 	QLabel *m_logoLabel;
 	QLabel *m_titleLabel;
-	QPushButton *m_settingsButton;
+	CenterToolTipButton *m_settingsButton;
 	QPushButton *m_helpCenterButton;
 	QPushButton *m_userButton;
 	QPushButton *m_minimizeButton;

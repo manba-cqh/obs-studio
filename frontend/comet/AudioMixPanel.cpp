@@ -1,4 +1,5 @@
 #include "AudioMixPanel.hpp"
+#include "common/CenterToolTipButton.hpp"
 #include <widgets/OBSBasic.hpp>
 #include <obs-frontend-api.h>
 #include <QVBoxLayout>
@@ -30,7 +31,7 @@ void AudioMixPanel::initUI()
     
     setContentWidget(m_contentWidget);
 
-    m_audioSettingButton = new QPushButton(this);
+    m_audioSettingButton = new CenterToolTipButton("高级音频设置", this);
     m_audioSettingButton->setFixedSize(24, 24);
     m_audioSettingButton->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
     

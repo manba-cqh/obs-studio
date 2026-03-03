@@ -25,6 +25,6 @@ protected:
 
 private:
 	CustomToolTip *m_tooltip = nullptr;
-	ToolTipPosition m_tooltipPosition = ToolTipPosition::Above;
+	ToolTipPosition m_tooltipPosition = ToolTipPosition::Below;
 };
 

@@ -305,10 +305,9 @@ QWidget *BroadcastModePanel::createHeaderOperButtons()
 	layout->addWidget(addBtn);
 
 	// 设置按钮：定位到 config-推流 页面
-	QPushButton *settingBtn = new QPushButton(container);
+	CenterToolTipButton *settingBtn = new CenterToolTipButton("推流设置", container);
 	settingBtn->setFixedSize(24, 24);
 	settingBtn->setStyleSheet(BUTTON_QSS_STYLE("setting.svg", "setting_hover.svg", "setting_hover.svg"));
-	settingBtn->setToolTip("推流设置");
 	connect(settingBtn, &QPushButton::clicked, this, [this]() { emit openStreamSettingsRequested(3, -1); });
 	layout->addWidget(settingBtn);
 
