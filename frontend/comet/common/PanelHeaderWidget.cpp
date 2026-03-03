@@ -4,6 +4,7 @@
 #include <QPainterPath>
 #include <QLabel>
 #include <QWidget>
+#include <QDockWidget>
 
 PanelHeaderWidget::PanelHeaderWidget(const QString &title, QWidget *parent)
 	: QWidget(parent)
@@ -40,12 +41,11 @@ PanelHeaderWidget::PanelHeaderWidget(const QString &title, QWidget *parent)
 	m_headerLayout->addWidget(separator);
 	m_headerLayout->addSpacing(8);
 
-	// 浮动按钮
+	// 浮动按钮（浮动时显示关闭图标，点击返回主窗体）
 	m_floatingButton = new QPushButton(this);
 	m_floatingButton->setFixedSize(24, 24);
 	m_floatingButton->setStyleSheet(BUTTON_QSS_STYLE("float.svg", "float_hover.svg", "float_hover.svg"));
-	m_floatingButton->setCheckable(true);
-	m_floatingButton->setChecked(false);
+	m_floatingButton->setToolTip("浮动");
 	connect(m_floatingButton, &QPushButton::clicked, this, &PanelHeaderWidget::onFloatingButtonClicked);
 	m_headerLayout->addWidget(m_floatingButton);
 }
@@ -91,6 +91,33 @@ void PanelHeaderWidget::setCollapseButtonChecked(bool checked)
 	}
 }
 
+void PanelHeaderWidget::setDockWidget(QDockWidget *dock)
+{
+	if (m_dockWidget == dock)
+		return;
+	if (m_dockWidget) {
+		m_dockWidget->disconnect(this);
+	}
+	m_dockWidget = dock;
+	if (m_dockWidget) {
+		connect(m_dockWidget, &QDockWidget::topLevelChanged, this, &PanelHeaderWidget::updateFloatingButtonAppearance);
+		updateFloatingButtonAppearance(m_dockWidget->isFloating());
+	}
+}
+
+void PanelHeaderWidget::updateFloatingButtonAppearance(bool floating)
+{
+	if (!m_floatingButton)
+		return;
+	if (floating) {
+		m_floatingButton->setStyleSheet(BUTTON_QSS_STYLE("close.svg", "close_hover.svg", "close_hover.svg"));
+		m_floatingButton->setToolTip("返回主窗口");
+	} else {
+		m_floatingButton->setStyleSheet(BUTTON_QSS_STYLE("float.svg", "float_hover.svg", "float_hover.svg"));
+		m_floatingButton->setToolTip("浮动");
+	}
+}
+
 void PanelHeaderWidget::onCollapseButtonClicked(bool checked)
 {
 	// emit sigCollapseClicked();
@@ -116,8 +143,10 @@ void PanelHeaderWidget::onCollapseButtonClicked(bool checked)
 
 void PanelHeaderWidget::onFloatingButtonClicked()
 {
-	if (m_floatingButton) {
-		emit sigFloating(m_floatingButton->isChecked());
+	if (m_dockWidget && m_dockWidget->isFloating()) {
+		emit sigFloating(false);  // 浮动中：点击返回主窗体
+	} else {
+		emit sigFloating(true);   // 停靠中：点击分离
 	}
 }
 

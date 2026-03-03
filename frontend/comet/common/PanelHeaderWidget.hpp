@@ -5,6 +5,8 @@
 #include <QPushButton>
 #include <QLabel>
 
+class QDockWidget;
+
 class PanelHeaderWidget : public QWidget
 {
 	Q_OBJECT
@@ -26,18 +28,22 @@ public:
 	void setHeaderOperWidget(QWidget *widget);
 	void setCollapseButtonChecked(bool checked);
 
+	void setDockWidget(QDockWidget *dock);
+
 protected:
 	void paintEvent(QPaintEvent *event) override;
 
 private slots:
 	void onCollapseButtonClicked(bool checked);
 	void onFloatingButtonClicked();
+	void updateFloatingButtonAppearance(bool floating);
 
 private:
 	QHBoxLayout *m_headerLayout;
 	QPushButton *m_collapseButton;
 	QLabel *m_titleLabel;
 	QPushButton *m_floatingButton;
+	QDockWidget *m_dockWidget = nullptr;
 	QString m_title;
 	QSize m_preParentSize;
 	QSize m_preParentMinimumSize;

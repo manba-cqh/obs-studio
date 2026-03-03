@@ -3,6 +3,14 @@ QWidget[main_widget=true]
     background: rgba(21, 21, 32, 1);
 }
 
+/* 浮动 dock 窗口保持与停靠时相同的深色样式，不置灰 */
+QDockWidget {
+    background-color: #222232;
+}
+QDockWidget QWidget {
+    background-color: transparent;
+}
+
 QMainWindow::separator
 { 
     width: 14px;

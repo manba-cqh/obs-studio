@@ -132,6 +132,7 @@ void CometMainWindow::createMainContent()
 	}
 	m_scenePanelDock->setWidget(m_scenePanel);
 	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
+	sceneHeader->setDockWidget(m_scenePanelDock);
 	
 	// 连接 ScenePanel 的信号，当源发生变化时刷新预览显示
 	connect(m_scenePanel, &ScenePanel::sourcesChanged, this, &CometMainWindow::updatePreviewDisplay);
@@ -156,6 +157,7 @@ void CometMainWindow::createMainContent()
 	m_interactPanelDock->setTitleBarWidget(interactHeader);
 	m_interactPanelDock->setWidget(m_interactPanel);
 	addDockWidget(Qt::LeftDockWidgetArea, m_interactPanelDock);
+	interactHeader->setDockWidget(m_interactPanelDock);
 	splitDockWidget(m_scenePanelDock, m_interactPanelDock, Qt::Vertical);
 	QList<QDockWidget*> leftDocks{m_scenePanelDock, m_interactPanelDock};
 	resizeDocks(leftDocks, {2, 1}, Qt::Vertical);
@@ -345,6 +347,7 @@ void CometMainWindow::createMainContent()
 	}
 	m_audioMixPanelDock->setWidget(m_audioMixPanel);
 	addDockWidget(Qt::BottomDockWidgetArea, m_audioMixPanelDock);
+	audioMixHeader->setDockWidget(m_audioMixPanelDock);
 	// 开播模式
 	m_broadcastModePanelDock = new QDockWidget();
 	m_broadcastModePanelDock->setMinimumSize(280, 234);
@@ -375,6 +378,7 @@ void CometMainWindow::createMainContent()
 				m_audioMixPanel->refreshAudioControls();
 		});
 	addDockWidget(Qt::BottomDockWidgetArea, m_broadcastModePanelDock);
+	broadcastModeHeader->setDockWidget(m_broadcastModePanelDock);
 	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
 	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
@@ -398,6 +402,7 @@ void CometMainWindow::createMainContent()
 	m_pluginPanelDock->setTitleBarWidget(pluginHeader);
 	m_pluginPanelDock->setWidget(m_pluginPanel);
 	addDockWidget(Qt::RightDockWidgetArea, m_pluginPanelDock);
+	pluginHeader->setDockWidget(m_pluginPanelDock);
 	// 弹幕面板
 	m_danmuPanelDock = new QDockWidget();
 	m_danmuPanelDock->setMinimumSize(280, 250);
@@ -416,6 +421,7 @@ void CometMainWindow::createMainContent()
 	m_danmuPanelDock->setTitleBarWidget(danmuHeader);
 	m_danmuPanelDock->setWidget(m_danmuPanel);
 	addDockWidget(Qt::RightDockWidgetArea, m_danmuPanelDock);
+	danmuHeader->setDockWidget(m_danmuPanelDock);
 	splitDockWidget(m_pluginPanelDock, m_danmuPanelDock, Qt::Vertical);
 	QList<QDockWidget*> rightDocks{m_pluginPanelDock, m_danmuPanelDock};
 	resizeDocks(rightDocks, {2, 1}, Qt::Vertical);
@@ -432,6 +438,22 @@ void CometMainWindow::createMainContent()
 		dock->installEventFilter(this);
 		if (QWidget *content = dock->widget())
 			content->installEventFilter(this);
+		// 浮动时不置灰：保持与停靠时相同的深色样式
+		connect(dock, &QDockWidget::topLevelChanged, this, [dock](bool topLevel) {
+			if (topLevel) {
+				QTimer::singleShot(0, dock, [dock]() {
+					if (!dock->isFloating()) return;
+					QWidget *win = dock->window();
+					if (win) {
+						win->setWindowOpacity(1.0);
+						QPalette pal = win->palette();
+						pal.setColor(QPalette::Window, QColor(0x22, 0x22, 0x32));
+						win->setPalette(pal);
+						win->setAutoFillBackground(true);
+					}
+				});
+			}
+		});
 	}
 }
 
