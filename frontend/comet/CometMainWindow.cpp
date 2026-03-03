@@ -423,6 +423,16 @@ void CometMainWindow::createMainContent()
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
 	setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+
+	// 禁止 dock 与中央区域之间的拖动：安装事件过滤，拦截顶层分隔条上的鼠标操作
+	for (QDockWidget *dock : {
+		 m_scenePanelDock, m_interactPanelDock,
+		 m_audioMixPanelDock, m_broadcastModePanelDock,
+		 m_pluginPanelDock, m_danmuPanelDock}) {
+		dock->installEventFilter(this);
+		if (QWidget *content = dock->widget())
+			content->installEventFilter(this);
+	}
 }
 
 void CometMainWindow::RenderMain(void *data, uint32_t, uint32_t)
@@ -784,6 +794,38 @@ bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 		}
 	}
 	
+	// 拦截 dock 与中央区域之间的分隔条：禁止通过拖动单侧 dock 调整大小
+	// 仅允许 dock 之间的 splitter 拖动（如 场景/互动玩法、混音器/开播与录制）
+	auto isBlockedSeparatorEvent = [this](QWidget *w, const QPoint &pos) -> bool {
+		if (!w) return false;
+		int pw = w->width(), ph = w->height();
+		// 中央区及其子控件：左/右/下边缘
+		if (w == m_mainContent || w == m_previewHeader || w == m_previewStack ||
+		    (m_previewStack && w->parent() == m_previewStack)) {
+			return (pos.x() < DOCK_SEPARATOR_BLOCK_MARGIN) ||
+			       (pos.x() >= pw - DOCK_SEPARATOR_BLOCK_MARGIN) ||
+			       (pos.y() >= ph - DOCK_SEPARATOR_BLOCK_MARGIN);
+		}
+		// 左侧 dock 及其内容：右边缘
+		if (w == m_scenePanelDock || w == m_scenePanel || w == m_interactPanelDock || w == m_interactPanel)
+			return pos.x() >= pw - DOCK_SEPARATOR_BLOCK_MARGIN;
+		// 右侧 dock 及其内容：左边缘
+		if (w == m_pluginPanelDock || w == m_pluginPanel || w == m_danmuPanelDock || w == m_danmuPanel)
+			return pos.x() < DOCK_SEPARATOR_BLOCK_MARGIN;
+		// 底部 dock 及其内容：上边缘
+		if (w == m_audioMixPanelDock || w == m_audioMixPanel || w == m_broadcastModePanelDock || w == m_broadcastModePanel)
+			return pos.y() < DOCK_SEPARATOR_BLOCK_MARGIN;
+		return false;
+	};
+
+	if (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease ||
+	    event->type() == QEvent::MouseMove) {
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		if (isBlockedSeparatorEvent(widget, mouseEvent->pos())) {
+			return true;  // 消费事件，阻止分隔条拖动
+		}
+	}
+
 	// 处理其他子控件的鼠标移动事件
 	if (event->type() == QEvent::MouseMove) {
 		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);

@@ -15,3 +15,6 @@ enum ResizeEdge {
 
 // 边缘检测区域大小
 #define RESIZE_MARGIN 5
+
+// dock 与中央区域间分隔条检测区：在此边缘范围内拦截鼠标，禁止拖动
+#define DOCK_SEPARATOR_BLOCK_MARGIN 10

@@ -9,6 +9,10 @@ QMainWindow::separator
     height: 14px;
     background: transparent;
 }
+QMainWindow::separator:hover
+{
+    background: transparent;
+}
 
 QLabel[label_16_bold=true]
 {
