@@ -13,6 +13,7 @@
 
 #include <QAction>
 #include <QDateTime>
+#include <QFrame>
 #include <QHBoxLayout>
 #include <QMenu>
 #include <QIcon>
@@ -324,6 +325,7 @@ void BroadcastModePanel::initUI()
 	// 推流区域（可滚动）
 	m_streamScrollArea = new QScrollArea(contentWidget);
 	m_streamScrollArea->setWidgetResizable(true);
+	m_streamScrollArea->setFrameShape(QFrame::NoFrame);
 	m_streamScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	m_streamScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 	m_streamScrollArea->setStyleSheet(
@@ -333,7 +335,7 @@ void BroadcastModePanel::initUI()
 
 	m_streamContainer = new QWidget();
 	m_streamLayout = new QVBoxLayout(m_streamContainer);
-	m_streamLayout->setContentsMargins(0, 0, 0, 0);
+	m_streamLayout->setContentsMargins(0, 0, 0, 8);  // 底部留白，避免最后一项被裁剪
 	m_streamLayout->setSpacing(8);
 	m_streamLayout->addStretch();
 
