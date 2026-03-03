@@ -382,6 +382,11 @@ void CometMainWindow::createMainContent()
 	splitDockWidget(m_audioMixPanelDock, m_broadcastModePanelDock, Qt::Horizontal);
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
 	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
+	for (QDockWidget *dock : {m_audioMixPanelDock, m_broadcastModePanelDock}) {
+		connect(dock, &QDockWidget::topLevelChanged, this, [this, bottomDocks]() {
+				resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
+		});
+	}
 
 	// 右侧
 	// 插件面板
@@ -438,9 +443,9 @@ void CometMainWindow::createMainContent()
 		dock->installEventFilter(this);
 		if (QWidget *content = dock->widget())
 			content->installEventFilter(this);
-		// 浮动时不置灰：保持与停靠时相同的深色样式
-		connect(dock, &QDockWidget::topLevelChanged, this, [dock](bool topLevel) {
+		connect(dock, &QDockWidget::topLevelChanged, this, [this, dock](bool topLevel) {
 			if (topLevel) {
+				dock->setAllowedAreas(Qt::NoDockWidgetArea);  // 禁止拖动回主窗体
 				QTimer::singleShot(0, dock, [dock]() {
 					if (!dock->isFloating()) return;
 					QWidget *win = dock->window();
@@ -452,6 +457,14 @@ void CometMainWindow::createMainContent()
 						win->setAutoFillBackground(true);
 					}
 				});
+			} else {
+				// 恢复停靠区域
+				if (dock == m_scenePanelDock || dock == m_interactPanelDock)
+					dock->setAllowedAreas(Qt::LeftDockWidgetArea);
+				else if (dock == m_audioMixPanelDock || dock == m_broadcastModePanelDock)
+					dock->setAllowedAreas(Qt::BottomDockWidgetArea);
+				else if (dock == m_pluginPanelDock || dock == m_danmuPanelDock)
+					dock->setAllowedAreas(Qt::RightDockWidgetArea);
 			}
 		});
 	}
