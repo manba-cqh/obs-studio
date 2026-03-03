@@ -3,6 +3,13 @@ QWidget[main_widget=true]
     background: rgba(21, 21, 32, 1);
 }
 
+QMainWindow::separator
+{ 
+    width: 14px;
+    height: 14px;
+    background: transparent;
+}
+
 QLabel[label_16_bold=true]
 {
     color: #FFFFFFFF;
