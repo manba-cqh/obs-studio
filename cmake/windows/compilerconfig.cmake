@@ -88,8 +88,9 @@ add_compile_definitions(
 
 # Visual Studio sets "/LTCG:INCREMENTAL" when "Whole Program Optimization" is enabled for a x86 or x64 target. To
 # ensure "proper" link-time optimization, the LTCG flag has to be explicitly added here.
+# OBS_FAST_LINK disables LTCG for faster linking during development.
 add_link_options(
-  $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:/LTCG>
+  $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<NOT:$<BOOL:${OBS_FAST_LINK}>>>:/LTCG>
   $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:/OPT:REF>
   $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:/OPT:ICF>
   /DEBUG

@@ -80,3 +80,7 @@ endif()
 
 # Enable default inclusion of targets' source and binary directory
 set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
+
+# Option to skip LTCG for faster linking during development (Release/RelWithDebInfo only)
+option(OBS_FAST_LINK "Disable Link Time Code Gen for faster linking (dev builds, slightly larger binary)" OFF)
+mark_as_advanced(OBS_FAST_LINK)
