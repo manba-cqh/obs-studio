@@ -618,7 +618,8 @@ static int run_program(fstream &logFile, int argc, char *argv[])
 		if (!created_log)
 			create_log_file(logFile);
 
-		program.checkForUncleanShutdown();
+		// TODO 暂时关闭崩溃检测
+		// program.checkForUncleanShutdown();
 
 		qInstallMessageHandler([](QtMsgType type, const QMessageLogContext &, const QString &message) {
 			switch (type) {
