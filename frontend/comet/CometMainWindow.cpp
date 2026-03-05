@@ -446,17 +446,6 @@ void CometMainWindow::createMainContent()
 		connect(dock, &QDockWidget::topLevelChanged, this, [this, dock](bool topLevel) {
 			if (topLevel) {
 				dock->setAllowedAreas(Qt::NoDockWidgetArea);  // 禁止拖动回主窗体
-				QTimer::singleShot(0, dock, [dock]() {
-					if (!dock->isFloating()) return;
-					QWidget *win = dock->window();
-					if (win) {
-						win->setWindowOpacity(1.0);
-						QPalette pal = win->palette();
-						pal.setColor(QPalette::Window, QColor(0x22, 0x22, 0x32));
-						win->setPalette(pal);
-						win->setAutoFillBackground(true);
-					}
-				});
 			} else {
 				// 恢复停靠区域
 				if (dock == m_scenePanelDock || dock == m_interactPanelDock)
