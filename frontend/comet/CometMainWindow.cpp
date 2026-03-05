@@ -326,11 +326,11 @@ void CometMainWindow::createMainContent()
 
 	// 混音器面板
 	m_audioMixPanelDock = new QDockWidget();
-	m_audioMixPanelDock->setMinimumSize(280, 234);
 	m_audioMixPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_audioMixPanelDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_audioMixPanel = new AudioMixPanel();
-	m_audioMixPanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+	m_audioMixPanel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	m_audioMixPanel->setMinimumSize(280, 234);
 	PanelHeaderWidget *audioMixHeader = new PanelHeaderWidget("混音器", m_audioMixPanelDock);
 	connect(audioMixHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_audioMixPanelDock->setFloating(floating);
@@ -350,11 +350,11 @@ void CometMainWindow::createMainContent()
 	audioMixHeader->setDockWidget(m_audioMixPanelDock);
 	// 开播模式
 	m_broadcastModePanelDock = new QDockWidget();
-	m_broadcastModePanelDock->setMinimumSize(280, 234);
 	m_broadcastModePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_broadcastModePanelDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_broadcastModePanel = new BroadcastModePanel();
-	m_broadcastModePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+	m_broadcastModePanel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	m_broadcastModePanel->setMinimumSize(280, 234);
 	PanelHeaderWidget *broadcastModeHeader = new PanelHeaderWidget("开播与录制", m_broadcastModePanelDock);
 	QWidget *broadcastHeaderOper = m_broadcastModePanel->createHeaderOperButtons();
 	if (broadcastHeaderOper)
@@ -383,8 +383,17 @@ void CometMainWindow::createMainContent()
 	QList<QDockWidget*> bottomDocks{m_audioMixPanelDock, m_broadcastModePanelDock};
 	resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
 	for (QDockWidget *dock : {m_audioMixPanelDock, m_broadcastModePanelDock}) {
-		connect(dock, &QDockWidget::topLevelChanged, this, [this, bottomDocks]() {
-				resizeDocks(bottomDocks, {1, 1}, Qt::Horizontal);
+		connect(dock, &QDockWidget::topLevelChanged, this, [this, dock, bottomDocks, audioMixHeader, broadcastModeHeader]() {
+			if (!dock->isFloating()) {
+				if (!m_audioMixPanelDock->isFloating()) {
+					audioMixHeader->resize((m_previewStack->width() - 14) / 2, audioMixHeader->height());
+					m_audioMixPanel->resize((m_previewStack->width() - 14) / 2, m_audioMixPanel->height());
+				}
+				if (!m_broadcastModePanelDock->isFloating()) {
+					broadcastModeHeader->resize((m_previewStack->width() - 14) / 2, broadcastModeHeader->height());
+					m_broadcastModePanel->resize((m_previewStack->width() - 14) / 2, m_broadcastModePanel->height());
+				}
+			}
 		});
 	}
 
@@ -445,15 +454,10 @@ void CometMainWindow::createMainContent()
 			content->installEventFilter(this);
 		connect(dock, &QDockWidget::topLevelChanged, this, [this, dock](bool topLevel) {
 			if (topLevel) {
-				dock->setAllowedAreas(Qt::NoDockWidgetArea);  // 禁止拖动回主窗体
+				dock->setAllowedAreas(Qt::NoDockWidgetArea);
+				dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetMovable);
 			} else {
-				// 恢复停靠区域
-				if (dock == m_scenePanelDock || dock == m_interactPanelDock)
-					dock->setAllowedAreas(Qt::LeftDockWidgetArea);
-				else if (dock == m_audioMixPanelDock || dock == m_broadcastModePanelDock)
-					dock->setAllowedAreas(Qt::BottomDockWidgetArea);
-				else if (dock == m_pluginPanelDock || dock == m_danmuPanelDock)
-					dock->setAllowedAreas(Qt::RightDockWidgetArea);
+				dock->setFeatures(dock->features() | QDockWidget::DockWidgetMovable);
 			}
 		});
 	}
