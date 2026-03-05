@@ -116,6 +116,7 @@ void CometMainWindow::createMainContent()
 	// 场景面板
 	m_scenePanelDock = new QDockWidget();
 	m_scenePanelDock->setMinimumSize(280, 250);
+	m_scenePanelDock->setFixedWidth(280);
 	m_scenePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_scenePanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_scenePanel = new ScenePanel();
@@ -145,6 +146,7 @@ void CometMainWindow::createMainContent()
 	// 互动玩法面板
 	m_interactPanelDock = new QDockWidget();
 	m_interactPanelDock->setMinimumSize(280, 250);
+	m_interactPanelDock->setFixedWidth(280);
 	m_interactPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_interactPanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_interactPanel = new InteractPanel();
@@ -404,6 +406,7 @@ void CometMainWindow::createMainContent()
 	// 插件面板
 	m_pluginPanelDock = new QDockWidget();
 	m_pluginPanelDock->setMinimumSize(280, 250);
+	m_pluginPanelDock->setFixedWidth(280);
 	m_pluginPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_pluginPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_pluginPanel = new PluginPanel();
@@ -423,6 +426,7 @@ void CometMainWindow::createMainContent()
 	// 弹幕面板
 	m_danmuPanelDock = new QDockWidget();
 	m_danmuPanelDock->setMinimumSize(280, 250);
+	m_danmuPanelDock->setFixedWidth(280);
 	m_danmuPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_danmuPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_danmuPanel = new DanmuPanel();
