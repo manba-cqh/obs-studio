@@ -293,7 +293,7 @@ QMenu
 }
 QMenu::item
 {
-    background-color: transparent;
+    background-color: #222232;
     color: #BBBDDB;
     padding: 10px 6px 10px 6px;
     border: none;

@@ -243,15 +243,9 @@ void StreamItemWidget::onMoreButtonClicked()
 	if (m_platformIndex < 0)
 		return;
 
-	QMenu menu(this);
+	QMenu menu;
 	QAction *editAction = menu.addAction(QStringLiteral("编辑"));
 	QAction *deleteAction = menu.addAction(QStringLiteral("删除"));
-
-	menu.setStyleSheet(
-		"QMenu { background-color: #2C2C3C; border: 1px solid #3C3C4C; border-radius: 4px; padding: 4px 0; }"
-		"QMenu::item { color: #EEEEFF; padding: 8px 24px; min-width: 80px; }"
-		"QMenu::item:selected { background-color: #4A4A6A; }"
-	);
 
 	QAction *triggered = menu.exec(m_moreButton->mapToGlobal(QPoint(0, m_moreButton->height())));
 	if (triggered == editAction)

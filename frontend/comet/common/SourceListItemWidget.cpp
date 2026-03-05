@@ -155,7 +155,7 @@ void SourceListItemWidget::onMoreButtonClicked()
 
 void SourceListItemWidget::createContextMenu()
 {
-	m_contextMenu = new QMenu(this);
+	m_contextMenu = new QMenu();
     m_contextMenu->setFixedSize(114, 242);
 	
 	QAction *editAction = m_contextMenu->addAction("编辑");
