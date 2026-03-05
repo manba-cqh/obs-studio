@@ -103,6 +103,9 @@ void CometMainWindow::initUI()
 	// 主内容
 	createMainContent();
 
+	// 禁用 dock 动画，避免拖动 dock 分隔条时主窗体尺寸产生微小变动
+	setAnimated(false);
+
 	resize(1200, 700);
 	setMinimumSize(1200, 700);
 }
