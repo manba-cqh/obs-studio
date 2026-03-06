@@ -112,6 +112,31 @@ void CometMainWindow::initUI()
 
 void CometMainWindow::createMainContent()
 {
+	auto setDockGap = [](QDockWidget *upperDock, QDockWidget *lowerDock, int gap) {
+		if (!upperDock || !lowerDock || gap <= 0)
+			return;
+
+		auto applyToSplitter = [upperDock, lowerDock, gap](QWidget *candidate) {
+			QSplitter *splitter = qobject_cast<QSplitter *>(candidate);
+			if (!splitter || splitter->orientation() != Qt::Vertical)
+				return false;
+
+			if (splitter->indexOf(upperDock) < 0 || splitter->indexOf(lowerDock) < 0)
+				return false;
+
+			splitter->setHandleWidth(gap);
+			splitter->setChildrenCollapsible(false);
+			splitter->setStyleSheet("QSplitter::handle { background: transparent; }");
+			return true;
+		};
+
+		if (applyToSplitter(upperDock->parentWidget()) || applyToSplitter(lowerDock->parentWidget()))
+			return;
+
+		// fallback: if splitter is not directly reachable in current layout backend.
+		upperDock->setContentsMargins(0, 0, 0, gap);
+	};
+
 	// 左侧dock
 	// 场景面板
 	m_scenePanelDock = new QDockWidget();
@@ -166,6 +191,7 @@ void CometMainWindow::createMainContent()
 	splitDockWidget(m_scenePanelDock, m_interactPanelDock, Qt::Vertical);
 	QList<QDockWidget*> leftDocks{m_scenePanelDock, m_interactPanelDock};
 	resizeDocks(leftDocks, {2, 1}, Qt::Vertical);
+	setDockGap(m_scenePanelDock, m_interactPanelDock, 14);
 
 	// 主内容
 	m_mainContent = new QWidget();
@@ -446,6 +472,7 @@ void CometMainWindow::createMainContent()
 	splitDockWidget(m_pluginPanelDock, m_danmuPanelDock, Qt::Vertical);
 	QList<QDockWidget*> rightDocks{m_pluginPanelDock, m_danmuPanelDock};
 	resizeDocks(rightDocks, {2, 1}, Qt::Vertical);
+	setDockGap(m_pluginPanelDock, m_danmuPanelDock, 14);
 
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
