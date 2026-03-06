@@ -28,7 +28,7 @@ namespace {
 static QLabel *createSectionTitle(const QString &text)
 {
 	QLabel *label = new QLabel(text);
-	label->setProperty("label_15_medium", true);
+	label->setStyleSheet("color: #FFFFFFFF; font-size: 15px; font-weight: medium;");
 	return label;
 }
 } // namespace
@@ -59,8 +59,8 @@ void StreamConfigWt::initUI()
 	QWidget *contentWidget = new QWidget();
 	contentWidget->setAttribute(Qt::WA_StyledBackground, true);
 	QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
-	contentLayout->setContentsMargins(0, 0, 0, 0);
-	contentLayout->setSpacing(18);
+	contentLayout->setContentsMargins(15, 15, 15, 15);
+	contentLayout->setSpacing(15);
 
 	auto createRow = [&](const QString &labelText, QWidget *control) {
 		QHBoxLayout *row = new QHBoxLayout();

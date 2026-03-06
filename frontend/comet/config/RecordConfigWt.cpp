@@ -48,8 +48,8 @@ void RecordConfigWt::initUI()
 	// 创建内容容器
 	m_contentWidget = new QWidget();
 	m_contentLayout = new QVBoxLayout(m_contentWidget);
-	m_contentLayout->setContentsMargins(20, 20, 20, 20);
-	m_contentLayout->setSpacing(20);
+	m_contentLayout->setContentsMargins(15, 15, 15, 15);
+	m_contentLayout->setSpacing(15);
 	
 	setupRecordingSettings();
 	setupStreamSettings();
