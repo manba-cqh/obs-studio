@@ -2,14 +2,14 @@
 
 #include <obs.hpp>
 
-#include <QDialog>
+#include "comet/common/CometDialog.hpp"
 
 class OBSAdvAudioCtrl;
 class Ui_OBSAdvAudio;
 
 // "Basic advanced audio"?  ...
 
-class OBSBasicAdvAudio : public QDialog {
+class OBSBasicAdvAudio : public CometDialog {
 	Q_OBJECT
 
 private:

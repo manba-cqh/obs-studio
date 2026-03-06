@@ -27,8 +27,6 @@
 #include <properties-view.hpp>
 #include <qt-wrappers.hpp>
 
-#include "comet/common/DialogTitleBar.hpp"
-
 #include <QFile>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -49,7 +47,7 @@
 using namespace std;
 
 OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
-	: QDialog(parent),
+	: CometDialog(QString(), parent, DialogTitleBar::CornerStyle::None, true),
 	  ui(new Ui::OBSBasicFilters),
 	  source(source_),
 	  addSignal(obs_source_get_signal_handler(source), "filter_add", OBSBasicFilters::OBSSourceFilterAdded, this),
@@ -63,7 +61,6 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 {
 	main = OBSBasic::Get();
 
-	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, false);
 	setAutoFillBackground(true);
 	setObjectName("OBSBasicFilters");
@@ -76,17 +73,8 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 	}
 
 	ui->setupUi(this);
-
-	// 在原有布局顶部插入标题栏（不迁移内容，保持 setupUi 的完整布局）
-	DialogTitleBar *titleBar = new DialogTitleBar(this, this);
-	titleLabel = titleBar->titleLabel();
-
-	QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(this->layout());
-	if (mainLayout) {
-		mainLayout->setContentsMargins(0, 0, 0, 0);
-		mainLayout->setSpacing(0);
-		mainLayout->insertWidget(0, titleBar, 0, Qt::AlignTop);
-	}
+	finishCometLayout();
+	titleLabel = titleBar()->titleLabel();
 
 	const char *name = obs_source_get_name(source);
 	QString windowTitle = QTStr("Basic.Filters.Title").arg(QT_UTF8(name));

@@ -105,6 +105,8 @@ target_sources(
     comet/common/MovableWidget.hpp
     comet/common/DialogTitleBar.cpp
     comet/common/DialogTitleBar.hpp
+    comet/common/CometDialog.cpp
+    comet/common/CometDialog.hpp
     comet/EmptySceneWidget.cpp
     comet/EmptySceneWidget.hpp
     comet/SourceToolDialog.cpp

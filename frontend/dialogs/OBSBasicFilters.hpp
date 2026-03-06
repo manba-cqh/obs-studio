@@ -19,13 +19,13 @@
 
 #include "ui_OBSBasicFilters.h"
 
-#include <QDialog>
+#include "comet/common/CometDialog.hpp"
 #include <QLabel>
 
 class OBSBasic;
 class OBSPropertiesView;
 
-class OBSBasicFilters : public QDialog {
+class OBSBasicFilters : public CometDialog {
 	Q_OBJECT
 
 private:

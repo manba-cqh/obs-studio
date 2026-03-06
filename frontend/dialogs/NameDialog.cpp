@@ -19,8 +19,6 @@
 
 #include <OBSApp.hpp>
 
-#include "comet/common/DialogTitleBar.hpp"
-
 #include <QCheckBox>
 #include <QDialogButtonBox>
 #include <QFile>
@@ -35,12 +33,13 @@
 
 #include "moc_NameDialog.cpp"
 
-NameDialog::NameDialog(QWidget *parent) : QDialog(parent)
+NameDialog::NameDialog(QWidget *parent)
+	: CometDialog(QString(), parent, DialogTitleBar::CornerStyle::TopRounded),
+	  m_titleLabel(nullptr)
 {
 	installEventFilter(CreateShortcutFilter());
 	setModal(true);
 	setWindowModality(Qt::WindowModality::WindowModal);
-	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, false);
 	setAutoFillBackground(true);
 	setObjectName("NameDialog");
@@ -55,44 +54,27 @@ NameDialog::NameDialog(QWidget *parent) : QDialog(parent)
 		styleFile.close();
 	}
 
-	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 5px; }");
+	titleBar()->setCloseCallback([this]() { reject(); });
+	m_titleLabel = titleBar()->titleLabel();
 
-	QVBoxLayout *containerLayout = new QVBoxLayout(container);
-	containerLayout->setContentsMargins(0, 0, 0, 0);
-	containerLayout->setSpacing(0);
-
-	DialogTitleBar *titleBar = new DialogTitleBar(this, container, QString(),
-	                                              DialogTitleBar::CornerStyle::TopRounded);
-	titleBar->setCloseCallback([this]() { reject(); });
-	m_titleLabel = titleBar->titleLabel();
-	containerLayout->addWidget(titleBar);
-
-	QVBoxLayout *contentLayout = new QVBoxLayout();
-	contentLayout->setContentsMargins(15, 15, 15, 15);
+	QVBoxLayout *contentLayout = qobject_cast<QVBoxLayout *>(contentWidget()->layout());
 	contentLayout->setSpacing(12);
 
-	label = new QLabel(container);
+	label = new QLabel(contentWidget());
 	label->setText("Set Text");
 	label->setStyleSheet("QLabel { color: #EEEEFF; background: transparent; }");
 	contentLayout->addWidget(label);
 
-	userText = new QLineEdit(container);
+	userText = new QLineEdit(contentWidget());
 	contentLayout->addWidget(userText);
 
-	checkbox = new QCheckBox(container);
+	checkbox = new QCheckBox(contentWidget());
 	checkbox->setStyleSheet("QCheckBox { color: #EEEEFF; background: transparent; }");
 	contentLayout->addWidget(checkbox);
 
 	QDialogButtonBox *buttonbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 	buttonbox->setCenterButtons(true);
 	contentLayout->addWidget(buttonbox);
-
-	containerLayout->addLayout(contentLayout);
-
-	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
-	dialogLayout->setContentsMargins(0, 0, 0, 0);
-	dialogLayout->addWidget(container);
 
 	userText->setFocus();
 	connect(buttonbox, &QDialogButtonBox::accepted, this, &QDialog::accept);

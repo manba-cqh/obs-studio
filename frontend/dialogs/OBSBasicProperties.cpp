@@ -30,7 +30,6 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWidget>
-#include "comet/common/DialogTitleBar.hpp"
 #include <QPainter>
 #include <QStyleOption>
 
@@ -50,7 +49,7 @@ using namespace std;
 static void CreateTransitionScene(OBSSource scene, const char *text, uint32_t color);
 
 OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
-	: QDialog(parent),
+	: CometDialog(QString(), parent, DialogTitleBar::CornerStyle::None, true),
 	  ui(new Ui::OBSBasicProperties),
 	  main(qobject_cast<OBSBasic *>(parent)),
 	  acceptClicked(false),
@@ -64,60 +63,20 @@ OBSBasicProperties::OBSBasicProperties(QWidget *parent, OBSSource source_)
 
 	enum obs_source_type type = obs_source_get_type(source);
 
-	// 设置窗口为无边框，以便使用 MovableWidget
-	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, false);
 	setAutoFillBackground(true);
 	setObjectName("OBSBasicProperties");
 	
-	// 加载 OBSBasicProperties 专用样式文件
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
 		QString style = QString::fromUtf8(styleFile.readAll());
 		setStyleSheet(style);
 		styleFile.close();
 	}
-	// 创建容器 widget
-	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 0px; }");
-	
-	QVBoxLayout *containerLayout = new QVBoxLayout(container);
-	containerLayout->setContentsMargins(0, 0, 0, 0);
-	containerLayout->setSpacing(15);
 
-	// 创建标题栏
-	DialogTitleBar *titleBar = new DialogTitleBar(this, container);
-	titleLabel = titleBar->titleLabel();
-	containerLayout->addWidget(titleBar);
-
-	// 设置 UI（这会创建原有的布局）
 	ui->setupUi(this);
-	
-	QVBoxLayout *contentLayout = new QVBoxLayout(container);
-	contentLayout->setContentsMargins(15, 15, 15, 15);
-	contentLayout->setSpacing(15);
-	containerLayout->addLayout(contentLayout);
-
-	// 获取原有的布局和内容
-	QVBoxLayout *originalLayout = qobject_cast<QVBoxLayout *>(this->layout());
-	if (originalLayout) {
-		// 移除所有项目并添加到容器中
-		while (originalLayout->count() > 0) {
-			QLayoutItem *item = originalLayout->takeAt(0);
-			if (item->widget()) {
-				contentLayout->addWidget(item->widget());
-			} else if (item->layout()) {
-				contentLayout->addLayout(item->layout());
-			}
-			delete item;
-		}
-		delete originalLayout;
-	}
-
-	// 设置对话框布局
-	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
-	dialogLayout->setContentsMargins(0, 0, 0, 0);
-	dialogLayout->addWidget(container);
+	finishCometLayout();
+	titleLabel = titleBar()->titleLabel();
 
 	ui->buttonBox->button(QDialogButtonBox::Ok)->setFocus();
 	ui->buttonBox->button(QDialogButtonBox::Ok)->setFixedSize(70, 34);

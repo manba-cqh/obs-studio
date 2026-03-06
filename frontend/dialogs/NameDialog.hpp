@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <QDialog>
+#include "comet/common/CometDialog.hpp"
 
 class QCheckBox;
 class QLabel;
@@ -25,7 +25,7 @@ class QLineEdit;
 class QPaintEvent;
 class QString;
 
-class NameDialog : public QDialog {
+class NameDialog : public CometDialog {
 	Q_OBJECT
 
 public:

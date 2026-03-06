@@ -20,7 +20,7 @@
 #include <qt-wrappers.hpp>
 #include <cstring>
 
-#include "comet/common/DialogTitleBar.hpp"
+#include "comet/common/CometDialog.hpp"
 #include "comet/tools/tools.hpp"
 #include <QFile>
 #include <QPaintEvent>
@@ -378,17 +378,14 @@ static inline const char *GetSourceDisplayName(const char *id)
 }
 
 OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, undo_stack &undo_s)
-	: QDialog(parent),
+	: CometDialog(QTStr("Basic.SourceSelect"), parent,
+	             DialogTitleBar::CornerStyle::TopRounded, true),
 	  ui(new Ui::OBSBasicSourceSelect),
 	  id(id_),
 	  undo_s(undo_s)
 {
-	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
-	setAttribute(Qt::WA_TranslucentBackground);
-	setModal(true);
 	setObjectName("OBSBasicSourceSelect");
 	setWindowModality(Qt::ApplicationModal);
-	setModal(true);
 
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
@@ -398,30 +395,17 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 		styleFile.close();
 	}
 
-	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 5px; }");
-
-	QVBoxLayout *containerLayout = new QVBoxLayout(container);
-	containerLayout->setContentsMargins(0, 0, 0, 0);
-	containerLayout->setSpacing(0);
-
-	DialogTitleBar *titleBar = new DialogTitleBar(this, container, QTStr("Basic.SourceSelect"),
-	                                              DialogTitleBar::CornerStyle::TopRounded);
-	containerLayout->addWidget(titleBar);
-
 	ui->setupUi(this);
 
 	QVBoxLayout *originalLayout = qobject_cast<QVBoxLayout *>(layout());
-	if (originalLayout && originalLayout->count() >= 2) {
-		QVBoxLayout *contentLayout = new QVBoxLayout();
-		contentLayout->setContentsMargins(15, 15, 15, 15);
+	QVBoxLayout *contentLayout = qobject_cast<QVBoxLayout *>(contentWidget()->layout());
+	if (originalLayout && contentLayout) {
 		contentLayout->setSpacing(10);
-
+		if (originalLayout->count() >= 2) {
 		QLayoutItem *item0 = originalLayout->takeAt(0);
 		if (item0 && item0->layout()) {
 			QVBoxLayout *innerLayout = qobject_cast<QVBoxLayout *>(item0->layout());
 			if (innerLayout) {
-				int index = 0;
 				while (innerLayout->count() > 0) {
 					QLayoutItem *child = innerLayout->takeAt(0);
 					if (child->widget()) {
@@ -430,7 +414,6 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 						if (w == ui->sourceList) {
 							contentLayout->setStretch(contentLayout->count() - 1, 1);
 						}
-						index++;
 					} else if (child->layout()) {
 						contentLayout->addLayout(child->layout());
 					}
@@ -453,13 +436,16 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 		QLayoutItem *leftover;
 		while ((leftover = originalLayout->takeAt(0)) != nullptr)
 			delete leftover;
-		delete originalLayout;
-		containerLayout->addLayout(contentLayout);
+		} else {
+			finishCometLayout();
+			originalLayout = nullptr;
+		}
+		if (originalLayout) {
+			delete originalLayout;
+		}
 	}
 
-	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
-	dialogLayout->setContentsMargins(0, 0, 0, 0);
-	dialogLayout->addWidget(container);
+	setCometLayout();
 
 	ui->sourceList->setAttribute(Qt::WA_MacShowFocusRect, false);
 

@@ -12,7 +12,6 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QWidget>
-#include "comet/common/DialogTitleBar.hpp"
 #include <QPainter>
 #include <QStyleOption>
 #include <QPainterPath>
@@ -20,10 +19,11 @@
 
 #include "moc_OBSBasicAdvAudio.cpp"
 
-OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent) : QDialog(parent), ui(new Ui::OBSAdvAudio), showInactive(false)
+OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent)
+	: CometDialog("调音台", parent, DialogTitleBar::CornerStyle::None, true),
+	  ui(new Ui::OBSAdvAudio),
+	  showInactive(false)
 {
-	// 设置窗口为无边框，以便使用 MovableWidget
-	setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, false);
 	setAutoFillBackground(true);
 	setObjectName("OBSBasicAdvAudio");
@@ -32,64 +32,13 @@ OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent) : QDialog(parent), ui(new Ui
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
 		QString style = QString::fromUtf8(styleFile.readAll());
-		// 将 OBSBasicProperties 替换为 OBSBasicAdvAudio
 		style.replace("OBSBasicProperties", "OBSBasicAdvAudio");
 		setStyleSheet(style);
 		styleFile.close();
 	}
-	
-	// 创建容器 widget
-	QWidget *container = new QWidget(this);
-	container->setStyleSheet("QWidget { background-color: #1F1F2C; border-radius: 0px; }");
-	
-	QVBoxLayout *containerLayout = new QVBoxLayout(container);
-	containerLayout->setContentsMargins(0, 0, 0, 0);
-	containerLayout->setSpacing(0);
 
-	// 创建标题栏
-	DialogTitleBar *titleBar = new DialogTitleBar(this, container, "调音台");
-	containerLayout->addWidget(titleBar);
-
-	// 设置 UI（这会创建原有的布局）
 	ui->setupUi(this);
-	
-	// 获取原有的布局和内容
-	QGridLayout *originalLayout = qobject_cast<QGridLayout *>(this->layout());
-	if (originalLayout) {
-		// 创建内容布局
-		QVBoxLayout *contentLayout = new QVBoxLayout();
-		contentLayout->setContentsMargins(15, 15, 15, 15);
-		contentLayout->setSpacing(15);
-		
-		// 移除所有项目并添加到容器中
-		// QGridLayout 需要按行和列遍历
-		for (int row = 0; row < originalLayout->rowCount(); ++row) {
-			for (int col = 0; col < originalLayout->columnCount(); ++col) {
-				QLayoutItem *item = originalLayout->itemAtPosition(row, col);
-				if (item) {
-					if (item->widget()) {
-						contentLayout->addWidget(item->widget());
-					} else if (item->layout()) {
-						contentLayout->addLayout(item->layout());
-					}
-				}
-			}
-		}
-		
-		// 清理原始布局
-		QLayoutItem *item;
-		while ((item = originalLayout->takeAt(0)) != nullptr) {
-			delete item;
-		}
-		delete originalLayout;
-		
-		containerLayout->addLayout(contentLayout);
-	}
-
-	// 设置对话框布局
-	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
-	dialogLayout->setContentsMargins(0, 0, 0, 0);
-	dialogLayout->addWidget(container);
+	finishCometLayout();
 
 	signal_handler_t *sh = obs_get_signal_handler();
 	sigs.emplace_back(sh, "source_audio_activate", OBSSourceAdded, this);

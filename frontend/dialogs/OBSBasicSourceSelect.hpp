@@ -24,11 +24,11 @@
 
 #include <obs.hpp>
 
-#include <QDialog>
+#include "comet/common/CometDialog.hpp"
 
 class QPaintEvent;
 
-class OBSBasicSourceSelect : public QDialog {
+class OBSBasicSourceSelect : public CometDialog {
 	Q_OBJECT
 
 private:

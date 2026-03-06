@@ -9,7 +9,7 @@
 #include <QWidget>
 #include <QMap>
 #include <QSet>
-#include "common/DialogTitleBar.hpp"
+#include "common/CometDialog.hpp"
 
 struct SourceTypeInfo {
 	QString id;
@@ -17,7 +17,7 @@ struct SourceTypeInfo {
 	QString iconPath;
 };
 
-class SourceToolDialog : public QDialog
+class SourceToolDialog : public CometDialog
 {
 	Q_OBJECT
 signals:
@@ -27,9 +27,6 @@ signals:
 public:
 	SourceToolDialog(QWidget *parent = nullptr);
 	~SourceToolDialog();
-
-protected:
-	void paintEvent(QPaintEvent *event) override;
 
 private:
 	void initUI();
@@ -46,7 +43,6 @@ private:
 
 private:
 	static const int GRID_COLS = 5;
-	QWidget *m_contentWidget;
 	QGridLayout *m_contentGrid;
 	/** 内容网格行数（用于 updateCommonSection 时清除重填） */
 	int m_contentGridRows;

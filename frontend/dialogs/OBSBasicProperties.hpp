@@ -19,13 +19,13 @@
 
 #include "ui_OBSBasicProperties.h"
 
-#include <QDialog>
+#include "comet/common/CometDialog.hpp"
 #include <QLabel>
 
 class OBSBasic;
 class OBSPropertiesView;
 
-class OBSBasicProperties : public QDialog {
+class OBSBasicProperties : public CometDialog {
 	Q_OBJECT
 
 private:
