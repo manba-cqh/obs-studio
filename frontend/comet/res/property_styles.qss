@@ -9,10 +9,29 @@ OBSBasicFilters {
     background-color: #1F1F2C;
 }
 
-/* MovableWidget 标题栏样式 */
-OBSBasicProperties MovableWidget {
+/* 标题栏样式（MovableWidget / DialogTitleBar） */
+OBSBasicProperties MovableWidget,
+OBSBasicProperties DialogTitleBar {
     background-color: #2C2C3C;
     border-radius: 5px 5px 0px 0px;
+}
+
+/* 标题栏关闭按钮：覆盖通用 QPushButton 样式，使用 SVG 图标 */
+DialogTitleBar QPushButton {
+    border: none;
+    padding: 0;
+    min-width: 24px;
+    min-height: 24px;
+    background-color: transparent;
+}
+DialogTitleBar QPushButton {
+    border-image: url(:/images/close.svg);
+}
+DialogTitleBar QPushButton:hover {
+    border-image: url(:/images/close_hover.svg);
+}
+DialogTitleBar QPushButton:pressed {
+    border-image: url(:/images/close_hover.svg);
 }
 
 OBSBasicProperties QCheckBox,

@@ -9,7 +9,7 @@
 #include <QWidget>
 #include <QMap>
 #include <QSet>
-#include "MovableWidget.hpp"
+#include "common/DialogTitleBar.hpp"
 
 struct SourceTypeInfo {
 	QString id;
@@ -48,7 +48,6 @@ private:
 	static const int GRID_COLS = 5;
 	QWidget *m_contentWidget;
 	QGridLayout *m_contentGrid;
-	QPushButton *m_closeBtn;
 	/** 内容网格行数（用于 updateCommonSection 时清除重填） */
 	int m_contentGridRows;
 	

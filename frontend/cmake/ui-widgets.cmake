@@ -103,6 +103,8 @@ target_sources(
     comet/common/CommonButton.hpp
     comet/common/MovableWidget.cpp
     comet/common/MovableWidget.hpp
+    comet/common/DialogTitleBar.cpp
+    comet/common/DialogTitleBar.hpp
     comet/EmptySceneWidget.cpp
     comet/EmptySceneWidget.hpp
     comet/SourceToolDialog.cpp

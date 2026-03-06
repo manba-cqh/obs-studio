@@ -27,7 +27,7 @@
 #include <properties-view.hpp>
 #include <qt-wrappers.hpp>
 
-#include "comet/common/MovableWidget.hpp"
+#include "comet/common/DialogTitleBar.hpp"
 
 #include <QFile>
 #include <QHBoxLayout>
@@ -77,35 +77,9 @@ OBSBasicFilters::OBSBasicFilters(QWidget *parent, OBSSource source_)
 
 	ui->setupUi(this);
 
-	// 在原有布局顶部插入 MovableWidget 标题栏（不迁移内容，保持 setupUi 的完整布局）
-	MovableWidget *titleBar = new MovableWidget(this, this);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
-	titleBar->setFixedHeight(50);
-	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 13, 15, 13);
-	titleLayout->setSpacing(0);
-	titleLabel = new QLabel(titleBar);
-	titleLabel->setTextFormat(Qt::PlainText);
-	titleLabel->setStyleSheet(
-		"QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
-	titleLayout->addWidget(titleLabel, 0, Qt::AlignVCenter);
-	titleLayout->addStretch();
-	QPushButton *closeBtn = new QPushButton(titleBar);
-	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-	closeBtn->setFixedSize(24, 24);
-	closeBtn->setCursor(Qt::PointingHandCursor);
-	closeBtn->setStyleSheet(
-		"QPushButton {"
-		"    border: none;"
-		"    background: transparent;"
-		"    background-image: url(:/images/close.svg);"
-		"    background-repeat: no-repeat;"
-		"    background-position: center;"
-		"}"
-		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
-		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }");
-	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
-	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
+	// 在原有布局顶部插入标题栏（不迁移内容，保持 setupUi 的完整布局）
+	DialogTitleBar *titleBar = new DialogTitleBar(this, this);
+	titleLabel = titleBar->titleLabel();
 
 	QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout *>(this->layout());
 	if (mainLayout) {

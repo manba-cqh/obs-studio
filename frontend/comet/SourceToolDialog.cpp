@@ -1,5 +1,4 @@
 #include "SourceToolDialog.hpp"
-#include "tools/tools.hpp"
 
 #include <QMouseEvent>
 #include <QSettings>
@@ -43,25 +42,7 @@ void SourceToolDialog::initUI()
 	containerLayout->setContentsMargins(0, 0, 0, 0);
 	containerLayout->setSpacing(0);
 	
-	MovableWidget *titleBar = new MovableWidget(this, container);
-	titleBar->setFixedHeight(50);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; }");
-	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 0, 15, 0);
-	titleLayout->setSpacing(0);
-	
-	QLabel *titleLabel = new QLabel("基础工具", titleBar);
-	titleLabel->setProperty("label_15_bold", true);
-	titleLayout->addWidget(titleLabel);
-	titleLayout->addStretch();
-	
-	m_closeBtn = new QPushButton(titleBar);
-	m_closeBtn->setFixedSize(24, 24);
-	m_closeBtn->setCursor(Qt::PointingHandCursor);
-	m_closeBtn->setStyleSheet(BUTTON_QSS_STYLE("close.svg", "close_hover.svg", "close_pressed.svg"));
-	connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
-	titleLayout->addWidget(m_closeBtn);
-	
+	DialogTitleBar *titleBar = new DialogTitleBar(this, container, "基础工具");
 	containerLayout->addWidget(titleBar);
 
 	// 内容区域：单一网格，使各组第一列等垂直对齐

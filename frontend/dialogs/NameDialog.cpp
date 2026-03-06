@@ -19,7 +19,7 @@
 
 #include <OBSApp.hpp>
 
-#include "comet/common/MovableWidget.hpp"
+#include "comet/common/DialogTitleBar.hpp"
 
 #include <QCheckBox>
 #include <QDialogButtonBox>
@@ -62,37 +62,10 @@ NameDialog::NameDialog(QWidget *parent) : QDialog(parent)
 	containerLayout->setContentsMargins(0, 0, 0, 0);
 	containerLayout->setSpacing(0);
 
-	MovableWidget *titleBar = new MovableWidget(this, container);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; border-radius: 5px 5px 0 0; }");
-	titleBar->setFixedHeight(50);
-	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 13, 15, 13);
-	titleLayout->setSpacing(0);
-
-	m_titleLabel = new QLabel(titleBar);
-	m_titleLabel->setTextFormat(Qt::PlainText);
-	m_titleLabel->setStyleSheet(
-		"QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
-	titleLayout->addWidget(m_titleLabel, 0, Qt::AlignVCenter);
-	titleLayout->addStretch();
-
-	QPushButton *closeBtn = new QPushButton(titleBar);
-	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-	closeBtn->setFixedSize(24, 24);
-	closeBtn->setCursor(Qt::PointingHandCursor);
-	closeBtn->setStyleSheet(
-		"QPushButton {"
-		"    border: none;"
-		"    background: transparent;"
-		"    background-image: url(:/images/close.svg);"
-		"    background-repeat: no-repeat;"
-		"    background-position: center;"
-		"}"
-		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
-		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }"
-	);
-	connect(closeBtn, &QPushButton::clicked, this, &QDialog::reject);
-	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
+	DialogTitleBar *titleBar = new DialogTitleBar(this, container, QString(),
+	                                              DialogTitleBar::CornerStyle::TopRounded);
+	titleBar->setCloseCallback([this]() { reject(); });
+	m_titleLabel = titleBar->titleLabel();
 	containerLayout->addWidget(titleBar);
 
 	QVBoxLayout *contentLayout = new QVBoxLayout();

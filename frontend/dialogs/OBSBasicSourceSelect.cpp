@@ -20,7 +20,7 @@
 #include <qt-wrappers.hpp>
 #include <cstring>
 
-#include "comet/common/MovableWidget.hpp"
+#include "comet/common/DialogTitleBar.hpp"
 #include "comet/tools/tools.hpp"
 #include <QFile>
 #include <QPaintEvent>
@@ -405,38 +405,8 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 	containerLayout->setContentsMargins(0, 0, 0, 0);
 	containerLayout->setSpacing(0);
 
-	MovableWidget *titleBar = new MovableWidget(this, container);
-	titleBar->setFixedHeight(50);
-	titleBar->setStyleSheet("MovableWidget { background-color: #2C2C3C; border-radius: 5px 5px 0 0; }");
-	QHBoxLayout *titleLayout = new QHBoxLayout(titleBar);
-	titleLayout->setContentsMargins(15, 0, 15, 0);
-	titleLayout->setSpacing(0);
-
-	QLabel *titleLabel = new QLabel(titleBar);
-	titleLabel->setTextFormat(Qt::PlainText);
-	titleLabel->setText(QTStr("Basic.SourceSelect"));
-	titleLabel->setStyleSheet(
-		"QLabel { color: #FFFFFF; font-size: 15px; font-weight: bold; background: transparent; border: none; padding: 0px; }");
-	titleLayout->addWidget(titleLabel);
-	titleLayout->addStretch();
-
-	QPushButton *closeBtn = new QPushButton(titleBar);
-	closeBtn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-	closeBtn->setFixedSize(24, 24);
-	closeBtn->setCursor(Qt::PointingHandCursor);
-	closeBtn->setStyleSheet(
-		"QPushButton {"
-		"    border: none;"
-		"    background: transparent;"
-		"    background-image: url(:/images/close.svg);"
-		"    background-repeat: no-repeat;"
-		"    background-position: center;"
-		"}"
-		"QPushButton:hover { background-image: url(:/images/close_hover.svg); }"
-		"QPushButton:pressed { background-image: url(:/images/close_pressed.svg); }"
-	);
-	connect(closeBtn, &QPushButton::clicked, this, &QDialog::close);
-	titleLayout->addWidget(closeBtn, 0, Qt::AlignVCenter);
+	DialogTitleBar *titleBar = new DialogTitleBar(this, container, QTStr("Basic.SourceSelect"),
+	                                              DialogTitleBar::CornerStyle::TopRounded);
 	containerLayout->addWidget(titleBar);
 
 	ui->setupUi(this);
