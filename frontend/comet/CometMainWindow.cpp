@@ -112,39 +112,14 @@ void CometMainWindow::initUI()
 
 void CometMainWindow::createMainContent()
 {
-	auto setDockGap = [](QDockWidget *upperDock, QDockWidget *lowerDock, int gap) {
-		if (!upperDock || !lowerDock || gap <= 0)
-			return;
-
-		auto applyToSplitter = [upperDock, lowerDock, gap](QWidget *candidate) {
-			QSplitter *splitter = qobject_cast<QSplitter *>(candidate);
-			if (!splitter || splitter->orientation() != Qt::Vertical)
-				return false;
-
-			if (splitter->indexOf(upperDock) < 0 || splitter->indexOf(lowerDock) < 0)
-				return false;
-
-			splitter->setHandleWidth(gap);
-			splitter->setChildrenCollapsible(false);
-			splitter->setStyleSheet("QSplitter::handle { background: transparent; }");
-			return true;
-		};
-
-		if (applyToSplitter(upperDock->parentWidget()) || applyToSplitter(lowerDock->parentWidget()))
-			return;
-
-		// fallback: if splitter is not directly reachable in current layout backend.
-		upperDock->setContentsMargins(0, 0, 0, gap);
-	};
-
 	// 左侧dock
 	// 场景面板
 	m_scenePanelDock = new QDockWidget();
 	m_scenePanelDock->setMinimumSize(280, 250);
-	m_scenePanelDock->setFixedWidth(280);
 	m_scenePanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_scenePanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_scenePanel = new ScenePanel();
+	m_scenePanel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 	PanelHeaderWidget *sceneHeader = new PanelHeaderWidget("场景", m_scenePanel);
 	connect(sceneHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_scenePanelDock->setFloating(floating);
@@ -171,10 +146,10 @@ void CometMainWindow::createMainContent()
 	// 互动玩法面板
 	m_interactPanelDock = new QDockWidget();
 	m_interactPanelDock->setMinimumSize(280, 250);
-	m_interactPanelDock->setFixedWidth(280);
 	m_interactPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_interactPanelDock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	m_interactPanel = new InteractPanel();
+	m_interactPanel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 	PanelHeaderWidget *interactHeader = new PanelHeaderWidget("互动玩法", m_interactPanelDock);
 	connect(interactHeader, &PanelHeaderWidget::sigFloating, this, [this](bool floating) {
 		m_interactPanelDock->setFloating(floating);
@@ -191,7 +166,6 @@ void CometMainWindow::createMainContent()
 	splitDockWidget(m_scenePanelDock, m_interactPanelDock, Qt::Vertical);
 	QList<QDockWidget*> leftDocks{m_scenePanelDock, m_interactPanelDock};
 	resizeDocks(leftDocks, {2, 1}, Qt::Vertical);
-	setDockGap(m_scenePanelDock, m_interactPanelDock, 14);
 
 	// 主内容
 	m_mainContent = new QWidget();
@@ -432,7 +406,6 @@ void CometMainWindow::createMainContent()
 	// 插件面板
 	m_pluginPanelDock = new QDockWidget();
 	m_pluginPanelDock->setMinimumSize(280, 250);
-	m_pluginPanelDock->setFixedWidth(280);
 	m_pluginPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_pluginPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_pluginPanel = new PluginPanel();
@@ -452,7 +425,6 @@ void CometMainWindow::createMainContent()
 	// 弹幕面板
 	m_danmuPanelDock = new QDockWidget();
 	m_danmuPanelDock->setMinimumSize(280, 250);
-	m_danmuPanelDock->setFixedWidth(280);
 	m_danmuPanelDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 	m_danmuPanelDock->setAllowedAreas(Qt::RightDockWidgetArea);
 	m_danmuPanel = new DanmuPanel();
@@ -472,7 +444,6 @@ void CometMainWindow::createMainContent()
 	splitDockWidget(m_pluginPanelDock, m_danmuPanelDock, Qt::Vertical);
 	QList<QDockWidget*> rightDocks{m_pluginPanelDock, m_danmuPanelDock};
 	resizeDocks(rightDocks, {2, 1}, Qt::Vertical);
-	setDockGap(m_pluginPanelDock, m_danmuPanelDock, 14);
 
 	// 底部dock不全部占据底部空间
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -856,6 +827,26 @@ bool CometMainWindow::eventFilter(QObject *obj, QEvent *event)
 		}
 	}
 	
+	// 场景面板：仅允许垂直方向调整高度的光标，禁止水平方向
+	if (widget == m_scenePanelDock || widget == m_scenePanel || widget == m_interactPanelDock || widget == m_interactPanel) {
+		if (event->type() == QEvent::MouseMove) {
+			QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+			QPoint dockPos = widget == m_scenePanelDock ? mouseEvent->pos() : widget->mapTo(m_scenePanelDock, mouseEvent->pos());
+			int pw = m_scenePanelDock->width(), ph = m_scenePanelDock->height();
+			const int edgeMargin = 8;
+			bool inLeftRight = dockPos.x() < edgeMargin || dockPos.x() >= pw - edgeMargin;
+			bool inTopBottom = dockPos.y() < edgeMargin || dockPos.y() >= ph - edgeMargin;
+			if (inLeftRight)
+				m_scenePanelDock->setCursor(Qt::ArrowCursor);  // 禁止水平/对角，仅允许垂直
+			else if (inTopBottom)
+				m_scenePanelDock->setCursor(Qt::SizeVerCursor);
+			else
+				m_scenePanelDock->unsetCursor();
+		} else if (event->type() == QEvent::Leave) {
+			m_scenePanelDock->unsetCursor();
+		}
+	}
+
 	// 拦截 dock 与中央区域之间的分隔条：禁止通过拖动单侧 dock 调整大小
 	// 仅允许 dock 之间的 splitter 拖动（如 场景/互动玩法、混音器/开播与录制）
 	auto isBlockedSeparatorEvent = [this](QWidget *w, const QPoint &pos) -> bool {
