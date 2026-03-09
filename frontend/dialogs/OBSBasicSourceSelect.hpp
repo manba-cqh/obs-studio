@@ -55,7 +55,4 @@ public:
 	OBSSource newSource;
 
 	static void SourcePaste(SourceCopyInfo &info, bool duplicate);
-
-protected:
-	void paintEvent(QPaintEvent *event) override;
 };

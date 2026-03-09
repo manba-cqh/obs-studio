@@ -41,7 +41,4 @@ public:
 	~OBSBasicAdvAudio();
 	void SetShowInactive(bool showInactive);
 	void SetIconsVisible(bool visible);
-
-protected:
-	void paintEvent(QPaintEvent *event) override;
 };

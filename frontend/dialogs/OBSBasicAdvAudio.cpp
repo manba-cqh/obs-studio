@@ -24,8 +24,8 @@ OBSBasicAdvAudio::OBSBasicAdvAudio(QWidget *parent)
 	  ui(new Ui::OBSAdvAudio),
 	  showInactive(false)
 {
-	setAttribute(Qt::WA_TranslucentBackground, false);
-	setAutoFillBackground(true);
+	setAttribute(Qt::WA_TranslucentBackground);
+	setAutoFillBackground(false);
 	setObjectName("OBSBasicAdvAudio");
 	
 	// 加载 OBSBasicAdvAudio 专用样式文件（使用与 OBSBasicProperties 相同的样式）
@@ -210,13 +210,4 @@ void OBSBasicAdvAudio::SetIconsVisible(bool visible)
 	for (size_t i = 0; i < controls.size(); i++) {
 		controls[i]->SetIconVisible(visible);
 	}
-}
-
-void OBSBasicAdvAudio::paintEvent(QPaintEvent *event)
-{
-	QStyleOption opt;
-	opt.initFrom(this);
-	QPainter p(this);
-	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-	QDialog::paintEvent(event);
 }

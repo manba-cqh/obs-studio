@@ -244,6 +244,7 @@ void StreamItemWidget::onMoreButtonClicked()
 		return;
 
 	QMenu menu;
+	menu.setMinimumWidth(60);
 	QAction *editAction = menu.addAction(QStringLiteral("编辑"));
 	QAction *deleteAction = menu.addAction(QStringLiteral("删除"));
 

@@ -40,8 +40,8 @@ NameDialog::NameDialog(QWidget *parent)
 	installEventFilter(CreateShortcutFilter());
 	setModal(true);
 	setWindowModality(Qt::WindowModality::WindowModal);
-	setAttribute(Qt::WA_TranslucentBackground, false);
-	setAutoFillBackground(true);
+	setAttribute(Qt::WA_TranslucentBackground);
+	setAutoFillBackground(false);
 	setObjectName("NameDialog");
 	setFixedWidth(400);
 	setMinimumHeight(120);
@@ -86,15 +86,6 @@ void NameDialog::setWindowTitle(const QString &title)
 	QDialog::setWindowTitle(title);
 	if (m_titleLabel)
 		m_titleLabel->setText(title);
-}
-
-void NameDialog::paintEvent(QPaintEvent *event)
-{
-	QStyleOption opt;
-	opt.initFrom(this);
-	QPainter p(this);
-	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
-	QDialog::paintEvent(event);
 }
 
 static bool IsWhitespace(char ch)

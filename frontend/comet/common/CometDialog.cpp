@@ -3,6 +3,7 @@
 #include <QGridLayout>
 #include <QPainter>
 #include <QPainterPath>
+#include <QRegion>
 #include <QResizeEvent>
 
 CometDialog::CometDialog(const QString &title, QWidget *parent,
@@ -77,7 +78,14 @@ void CometDialog::setContentMargins(int left, int top, int right, int bottom)
 
 void CometDialog::updateMask()
 {
-	// Keep API compatibility. Rounded corners are rendered via antialiased painting.
+	if (testAttribute(Qt::WA_TranslucentBackground)) {
+		clearMask();
+	} else {
+		// Non-translucent top-level windows need a shape mask to avoid dark square corners.
+		QPainterPath path;
+		path.addRoundedRect(QRectF(rect()).adjusted(0, 0, -1, -1), m_cornerRadius, m_cornerRadius);
+		setMask(QRegion(path.toFillPolygon().toPolygon()));
+	}
 	update();
 }
 

@@ -45,9 +45,6 @@ public:
 					 std::string &userTextInput, const QString &optionLabel, bool &optionChecked,
 					 const QString &placeHolder = QString(""));
 
-protected:
-	void paintEvent(QPaintEvent *event) override;
-
 private:
 	QLabel *m_titleLabel;
 	QLabel *label;

@@ -387,6 +387,9 @@ OBSBasicSourceSelect::OBSBasicSourceSelect(QWidget *parent, const char *id_, und
 	setObjectName("OBSBasicSourceSelect");
 	setWindowModality(Qt::ApplicationModal);
 
+	setAttribute(Qt::WA_TranslucentBackground);
+	setAutoFillBackground(false);
+
 	QFile styleFile(":/property_styles.qss");
 	if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
 		QString style = QString::fromUtf8(styleFile.readAll());
@@ -517,12 +520,4 @@ void OBSBasicSourceSelect::SourcePaste(SourceCopyInfo &info, bool dup)
 		return;
 
 	AddExisting(source, info.visible, dup, &info.transform, &info.crop, &info.blend_method, &info.blend_mode);
-}
-
-void OBSBasicSourceSelect::paintEvent(QPaintEvent *event)
-{
-	QStyleOption opt;
-	opt.initFrom(this);
-	QPainter p(this);
-	style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
 }
