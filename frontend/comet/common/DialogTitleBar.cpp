@@ -13,7 +13,12 @@ DialogTitleBar::DialogTitleBar(QWidget *targetWindow, QWidget *parent,
 	setFixedHeight(50);
 	QString style = "DialogTitleBar { background-color: #2C2C3C; }";
 	if (cornerStyle == CornerStyle::TopRounded)
-		style += "DialogTitleBar { border-radius: 5px 5px 0 0; }";
+		style += "DialogTitleBar {"
+		"border-top-left-radius: 5px;"
+		"border-top-right-radius: 5px;"
+		"border-bottom-left-radius: 0px;"
+		"border-bottom-right-radius: 0px;"
+		"}";
 	setStyleSheet(style);
 
 	QHBoxLayout *layout = new QHBoxLayout(this);

@@ -3,7 +3,6 @@
 #include <QGridLayout>
 #include <QPainter>
 #include <QPainterPath>
-#include <QRegion>
 #include <QResizeEvent>
 
 CometDialog::CometDialog(const QString &title, QWidget *parent,
@@ -22,7 +21,8 @@ CometDialog::CometDialog(const QString &title, QWidget *parent,
 	setModal(true);
 
 	m_container = new QWidget(this);
-	m_container->setStyleSheet("background-color: #1F1F2C;");
+	m_container->setAttribute(Qt::WA_TranslucentBackground);
+	m_container->setStyleSheet("background: transparent;");
 
 	QVBoxLayout *containerLayout = new QVBoxLayout(m_container);
 	containerLayout->setContentsMargins(0, 0, 0, 0);
@@ -32,7 +32,8 @@ CometDialog::CometDialog(const QString &title, QWidget *parent,
 	containerLayout->addWidget(m_titleBar);
 
 	m_contentWidget = new QWidget(m_container);
-	m_contentWidget->setStyleSheet("background-color: #1F1F2C;");
+	m_contentWidget->setAttribute(Qt::WA_TranslucentBackground);
+	m_contentWidget->setStyleSheet("background: transparent;");
 	QVBoxLayout *contentLayout = new QVBoxLayout(m_contentWidget);
 	contentLayout->setContentsMargins(m_contentMargins);
 	contentLayout->setSpacing(0);
@@ -76,9 +77,8 @@ void CometDialog::setContentMargins(int left, int top, int right, int bottom)
 
 void CometDialog::updateMask()
 {
-	QPainterPath path;
-	path.addRoundedRect(QRectF(rect()), m_cornerRadius, m_cornerRadius);
-	setMask(QRegion(path.toFillPolygon().toPolygon()));
+	// Keep API compatibility. Rounded corners are rendered via antialiased painting.
+	update();
 }
 
 void CometDialog::finishCometLayout()
@@ -122,9 +122,17 @@ void CometDialog::paintEvent(QPaintEvent *event)
 	QPainter p(this);
 	p.setRenderHint(QPainter::Antialiasing);
 	p.setRenderHint(QPainter::SmoothPixmapTransform);
-	p.setPen(QPen(QColor(255, 255, 255, 26), 1)); // 1px solid rgba(255,255,255,0.1)
+	const QRectF frameRect = QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5);
+	QPainterPath framePath;
+	framePath.addRoundedRect(frameRect, m_cornerRadius, m_cornerRadius);
+
+	p.setPen(Qt::NoPen);
 	p.setBrush(m_backgroundColor);
-	p.drawRoundedRect(rect(), m_cornerRadius, m_cornerRadius);
+	p.drawPath(framePath);
+
+	p.setPen(QPen(QColor(255, 255, 255, 26), 1)); // 1px solid rgba(255,255,255,0.1)
+	p.setBrush(Qt::NoBrush);
+	p.drawPath(framePath);
 }
 
 void CometDialog::resizeEvent(QResizeEvent *event)
