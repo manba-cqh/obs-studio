@@ -596,6 +596,22 @@ void OBSBasic::SetShowing(bool showing)
 
 void OBSBasic::ToggleShowHide()
 {
+#ifdef USE_COMET_UI
+	QMainWindow *visibleWindow = App()->GetVisibleMainWindow();
+	if (visibleWindow) {
+		if (visibleWindow->isVisible()) {
+			visibleWindow->hide();
+			if (showHide)
+				showHide->setText(QTStr("Basic.SystemTray.Show"));
+		} else {
+			visibleWindow->show();
+			visibleWindow->raise();
+			visibleWindow->activateWindow();
+			if (showHide)
+				showHide->setText(QTStr("Basic.SystemTray.Hide"));
+		}
+	}
+#else
 	bool showing = isVisible();
 	if (showing) {
 		/* check for modal dialogs */
@@ -604,6 +620,7 @@ void OBSBasic::ToggleShowHide()
 			return;
 	}
 	SetShowing(!showing);
+#endif
 }
 
 void OBSBasic::on_actionMainUndo_triggered()

@@ -30,7 +30,11 @@ void OBSBasic::SystemTrayInit()
 	QIcon trayIconFile = QIcon(":/res/images/obs.png");
 #endif
 	trayIcon.reset(new QSystemTrayIcon(QIcon::fromTheme("obs-tray", trayIconFile), this));
+#ifdef USE_COMET_UI
+	trayIcon->setToolTip("Comet Studio");
+#else
 	trayIcon->setToolTip("OBS Studio");
+#endif
 
 	showHide = new QAction(QTStr("Basic.SystemTray.Show"), trayIcon.data());
 	sysTrayStream =
@@ -92,7 +96,12 @@ void OBSBasic::IconActivated(QSystemTrayIcon::ActivationReason reason)
 	UNUSED_PARAMETER(reason);
 #else
 	if (reason == QSystemTrayIcon::Trigger) {
+#ifdef USE_COMET_UI
+		QMainWindow *visibleWindow = App()->GetVisibleMainWindow();
+		EnablePreviewDisplay(previewEnabled && (!visibleWindow || !visibleWindow->isVisible()));
+#else
 		EnablePreviewDisplay(previewEnabled && !isVisible());
+#endif
 		ToggleShowHide();
 	}
 #endif
@@ -132,10 +141,18 @@ void OBSBasic::SystemTray(bool firstStarted)
 		}
 	}
 
+#ifdef USE_COMET_UI
+	QMainWindow *visibleWindow = App()->GetVisibleMainWindow();
+	if (visibleWindow && visibleWindow->isVisible())
+		showHide->setText(QTStr("Basic.SystemTray.Hide"));
+	else
+		showHide->setText(QTStr("Basic.SystemTray.Show"));
+#else
 	if (isVisible())
 		showHide->setText(QTStr("Basic.SystemTray.Hide"));
 	else
 		showHide->setText(QTStr("Basic.SystemTray.Show"));
+#endif
 }
 
 bool OBSBasic::sysTrayMinimizeToTray()

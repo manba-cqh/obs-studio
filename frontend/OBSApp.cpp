@@ -906,6 +906,15 @@ OBSApp::~OBSApp()
 	}
 };
 
+QMainWindow *OBSApp::GetVisibleMainWindow() const
+{
+#ifdef USE_COMET_UI
+	return cometMainWindow.data();
+#else
+	return mainWindow.data();
+#endif
+}
+
 static void move_basic_to_profiles(void)
 {
 	char path[512];

@@ -145,6 +145,8 @@ public:
 
 	inline QMainWindow *GetMainWindow() const { return mainWindow.data(); }
 
+	QMainWindow *GetVisibleMainWindow() const;
+
 	inline config_t *GetAppConfig() const { return appConfig; }
 	inline config_t *GetUserConfig() const { return userConfig; }
 	std::filesystem::path userConfigLocation;
