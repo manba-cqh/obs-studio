@@ -136,7 +136,7 @@ void ScenePanel::createContentWidget()
     // 创建底部"添加直播素材"按钮
     QWidget *addSourceButtonContainer = new QWidget(contentWidget);
     addSourceButtonContainer->setFixedHeight(30);
-    addSourceButtonContainer->setStyleSheet("background: rgba(21, 21, 32, 1);");
+    addSourceButtonContainer->setStyleSheet("background: rgba(21, 21, 32, 1); border-radius: 5px;");
     QHBoxLayout *addSourceButtonLayout = new QHBoxLayout(addSourceButtonContainer);
     addSourceButtonLayout->setContentsMargins(10, 0, 10, 0);
     addSourceButtonLayout->setSpacing(0);

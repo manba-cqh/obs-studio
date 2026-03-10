@@ -79,9 +79,13 @@ QString PanelHeaderWidget::title() const
 
 void PanelHeaderWidget::setHeaderOperWidget(QWidget *widget)
 {
-	if (m_headerLayout && widget) {
-		m_headerLayout->insertWidget(4, widget);
-	}
+	if (!m_headerLayout || !widget)
+		return;
+	const int insertIndex = 4;
+	int count = m_headerLayout->count();
+	if (insertIndex < 0 || insertIndex > count)
+		return;
+	m_headerLayout->insertWidget(insertIndex, widget);
 }
 
 void PanelHeaderWidget::setCollapseButtonChecked(bool checked)

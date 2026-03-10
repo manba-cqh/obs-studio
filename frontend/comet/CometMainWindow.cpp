@@ -132,7 +132,11 @@ void CometMainWindow::createMainContent()
 	m_scenePanelDock->setTitleBarWidget(sceneHeader);
 	QPushButton *broadcastButton = m_scenePanel->getBroadcastButton();
 	if (broadcastButton) {
-		sceneHeader->setHeaderOperWidget(broadcastButton);
+		// 延后执行，等待 dock title bar 布局就绪，避免偶现崩溃
+		QTimer::singleShot(0, this, [sceneHeader, broadcastButton]() {
+			if (sceneHeader && broadcastButton)
+				sceneHeader->setHeaderOperWidget(broadcastButton);
+		});
 	}
 	m_scenePanelDock->setWidget(m_scenePanel);
 	addDockWidget(Qt::LeftDockWidgetArea, m_scenePanelDock);
