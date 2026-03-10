@@ -30,7 +30,7 @@ CometDialog::CometDialog(const QString &title, QWidget *parent,
 	containerLayout->setSpacing(0);
 
 	m_titleBar = new DialogTitleBar(this, m_container, title, cornerStyle);
-	containerLayout->addWidget(m_titleBar);
+	containerLayout->addWidget(m_titleBar, 0);
 
 	m_contentWidget = new QWidget(m_container);
 	m_contentWidget->setAttribute(Qt::WA_TranslucentBackground);
@@ -38,12 +38,12 @@ CometDialog::CometDialog(const QString &title, QWidget *parent,
 	QVBoxLayout *contentLayout = new QVBoxLayout(m_contentWidget);
 	contentLayout->setContentsMargins(m_contentMargins);
 	contentLayout->setSpacing(0);
-	containerLayout->addWidget(m_contentWidget);
+	containerLayout->addWidget(m_contentWidget, 1);
 
 	if (!m_deferLayout) {
 		QVBoxLayout *dialogLayout = new QVBoxLayout(this);
 		dialogLayout->setContentsMargins(0, 0, 0, 0);
-		dialogLayout->addWidget(m_container);
+		dialogLayout->addWidget(m_container, 1);
 	}
 }
 
@@ -96,7 +96,6 @@ void CometDialog::finishCometLayout()
 	QLayout *originalLayout = layout();
 	QVBoxLayout *contentLayout = qobject_cast<QVBoxLayout *>(m_contentWidget->layout());
 	if (originalLayout && contentLayout) {
-		// 支持 QVBoxLayout �?QGridLayout
 		QList<QLayoutItem *> items;
 		while (originalLayout->count() > 0) {
 			items.append(originalLayout->takeAt(0));
@@ -104,10 +103,20 @@ void CometDialog::finishCometLayout()
 		for (QLayoutItem *item : items) {
 			if (item->widget()) {
 				contentLayout->addWidget(item->widget());
+				delete item;
 			} else if (item->layout()) {
-				contentLayout->addLayout(item->layout());
+				// item IS the QLayout (QLayout extends QLayoutItem).
+				// Wrap in a QWidget so that setLayout() reparents all
+				// child widgets into the CometDialog hierarchy.
+				QWidget *wrapper = new QWidget(m_contentWidget);
+				wrapper->setSizePolicy(QSizePolicy::Preferred,
+						       QSizePolicy::Expanding);
+				wrapper->setLayout(item->layout());
+				contentLayout->addWidget(wrapper);
+				// setLayout() took ownership — do NOT delete item
+			} else {
+				contentLayout->addItem(item);
 			}
-			delete item;
 		}
 		delete originalLayout;
 	}
@@ -121,7 +130,7 @@ void CometDialog::setCometLayout()
 		return;
 	QVBoxLayout *dialogLayout = new QVBoxLayout(this);
 	dialogLayout->setContentsMargins(0, 0, 0, 0);
-	dialogLayout->addWidget(m_container);
+	dialogLayout->addWidget(m_container, 1);
 }
 
 void CometDialog::paintEvent(QPaintEvent *event)
