@@ -235,7 +235,7 @@ void ScenePanel::setupSceneButtons()
 
 	// 选择第一个场景
 	if (!m_sceneItems.isEmpty() && !m_initialSelectionDone) {
-        QTimer::singleShot(500, this, [this]() {
+        QTimer::singleShot(0, this, [this]() {
             // 获取第一个场景的 source
             struct obs_frontend_source_list scenes = {0};
             obs_frontend_get_scenes(&scenes);

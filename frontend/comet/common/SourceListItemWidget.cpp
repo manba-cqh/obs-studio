@@ -27,6 +27,10 @@ SourceListItemWidget::SourceListItemWidget(const QString &text, OBSSceneItem sce
 
 SourceListItemWidget::~SourceListItemWidget()
 {
+	if (m_contextMenu) {
+		delete m_contextMenu;
+		m_contextMenu = nullptr;
+	}
 }
 
 void SourceListItemWidget::initUI(bool isGroup, bool indented)

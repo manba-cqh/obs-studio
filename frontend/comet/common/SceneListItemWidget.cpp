@@ -38,6 +38,10 @@ SceneListItemWidget::SceneListItemWidget(OBSSource source, QWidget *parent)
 
 SceneListItemWidget::~SceneListItemWidget()
 {
+	if (m_contextMenu) {
+		delete m_contextMenu;
+		m_contextMenu = nullptr;
+	}
 }
 
 void SceneListItemWidget::initUI()
@@ -226,7 +230,7 @@ void SceneListItemWidget::onMoreButtonClicked()
 
 void SceneListItemWidget::createContextMenu()
 {
-	m_contextMenu = new QMenu(this);
+	m_contextMenu = new QMenu();
 	
 	QAction *renameAction = m_contextMenu->addAction("重命名");
 	connect(renameAction, &QAction::triggered, this, &SceneListItemWidget::onRenameAction);
