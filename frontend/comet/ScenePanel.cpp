@@ -234,8 +234,8 @@ void ScenePanel::setupSceneButtons()
 	}
 
 	// 选择第一个场景
-	if (!m_sceneItems.isEmpty()) {
-        QTimer::singleShot(100, this, [this]() {
+	if (!m_sceneItems.isEmpty() && !m_initialSelectionDone) {
+        QTimer::singleShot(500, this, [this]() {
             // 获取第一个场景的 source
             struct obs_frontend_source_list scenes = {0};
             obs_frontend_get_scenes(&scenes);
@@ -244,6 +244,7 @@ void ScenePanel::setupSceneButtons()
                 onSceneItemClicked(firstScene);
             }
             obs_frontend_source_list_free(&scenes);
+            m_initialSelectionDone = true;
         });
 	}
 }
@@ -255,8 +256,8 @@ void ScenePanel::addSceneItem(OBSSource source, int row, int col)
 	}
 
 	SceneListItemWidget *sceneItem = new SceneListItemWidget(source, this);
-	sceneItem->setFixedHeight(34);
-    sceneItem->setMaximumWidth(82);
+	sceneItem->setFixedHeight(40);
+	sceneItem->setMaximumWidth(82);
 	
 	// 连接信号
 	connect(sceneItem, &SceneListItemWidget::sceneSelected, this, &ScenePanel::onSceneItemClicked);
@@ -319,28 +320,13 @@ void ScenePanel::onAddSceneButtonClicked()
             return;
         }
         
-        // 创建场景
+        // 创建场景（obs_scene_create 会触发 source_create，OBSBasic::SourceCreated 自动调用 AddScene）
         OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
         if (scene) {
             obs_source_t *scene_source = obs_scene_get_source(scene);
-            
-			// 添加新场景项到 UI
-			int totalItems = m_sceneItems.size();
-			int row = totalItems / 3;
-			int col = totalItems % 3;
-			addSceneItem(scene_source, row, col);
-	
-			// 移动"+"按钮到下一个位置
-			m_sceneGridLayout->removeWidget(m_addSceneButton);
-			int nextRow = (totalItems + 1) / 3;
-			int nextCol = (totalItems + 1) % 3;
-			m_sceneGridLayout->addWidget(m_addSceneButton, nextRow, nextCol);
-			
-			// 设置当前场景，这会触发 AddScene 回调并更新 OBS 的内部状态
+
+			// 仅设置当前场景，AddScene 由 SourceCreated 回调自动完成
 			main->SetCurrentScene(scene_source);
-	
-			// 选中新添加的场景
-			selectScene(totalItems);
         }
     }
 }
@@ -410,8 +396,13 @@ void ScenePanel::onSceneItemClicked(OBSSource source)
 		selectScene(index);
 	}
 	
-	// 切换到对应的场景（只影响预览画面，不影响直播画面）
-	obs_frontend_set_current_preview_scene(source);
+	// 切换场景：导播模式仅更新预览，普通模式直接切换当前场景
+	OBSBasic *main = OBSBasic::Get();
+	if (main && main->IsPreviewProgramMode()) {
+		obs_frontend_set_current_preview_scene(source);
+	} else {
+		obs_frontend_set_current_scene(source);
+	}
 	
 	// 更新当前场景的源列表
 	updateCurrentSceneSources();

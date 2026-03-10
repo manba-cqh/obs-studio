@@ -57,5 +57,6 @@ private:
     
     int m_currentSceneIndex;
     QList<SceneListItemWidget*> m_sceneItems;
+    bool m_initialSelectionDone = false;
 };
 

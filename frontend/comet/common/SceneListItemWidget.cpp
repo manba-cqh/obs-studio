@@ -43,9 +43,11 @@ SceneListItemWidget::~SceneListItemWidget()
 void SceneListItemWidget::initUI()
 {
 	setAttribute(Qt::WA_StyledBackground, true);
+	setAttribute(Qt::WA_AcceptTouchEvents, true);
 	setProperty("scene_item", true);
 	setCursor(Qt::PointingHandCursor);
-	setMouseTracking(true); // 启用鼠标跟踪以支持悬停效果
+	setMouseTracking(true);
+	setFocusPolicy(Qt::StrongFocus);
 
 	m_layout = new QHBoxLayout(this);
 	m_layout->setContentsMargins(8, 0, 4, 0);
@@ -131,15 +133,20 @@ bool SceneListItemWidget::eventFilter(QObject *obj, QEvent *event)
 
 void SceneListItemWidget::mousePressEvent(QMouseEvent *event)
 {
-	// 如果点击的是三个点按钮区域，不触发场景选择
-	if (m_moreButton && m_moreButton->geometry().contains(event->pos())) {
-		QWidget::mousePressEvent(event);
-		return;
+	// 正确判断是否点击在三个点按钮上（使用 mapFrom 转换坐标系）
+	if (m_moreButton) {
+		QPoint posInBtn = m_moreButton->mapFrom(this, event->pos());
+		if (m_moreButton->rect().contains(posInBtn)) {
+			QWidget::mousePressEvent(event);
+			return;
+		}
 	}
 	
-	// 点击场景项，触发选择
+	// 点击场景项主体区域，立即触发选择
 	if (event->button() == Qt::LeftButton && m_source) {
+		event->accept();
 		emit sceneSelected(m_source);
+		return;
 	}
 	
 	QWidget::mousePressEvent(event);
