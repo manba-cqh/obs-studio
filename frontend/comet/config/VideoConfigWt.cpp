@@ -165,6 +165,12 @@ void VideoConfigWt::loadVideoSettings()
 		return;
 	}
 	
+	// 整个加载过程阻塞信号，避免 clear/addItem 时触发的 currentTextChanged 覆盖竖屏配置
+	m_baseResolutionCombo->blockSignals(true);
+	m_baseResolutionCombo->lineEdit()->blockSignals(true);
+	m_outputResolutionCombo->blockSignals(true);
+	m_outputResolutionCombo->lineEdit()->blockSignals(true);
+	
 	// 加载分辨率列表
 	m_baseResolutionCombo->clear();
 	m_outputResolutionCombo->clear();
@@ -213,18 +219,13 @@ void VideoConfigWt::loadVideoSettings()
 	QString baseRes = ResString(baseCX, baseCY);
 	QString outputRes = ResString(outputCX, outputCY);
 	
-	// 同时阻止 QComboBox 和 QLineEdit 的信号
-	m_baseResolutionCombo->blockSignals(true);
-	m_baseResolutionCombo->lineEdit()->blockSignals(true);
 	m_baseResolutionCombo->lineEdit()->setText(baseRes);
-	m_baseResolutionCombo->lineEdit()->blockSignals(false);
-	m_baseResolutionCombo->blockSignals(false);
-	
-	m_outputResolutionCombo->blockSignals(true);
-	m_outputResolutionCombo->lineEdit()->blockSignals(true);
 	m_outputResolutionCombo->lineEdit()->setText(outputRes);
-	m_outputResolutionCombo->lineEdit()->blockSignals(false);
+	
+	m_baseResolutionCombo->blockSignals(false);
+	m_baseResolutionCombo->lineEdit()->blockSignals(false);
 	m_outputResolutionCombo->blockSignals(false);
+	m_outputResolutionCombo->lineEdit()->blockSignals(false);
 	
 	updateAspectRatioLabels();
 	
