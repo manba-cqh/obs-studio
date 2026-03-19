@@ -125,9 +125,11 @@ void AudioMixPanel::setupAudioControl(AudioControlItem &item, OBSSource source, 
     QHBoxLayout *dropdownLayout = new QHBoxLayout();
     dropdownLayout->setContentsMargins(0, 0, 0, 0);
     dropdownLayout->setSpacing(0);
-    item.dropdownBtn = new CommonComboBox(true,item.container);
+    item.dropdownBtn = new CommonComboBox(true, item.container);
+    item.dropdownBtn->setStyleSheet(item.dropdownBtn->styleSheet() + "QComboBox { font-size: 12px; font-weight: medium; }");
     populateDeviceList(item.dropdownBtn, isDesktop);
-    item.dropdownBtn->setFixedWidth(160);
+    item.dropdownBtn->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    item.dropdownBtn->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
     dropdownLayout->addWidget(item.dropdownBtn);
     dropdownLayout->addStretch();
     

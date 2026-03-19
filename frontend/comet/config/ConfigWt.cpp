@@ -67,7 +67,7 @@ void ConfigWt::initUI()
     QLabel *titleLabel = new QLabel("直播设置");
     titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     titleLabel->setFixedHeight(32);
-    titleLabel->setProperty("label_15_medium", true);
+    titleLabel->setProperty("label_15_blod", true);
 	setupNavigation();
 
     mainLayout->addWidget(leftWidget, 0);
@@ -86,7 +86,7 @@ void ConfigWt::initUI()
     configHeaderLayout->setSpacing(0);
     m_configTitle = new QLabel("", configHeaderWidget);
     m_configTitle->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    m_configTitle->setProperty("label_15_medium", true);
+    m_configTitle->setProperty("label_15_bold", true);
     QPushButton *closeButton = new QPushButton(configHeaderWidget);
     closeButton->setFixedSize(24, 24);
     closeButton->setStyleSheet(BUTTON_QSS_STYLE("close.svg", "close_hover.svg", "close_hover.svg"));
