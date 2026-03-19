@@ -32,13 +32,11 @@ void EmptySceneWidget::initUI()
 	QVBoxLayout *addLayout = new QVBoxLayout(addWidget);
 	addLayout->setContentsMargins(0, 0, 0, 0);
 	addLayout->setSpacing(16);
-	addLayout->setAlignment(Qt::AlignCenter);
-	
 	m_addBtn = new QPushButton();
 	m_addBtn->setFixedSize(64, 64);
 	m_addBtn->setStyleSheet(BUTTON_QSS_STYLE("add_big.svg", "add_big_hover.svg", "add_big_hover.svg"));
 	connect(m_addBtn, &QPushButton::clicked, this, &EmptySceneWidget::onAddBtnClicked);
-	addLayout->addWidget(m_addBtn);
+	addLayout->addWidget(m_addBtn, 0, Qt::AlignHCenter);
 	
 	m_titleLabel = new QLabel("添加直播素材");
 	m_titleLabel->setAlignment(Qt::AlignCenter);
@@ -49,7 +47,7 @@ void EmptySceneWidget::initUI()
 		"    font-weight: medium;"
 		"}"
 	);
-	addLayout->addWidget(m_titleLabel);
+	addLayout->addWidget(m_titleLabel, 0, Qt::AlignHCenter);
 	
 	m_mainLayout->addWidget(addWidget, 0, Qt::AlignCenter);
 	
