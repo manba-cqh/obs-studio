@@ -1,6 +1,22 @@
 #pragma once
 
 #include <QComboBox>
+#include <QStyledItemDelegate>
+
+/** 不绘制 item 焦点虚线框的 delegate */
+class NoFocusItemDelegate : public QStyledItemDelegate
+{
+public:
+    explicit NoFocusItemDelegate(QObject *parent = nullptr) : QStyledItemDelegate(parent) {}
+
+    void paint(QPainter *painter, const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override
+    {
+        QStyleOptionViewItem opt = option;
+        opt.state &= ~QStyle::State_HasFocus;  // 去除焦点状态，避免绘制虚线框
+        QStyledItemDelegate::paint(painter, opt, index);
+    }
+};
 
 class CommonComboBox : public QComboBox
 {
@@ -9,6 +25,7 @@ public:
         : QComboBox(parent)
     {
         setAttribute(Qt::WA_StyledBackground, true);
+        setItemDelegate(new NoFocusItemDelegate(this));
         // TODO 全局设置样式表不生效
         setStyleSheet(QString(
             "QComboBox {"
@@ -44,10 +61,12 @@ public:
             "    selection-background-color: #5370FF;"
             "    selection-color: #FFFFFFFF;"
             "    padding: 4px;"
+            "    outline: none;"
             "}"
             "QComboBox QAbstractItemView::item {"
             "    padding: 6px 12px;"
             "    border-radius: 2px;"
+            "    outline: none;"
             "}"
             "QComboBox QAbstractItemView::item:hover {"
             "    background-color: #454558;"
