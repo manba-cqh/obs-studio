@@ -220,13 +220,13 @@ QDoubleSpinBox::down-button:hover {
 /* 箭头 */
 QSpinBox::up-arrow,
 QDoubleSpinBox::up-arrow {
-    image: url(:/images/drop_up.svg);
+    image: url(:/images/drop_up.png);
     width: 14px;
     height: 12px;
 }
 QSpinBox::down-arrow,
 QDoubleSpinBox::down-arrow {
-    image: url(:/images/drop_down.svg);
+    image: url(:/images/drop_down.png);
     width: 14px;
     height: 12px;
 }
