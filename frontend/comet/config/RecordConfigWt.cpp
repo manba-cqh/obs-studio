@@ -105,6 +105,16 @@ void RecordConfigWt::setupRecordingSettings()
 	connect(m_recordingFormatCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &RecordConfigWt::onRecordingFormatChanged);
 	
+	// 录制质量
+	m_recordingQualityCombo = new CommonComboBox();
+	m_recordingQualityCombo->addItem(QTStr("Basic.Settings.Output.Simple.RecordingQuality.Stream"), QString("Stream"));
+	m_recordingQualityCombo->addItem(QTStr("Basic.Settings.Output.Simple.RecordingQuality.Small"), QString("Small"));
+	m_recordingQualityCombo->addItem(QTStr("Basic.Settings.Output.Simple.RecordingQuality.HQ"), QString("HQ"));
+	m_recordingQualityCombo->addItem(QTStr("Basic.Settings.Output.Simple.RecordingQuality.Lossless"), QString("Lossless"));
+	formLayout->addRow("录制质量:", m_recordingQualityCombo);
+	connect(m_recordingQualityCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+		this, &RecordConfigWt::onRecordingQualityChanged);
+	
 	// 文件名格式
 	m_fileNameFormatEdit = new CommonLineEdit();
 	formLayout->addRow("文件名格式:", m_fileNameFormatEdit);
@@ -279,6 +289,17 @@ void RecordConfigWt::loadRecordingSettings()
 			m_recordingFormatCombo->blockSignals(false);
 		}
 	}
+	
+	// 加载录制质量
+	const char *recQuality = config_get_string(m_config, "SimpleOutput", "RecQuality");
+	if (!recQuality || strlen(recQuality) == 0) {
+		recQuality = "Stream";
+	}
+	int qualityIdx = m_recordingQualityCombo->findData(QT_UTF8(recQuality));
+	if (qualityIdx == -1) qualityIdx = 0;
+	m_recordingQualityCombo->blockSignals(true);
+	m_recordingQualityCombo->setCurrentIndex(qualityIdx);
+	m_recordingQualityCombo->blockSignals(false);
 	
 	// 加载文件名格式
 	const char *filenameFormat = config_get_string(m_config, "Output", "FilenameFormatting");
@@ -505,6 +526,17 @@ void RecordConfigWt::onRecordingFormatChanged(int index)
 	
 	QString format = m_recordingFormatCombo->itemData(index).toString();
 	config_set_string(m_config, "AdvOut", "RecFormat2", QT_TO_UTF8(format));
+	config_save(m_config);
+}
+
+void RecordConfigWt::onRecordingQualityChanged(int index)
+{
+	if (index < 0 || !m_config) {
+		return;
+	}
+	
+	QString quality = m_recordingQualityCombo->itemData(index).toString();
+	config_set_string(m_config, "SimpleOutput", "RecQuality", QT_TO_UTF8(quality));
 	config_save(m_config);
 }
 

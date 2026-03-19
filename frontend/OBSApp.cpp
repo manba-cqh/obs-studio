@@ -1251,7 +1251,7 @@ bool OBSApp::OBSInit()
 	mainWindow->OBSInit();
 	
 	// 隐藏 OBSBasic 窗口
-	mainWindow->hide();
+	// mainWindow->hide();
 	
 	// 创建并显示 CometMainWindow
 	cometMainWindow = new CometMainWindow();

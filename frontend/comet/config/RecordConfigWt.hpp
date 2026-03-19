@@ -41,6 +41,7 @@ private:
 private slots:
 	void onSavePathButtonClicked();
 	void onRecordingFormatChanged(int index);
+	void onRecordingQualityChanged(int index);
 	void onVideoEncoderChanged(int index);
 	void onAudioEncoderChanged(int index);
 	void onAudioTrackChanged();
@@ -65,6 +66,9 @@ private:
 	
 	// 录像格式
 	CommonComboBox *m_recordingFormatCombo;
+	
+	// 录制质量
+	CommonComboBox *m_recordingQualityCombo;
 	
 	// 文件名格式
 	CommonLineEdit *m_fileNameFormatEdit;

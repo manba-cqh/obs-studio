@@ -14,6 +14,8 @@
 #include <QAction>
 #include <QDateTime>
 #include <QFrame>
+#include <QMessageBox>
+#include <QTimer>
 #include <QHBoxLayout>
 #include <QMenu>
 #include <QIcon>
@@ -467,7 +469,7 @@ void BroadcastModePanel::createRecordSection()
 	m_recordLabel = new QLabel("录制", m_recordSection);
 	m_recordLabel->setProperty("label_14_medium", true);
 	recLayout->addWidget(m_recordLabel);
-	recLayout->addSpacing(10);
+	recLayout->addSpacing(8);
 
 	// 开播自动录制
 	m_autoRecordToggle = new QCheckBox("开播自动录制", m_recordSection);
@@ -491,7 +493,7 @@ void BroadcastModePanel::createRecordSection()
 	m_recordTimeLabel = new QLabel("00:00:00", m_recordSection);
 	m_recordTimeLabel->setProperty("label_14_medium", true);
 	recLayout->addWidget(m_recordTimeLabel);
-	recLayout->addSpacing(5);
+	recLayout->addSpacing(3);
 
 	// 录制按钮
 	m_recordButton = new QPushButton(m_recordSection);
@@ -502,7 +504,7 @@ void BroadcastModePanel::createRecordSection()
 	m_recordButton->setStyleSheet(BUTTON_CHECKABLE_QSS_STYLE("not_started.svg", "not_started.svg", "not_started.svg", "recording.svg", "recording.svg", "recording.svg"));
 	connect(m_recordButton, &QPushButton::clicked, this, &BroadcastModePanel::onRecordButtonClicked);
 	recLayout->addWidget(m_recordButton);
-	recLayout->addSpacing(5);
+	recLayout->addSpacing(3);
 
 	// 暂停按钮
 	m_pauseButton = new QPushButton(m_recordSection);
@@ -530,11 +532,21 @@ void BroadcastModePanel::onPauseButtonClicked()
 {
 	if (!m_isRecording) return;
 
+	OBSBasic *main = OBSBasic::Get();
+	if (!main || !main->isRecordingPausable) {
+		QMessageBox::information(this, QString(), QTStr("Basic.Settings.Output.Simple.Warn.CannotPause"));
+		// 立即同步 UI 以恢复正确的按钮状态
+		QTimer::singleShot(0, this, &BroadcastModePanel::updateRecordingState);
+		return;
+	}
+
 	if (m_isPaused) {
 		obs_frontend_recording_pause(false);
 	} else {
 		obs_frontend_recording_pause(true);
 	}
+	// 若后端暂停未生效（如 outputHandler 不可用），延后同步以修正 UI
+	QTimer::singleShot(100, this, &BroadcastModePanel::updateRecordingState);
 }
 
 void BroadcastModePanel::onAutoRecordToggled(bool checked)
