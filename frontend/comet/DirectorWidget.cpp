@@ -106,7 +106,7 @@ void DirectorWidget::initUI()
 	m_transitionLabel = new QLabel("转场", this);
 	m_controlLayout->addWidget(m_transitionLabel);
 	
-	m_transitionCombo = new CommonComboBox(this);
+	m_transitionCombo = new CommonComboBox(false, false, this);
 	m_transitionCombo->addItem("淡入淡出");
 	m_transitionCombo->addItem("滑动");
 	m_transitionCombo->addItem("缩放");

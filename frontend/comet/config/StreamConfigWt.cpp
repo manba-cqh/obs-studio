@@ -85,7 +85,7 @@ void StreamConfigWt::initUI()
 	connect(addPlatformBtn, &QPushButton::clicked, this, &StreamConfigWt::onAddPlatformClicked);
 	platformHeaderLayout->addWidget(addPlatformBtn);
 
-	m_platformCombo = new CommonComboBox();
+	m_platformCombo = new CommonComboBox(false, true);
 	m_platformCombo->setProperty("label_14_medium", true);
 	m_platformCombo->setMinimumWidth(160);
 	m_platformCombo->setIconSize(QSize(20, 20));
@@ -103,12 +103,12 @@ void StreamConfigWt::initUI()
 	formLayout->setSpacing(18);
 	formLayout->addWidget(createSectionTitle("推流设置"));
 
-	m_serverEdit = new CommonLineEdit();
+	m_serverEdit = new CommonLineEdit(true);
 	m_serverEdit->setPlaceholderText("rtmp://push-rtmp-hs-f5.douyincdn.com/thirdgame/");
 	connect(m_serverEdit, &QLineEdit::editingFinished, this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("服务器", m_serverEdit));
 
-	m_streamKeyEdit = new CommonLineEdit();
+	m_streamKeyEdit = new CommonLineEdit(true);
 	m_streamKeyEdit->setPlaceholderText(QStringLiteral("************************"));
 	m_streamKeyEdit->setEchoMode(QLineEdit::Password);
 	connect(m_streamKeyEdit, &QLineEdit::editingFinished, this, &StreamConfigWt::saveCurrentPlatformConfig);
@@ -120,13 +120,13 @@ void StreamConfigWt::initUI()
 	keyRow->addWidget(m_keyToggleBtn);
 	formLayout->addLayout(keyRow);
 
-	m_delayCombo = new CommonComboBox();
+	m_delayCombo = new CommonComboBox(false, true);
 	m_delayCombo->addItems(QStringList{"0s", "1s", "2s", "3s"});
 	connect(m_delayCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("直播延迟", m_delayCombo));
 
-	m_videoSourceCombo = new CommonComboBox();
+	m_videoSourceCombo = new CommonComboBox(false, true);
 	m_videoSourceCombo->addItems(QStringList{"场景", "场景 - 画面一", "场景 - 画面二"});
 	connect(m_videoSourceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
@@ -152,25 +152,25 @@ void StreamConfigWt::initUI()
 
 	formLayout->addLayout(createRow("音轨", trackContainer));
 
-	m_audioEncoderCombo = new CommonComboBox();
+	m_audioEncoderCombo = new CommonComboBox(false, true);
 	m_audioEncoderCombo->addItems(QStringList{"FFmpeg AAC", "FFmpeg Opus"});
 	connect(m_audioEncoderCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("音频编码器", m_audioEncoderCombo));
 
-	m_videoEncoderCombo = new CommonComboBox();
+	m_videoEncoderCombo = new CommonComboBox(false, true);
 	m_videoEncoderCombo->addItems(QStringList{"NVIDIA NVENC H.264", "x264", "AV1 (实验)"});
 	connect(m_videoEncoderCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("视频编码器", m_videoEncoderCombo));
 
-	m_scalingCombo = new CommonComboBox();
+	m_scalingCombo = new CommonComboBox(false, true);
 	m_scalingCombo->addItems(QStringList{"双线性插值 (最快)", "双三次插值", "Lanczos"});
 	connect(m_scalingCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("重新缩放输出", m_scalingCombo));
 
-	m_resolutionCombo = new CommonComboBox();
+	m_resolutionCombo = new CommonComboBox(false, true);
 	m_resolutionCombo->addItems(QStringList{
 		"1280×720", "1920×1080", "2560×1440",
 		"720×1280", "1080×1920", "1440×2560"
@@ -181,49 +181,49 @@ void StreamConfigWt::initUI()
 
 	formLayout->addWidget(createSectionTitle("编码器设置"));
 
-	m_rateControlCombo = new CommonComboBox();
+	m_rateControlCombo = new CommonComboBox(false, true);
 	m_rateControlCombo->addItems(QStringList{"恒定比特率 (CBR)", "可变比特率 (VBR)", "恒定质量 (CQP)"});
 	connect(m_rateControlCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("比特率控制", m_rateControlCombo));
 
-	m_bitrateCombo = new CommonComboBox();
+	m_bitrateCombo = new CommonComboBox(false, true);
 	m_bitrateCombo->addItems(QStringList{"8000Kbps", "10000Kbps", "12000Kbps", "15000Kbps"});
 	connect(m_bitrateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("比特率", m_bitrateCombo));
 
-	m_keyframeCombo = new CommonComboBox();
+	m_keyframeCombo = new CommonComboBox(false, true);
 	m_keyframeCombo->addItems(QStringList{"0s", "1s", "2s", "4s", "5s"});
 	connect(m_keyframeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("关键帧间隔", m_keyframeCombo));
 
-	m_presetCombo = new CommonComboBox();
+	m_presetCombo = new CommonComboBox(false, true);
 	m_presetCombo->addItems(QStringList{"双线性插值", "快速", "标准", "慢速 (画质优先)"});
 	connect(m_presetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("预设", m_presetCombo));
 
-	m_tuneCombo = new CommonComboBox();
+	m_tuneCombo = new CommonComboBox(false, true);
 	m_tuneCombo->addItems(QStringList{"高质量", "低延迟", "无"});
 	connect(m_tuneCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("调节", m_tuneCombo));
 
-	m_multipassCombo = new CommonComboBox();
+	m_multipassCombo = new CommonComboBox(false, true);
 	m_multipassCombo->addItems(QStringList{"单次编码", "二次编码 (1/4 分辨率)", "二次编码 (全分辨率)"});
 	connect(m_multipassCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("多次编码模式", m_multipassCombo));
 
-	m_profileCombo = new CommonComboBox();
+	m_profileCombo = new CommonComboBox(false, true);
 	m_profileCombo->addItems(QStringList{"high", "main", "baseline"});
 	connect(m_profileCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("配置文件", m_profileCombo));
 
-	m_bframeCombo = new CommonComboBox();
+	m_bframeCombo = new CommonComboBox(false, true);
 	m_bframeCombo->addItems(QStringList{"0", "1", "2", "3", "4", "5", "6"});
 	connect(m_bframeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &StreamConfigWt::saveCurrentPlatformConfig);
@@ -241,7 +241,7 @@ void StreamConfigWt::initUI()
 	checkboxRow->addStretch();
 	formLayout->addLayout(checkboxRow);
 
-	m_customOptionsEdit = new CommonLineEdit();
+	m_customOptionsEdit = new CommonLineEdit(true);
 	m_customOptionsEdit->setPlaceholderText("自定义编码器选项");
 	connect(m_customOptionsEdit, &QLineEdit::editingFinished, this, &StreamConfigWt::saveCurrentPlatformConfig);
 	formLayout->addLayout(createRow("自定义编码器选项", m_customOptionsEdit));

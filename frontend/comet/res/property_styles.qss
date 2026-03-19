@@ -142,7 +142,7 @@ OBSBasicProperties QSpinBox:hover,
 OBSBasicProperties QDoubleSpinBox:hover,
 OBSBasicFilters QSpinBox:hover,
 OBSBasicFilters QDoubleSpinBox:hover {
-    border: 1px solid #5370FF;
+    border-color: #5370FF;
 }
 
 OBSBasicProperties QSpinBox:focus,
@@ -150,6 +150,28 @@ OBSBasicProperties QDoubleSpinBox:focus,
 OBSBasicFilters QSpinBox:focus,
 OBSBasicFilters QDoubleSpinBox:focus {
     border: 1px solid #5370FF;
+    outline: none;
+}
+
+/* 属性/滤镜窗口 QComboBox：默认边框，hover 改变边框颜色 */
+OBSBasicProperties QComboBox,
+OBSBasicFilters QComboBox {
+    background-color: #3C3C4D;
+    color: #EEEFFF;
+    border: 1px solid #454558;
+    border-radius: 5px;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-weight: medium;
+    min-height: 28px;
+}
+OBSBasicProperties QComboBox:hover,
+OBSBasicFilters QComboBox:hover {
+    border-color: #5370FF;
+}
+OBSBasicProperties QComboBox:focus,
+OBSBasicFilters QComboBox:focus {
+    border-color: #5370FF;
     outline: none;
 }
 
@@ -169,14 +191,14 @@ OBSBasicProperties QTextEdit:hover,
 OBSBasicProperties QPlainTextEdit:hover,
 OBSBasicFilters QTextEdit:hover,
 OBSBasicFilters QPlainTextEdit:hover {
-    border: 1px solid #5370FF;
+    border-color: #5370FF;
 }
 
 OBSBasicProperties QTextEdit:focus,
 OBSBasicProperties QPlainTextEdit:focus,
 OBSBasicFilters QTextEdit:focus,
 OBSBasicFilters QPlainTextEdit:focus {
-    border: 1px solid #5370FF;
+    border-color: #5370FF;
     outline: none;
 }
 
@@ -199,7 +221,7 @@ OBSBasicFilters QLineEdit:hover {
 
 OBSBasicProperties QLineEdit:focus,
 OBSBasicFilters QLineEdit:focus {
-    border: 1px solid #5370FF;
+    border-color: #5370FF;
     outline: none;
 }
 

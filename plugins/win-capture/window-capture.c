@@ -550,7 +550,6 @@ static obs_properties_t *wc_properties(void *data)
 
 	if (audio_capture_available()) {
 		p = obs_properties_add_bool(ppts, "capture_audio", TEXT_CAPTURE_AUDIO);
-		obs_property_set_long_description(p, TEXT_CAPTURE_AUDIO_TT);
 	}
 
 	obs_properties_add_bool(ppts, "cursor", TEXT_CAPTURE_CURSOR);

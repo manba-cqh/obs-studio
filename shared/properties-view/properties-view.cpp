@@ -648,7 +648,7 @@ QWidget *OBSPropertiesView::AddList(obs_property_t *prop, bool &warning)
 
 	int idx = -1;
 
-	CommonComboBox *combo = new CommonComboBox();
+	CommonComboBox *combo = new CommonComboBox(false, true);
 	for (size_t i = 0; i < count; i++)
 		AddComboItem(combo, prop, i);
 
@@ -1058,7 +1058,7 @@ static QWidget *CreateSimpleFPSValues(OBSFrameRatePropertyWidget *fpsProps, bool
 	auto items = vector<common_frame_rate>{};
 	items.reserve(sizeof(common_fps) / sizeof(common_frame_rate));
 
-	auto combo = fpsProps->simpleFPS = new CommonComboBox();
+	auto combo = fpsProps->simpleFPS = new CommonComboBox(false, true);
 
 	combo->addItem("", QVariant::fromValue(make_fps(0, 0)));
 	for (const auto &fps : common_fps) {
@@ -1134,7 +1134,7 @@ static QWidget *CreateRationalFPS(OBSFrameRatePropertyWidget *fpsProps, bool &se
 	auto str = QObject::tr("Basic.PropertiesView.FPS.ValidFPSRanges");
 	auto rlabel = new QLabel{str};
 
-	auto combo = fpsProps->fpsRange = new CommonComboBox();
+	auto combo = fpsProps->fpsRange = new CommonComboBox(false, true);
 	auto convert_fps = media_frames_per_second_to_fps;
 	//auto convert_fi  = media_frames_per_second_to_frame_interval;
 
@@ -1182,7 +1182,7 @@ static OBSFrameRatePropertyWidget *CreateFrameRateWidget(obs_property_t *prop, b
 
 	swap(widget->fps_ranges, fps_ranges);
 
-	auto combo = widget->modeSelect = new CommonComboBox();
+	auto combo = widget->modeSelect = new CommonComboBox(false, true);
 	combo->addItem(QObject::tr("Basic.PropertiesView.FPS.Simple"), QVariant::fromValue(frame_rate_tag::simple()));
 	combo->addItem(QObject::tr("Basic.PropertiesView.FPS.Rational"),
 		       QVariant::fromValue(frame_rate_tag::rational()));

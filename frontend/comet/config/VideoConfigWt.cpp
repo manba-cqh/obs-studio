@@ -101,7 +101,7 @@ void VideoConfigWt::setupVideoSettings()
 	
 	// 基础(画布)分辨率
 	QHBoxLayout *baseResLayout = new QHBoxLayout();
-	m_baseResolutionCombo = new CommonComboBox();
+	m_baseResolutionCombo = new CommonComboBox(false, true);
 	m_baseResolutionCombo->setEditable(true);
 	m_baseAspectRatioLabel = new QLabel("长宽比 16:9");
 	m_baseAspectRatioLabel->setMinimumWidth(100);
@@ -115,7 +115,7 @@ void VideoConfigWt::setupVideoSettings()
 	
 	// 输出(画布)分辨率
 	QHBoxLayout *outputResLayout = new QHBoxLayout();
-	m_outputResolutionCombo = new CommonComboBox();
+	m_outputResolutionCombo = new CommonComboBox(false, true);
 	m_outputResolutionCombo->setEditable(true);
 	m_outputAspectRatioLabel = new QLabel("长宽比 16:9");
 	m_outputAspectRatioLabel->setMinimumWidth(100);
@@ -128,7 +128,7 @@ void VideoConfigWt::setupVideoSettings()
 		this, &VideoConfigWt::onOutputResolutionChanged);
 	
 	// 缩小算法
-	m_downscaleFilterCombo = new CommonComboBox();
+	m_downscaleFilterCombo = new CommonComboBox(false, true);
 	m_downscaleFilterCombo->addItem("双线性(快速缩放, 32个样本)", "bilinear");
 	m_downscaleFilterCombo->addItem("区域(平滑缩放)", "area");
 	m_downscaleFilterCombo->addItem("双三次插值(平滑缩放, 32个样本)", "bicubic");
@@ -138,7 +138,7 @@ void VideoConfigWt::setupVideoSettings()
 		this, &VideoConfigWt::onDownscaleFilterChanged);
 	
 	// 常用帧率
-	m_fpsCombo = new CommonComboBox();
+	m_fpsCombo = new CommonComboBox(false, true);
 	m_fpsCombo->addItem("10", "10");
 	m_fpsCombo->addItem("20", "20");
 	m_fpsCombo->addItem("24 NTSC", "23.976");

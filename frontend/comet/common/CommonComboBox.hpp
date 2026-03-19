@@ -21,12 +21,14 @@ public:
 class CommonComboBox : public QComboBox
 {
 public:
-    explicit CommonComboBox(bool isTransparent = false, QWidget *parent = nullptr)
+    explicit CommonComboBox(bool isTransparent = false, bool configStyle = false, QWidget *parent = nullptr)
         : QComboBox(parent)
     {
         setAttribute(Qt::WA_StyledBackground, true);
         setItemDelegate(new NoFocusItemDelegate(this));
-        // TODO 全局设置样式表不生效
+        QString borderNormal = configStyle ? "border: 1px solid #454558;" : "";
+        QString borderHover = isTransparent ? "border: none;" : (configStyle ? "border-color: #5370FF;" : "border: 1px solid #5370FF;");
+        QString borderFocus = isTransparent ? "border: none;" : (configStyle ? "border-color: #5370FF;" : "border: 1px solid #5370FF;");
         setStyleSheet(QString(
             "QComboBox {"
             "    background-color: %1;"
@@ -35,6 +37,7 @@ public:
             "    padding: 6px 10px;"
             "    font-size: 14px;"
             "    font-weight: medium;"
+            "    %4"
             "}"
             "QComboBox:hover {"
             "    %2;"
@@ -76,7 +79,8 @@ public:
             "    color: #FFFFFFFF;"
             "}"
         ).arg(isTransparent ? "transparent" : "#3C3C4D")
-        .arg(isTransparent ? "border: none;" : "border: 1px solid #5370FF;")
-        .arg(isTransparent ? "border: none;" : "border: 1px solid #5370FF;"));
+        .arg(borderHover)
+        .arg(borderFocus)
+        .arg(borderNormal));
     }
 };

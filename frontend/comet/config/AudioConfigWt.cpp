@@ -70,7 +70,7 @@ void AudioConfigWt::setupMicrophoneSettings()
 	micLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 选择设备
-	m_micDeviceCombo = new CommonComboBox();
+	m_micDeviceCombo = new CommonComboBox(false, true);
 	micLayout->addRow("选择设备:", m_micDeviceCombo);
 	connect(m_micDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
 		this, &AudioConfigWt::onMicrophoneDeviceChanged);
@@ -91,7 +91,7 @@ void AudioConfigWt::setupMicrophoneSettings()
 	connect(m_micVolumeSlider, &QSlider::valueChanged, this, &AudioConfigWt::onMicrophoneVolumeChanged);
 	
 	// 监听
-	m_micMonitorCombo = new CommonComboBox();
+	m_micMonitorCombo = new CommonComboBox(false, true);
 	m_micMonitorCombo->addItem("关闭监听", (int)OBS_MONITORING_TYPE_NONE);
 	m_micMonitorCombo->addItem("仅监听(输出静音)", (int)OBS_MONITORING_TYPE_MONITOR_ONLY);
 	m_micMonitorCombo->addItem("监听并输出", (int)OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
@@ -107,7 +107,7 @@ void AudioConfigWt::setupMicrophoneSettings()
 	micAdvancedLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 声道
-	m_micChannelCombo = new CommonComboBox();
+	m_micChannelCombo = new CommonComboBox(false, true);
 	m_micChannelCombo->addItem("单声道", "Mono");
 	m_micChannelCombo->addItem("立体声", "Stereo");
 	micAdvancedLayout->addRow("声道:", m_micChannelCombo);
@@ -157,7 +157,7 @@ void AudioConfigWt::setupSpeakerSettings()
 	speakerLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 选择设备
-	m_speakerDeviceCombo = new CommonComboBox();
+	m_speakerDeviceCombo = new CommonComboBox(false, true);
 	speakerLayout->addRow("选择设备:", m_speakerDeviceCombo);
 	connect(m_speakerDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &AudioConfigWt::onSpeakerDeviceChanged);
@@ -178,7 +178,7 @@ void AudioConfigWt::setupSpeakerSettings()
 	connect(m_speakerVolumeSlider, &QSlider::valueChanged, this, &AudioConfigWt::onSpeakerVolumeChanged);
 	
 	// 监听
-	m_speakerMonitorCombo = new CommonComboBox();
+	m_speakerMonitorCombo = new CommonComboBox(false, true);
 	m_speakerMonitorCombo->addItem("关闭监听", (int)OBS_MONITORING_TYPE_NONE);
 	m_speakerMonitorCombo->addItem("仅监听(输出静音)", (int)OBS_MONITORING_TYPE_MONITOR_ONLY);
 	m_speakerMonitorCombo->addItem("监听并输出", (int)OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
@@ -194,7 +194,7 @@ void AudioConfigWt::setupSpeakerSettings()
 	speakerAdvancedLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 声道
-	m_speakerChannelCombo = new CommonComboBox();
+	m_speakerChannelCombo = new CommonComboBox(false, true);
 	m_speakerChannelCombo->addItem("单声道", "Mono");
 	m_speakerChannelCombo->addItem("立体声", "Stereo");
 	speakerAdvancedLayout->addRow("声道:", m_speakerChannelCombo);
@@ -243,7 +243,7 @@ void AudioConfigWt::setupOtherAudioSources()
 	otherLayout->setSpacing(15);
 	otherLayout->setLabelAlignment(Qt::AlignRight);
 
-	m_otherDeviceCombo = new CommonComboBox();
+	m_otherDeviceCombo = new CommonComboBox(false, true);
 	otherLayout->addRow("选择设备:", m_otherDeviceCombo);
 	connect(m_otherDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &AudioConfigWt::onOtherDeviceChanged);
@@ -262,7 +262,7 @@ void AudioConfigWt::setupOtherAudioSources()
 	otherLayout->addRow("输出音量:", otherVolumeLayout);
 	connect(m_otherVolumeSlider, &QSlider::valueChanged, this, &AudioConfigWt::onOtherVolumeChanged);
 
-	m_otherMonitorCombo = new CommonComboBox();
+	m_otherMonitorCombo = new CommonComboBox(false, true);
 	m_otherMonitorCombo->addItem("关闭监听", (int)OBS_MONITORING_TYPE_NONE);
 	m_otherMonitorCombo->addItem("仅监听(输出静音)", (int)OBS_MONITORING_TYPE_MONITOR_ONLY);
 	m_otherMonitorCombo->addItem("监听并输出", (int)OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT);
@@ -270,7 +270,7 @@ void AudioConfigWt::setupOtherAudioSources()
 	connect(m_otherMonitorCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
 		this, &AudioConfigWt::onOtherMonitorChanged);
 
-	m_otherChannelCombo = new CommonComboBox();
+	m_otherChannelCombo = new CommonComboBox(false, true);
 	m_otherChannelCombo->addItem("单声道", "Mono");
 	m_otherChannelCombo->addItem("立体声", "Stereo");
 	otherLayout->addRow("声道:", m_otherChannelCombo);
@@ -315,7 +315,7 @@ void AudioConfigWt::setupGlobalAdvancedSettings()
 	globalLayout->setLabelAlignment(Qt::AlignRight);
 	
 	// 音频码率
-	m_audioBitrateCombo = new CommonComboBox();
+	m_audioBitrateCombo = new CommonComboBox(false, true);
 	m_audioBitrateCombo->addItem("160 kbps", 160);
 	m_audioBitrateCombo->addItem("192 kbps", 192);
 	m_audioBitrateCombo->addItem("224 kbps", 224);

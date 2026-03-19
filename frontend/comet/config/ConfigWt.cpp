@@ -67,7 +67,7 @@ void ConfigWt::initUI()
     QLabel *titleLabel = new QLabel("直播设置");
     titleLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     titleLabel->setFixedHeight(32);
-    titleLabel->setProperty("label_15_blod", true);
+    titleLabel->setProperty("label_15_bold", true);
 	setupNavigation();
 
     mainLayout->addWidget(leftWidget, 0);
