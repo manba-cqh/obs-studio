@@ -55,6 +55,11 @@ void PanelContainer::setCollapsed(bool collapsed)
 	update();
 }
 
+void PanelContainer::resetContentMargins(int left, int top, int right, int bottom)
+{
+	m_mainLayout->setContentsMargins(left, top, right, bottom);
+}
+
 void PanelContainer::setContentWidget(QWidget *widget)
 {
 	m_contentWidget = widget;

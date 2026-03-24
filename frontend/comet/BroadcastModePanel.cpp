@@ -319,6 +319,8 @@ void BroadcastModePanel::initUI()
 	contentLayout->setContentsMargins(0, 0, 0, 0);
 	contentLayout->setSpacing(8);
 
+	resetContentMargins(0, 0, 0, 0);
+
 	// 推流区域（可滚动）
 	m_streamScrollArea = new QScrollArea(contentWidget);
 	m_streamScrollArea->setWidgetResizable(true);
@@ -332,7 +334,7 @@ void BroadcastModePanel::initUI()
 
 	m_streamContainer = new QWidget();
 	m_streamLayout = new QVBoxLayout(m_streamContainer);
-	m_streamLayout->setContentsMargins(0, 0, 0, 8);  // 底部留白，避免最后一项被裁剪
+	m_streamLayout->setContentsMargins(12, 0, 12, 8);  // 底部留白，避免最后一项被裁剪
 	m_streamLayout->setSpacing(8);
 	m_streamLayout->addStretch();
 

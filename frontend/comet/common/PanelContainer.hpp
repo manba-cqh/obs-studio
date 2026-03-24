@@ -14,6 +14,8 @@ public:
 	void setCollapsed(bool collapsed);
 	bool isCollapsed() const { return m_collapsed; }
 
+	void resetContentMargins(int left, int top, int right, int bottom);
+
 protected:
 	virtual void paintEvent(QPaintEvent *event) override;
 
