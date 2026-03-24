@@ -279,11 +279,19 @@ OBSBasicFilters CommonButton:disabled {
 }
 
 /* 可编辑列表右侧工具栏按钮（幻灯片图像列表的加号/删除/设置/上移/下移），需显示图标（通过 class 属性匹配） */
-OBSBasicProperties QPushButton[class*="btn-tool"],
-OBSBasicFilters QPushButton[class*="btn-tool"] {
+OBSBasicProperties QPushButton[class*="btn-tool"] {
     padding: 6px;
     min-width: 28px;
     min-height: 28px;
+}
+
+/* 滤镜窗口列表下工具条：与 OBSBasicFilters.ui 中 maximumSize 22x22 一致，勿用 28px min 以免与 max 冲突导致底部被裁切 */
+OBSBasicFilters QPushButton[class*="btn-tool"] {
+    padding: 0px;
+    min-width: 22px;
+    min-height: 22px;
+    max-width: 22px;
+    max-height: 22px;
 }
 OBSBasicProperties QPushButton[class*="icon-plus"],
 OBSBasicFilters QPushButton[class*="icon-plus"] {
