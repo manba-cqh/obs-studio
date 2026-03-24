@@ -4,8 +4,6 @@
 CenterToolTipButton::CenterToolTipButton(const QString &tipText, QWidget *parent)
 	: QPushButton(parent)
 {
-	setAttribute(Qt::WA_StyledBackground, true);
-
 	m_tooltip = new CustomToolTip(tipText, nullptr);
 	m_tooltip->setText(tipText);
 	m_tooltip->adjustSize();
