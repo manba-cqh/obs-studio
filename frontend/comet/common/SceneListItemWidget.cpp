@@ -314,5 +314,6 @@ void SceneListItemWidget::onDeleteAction()
 		return;
 	}
 	main->RemoveSelectedScene(true);
-	emit sceneChanged();
+	/* 勿在此 emit sceneChanged：同步会触发 setupSceneButtons 并 delete 本控件，而 onDeleteAction 尚未返回导致崩溃。
+	 * OBS_FRONTEND_EVENT_SCENE_LIST_CHANGED 已 Queued 调用 refreshSceneList。 */
 }

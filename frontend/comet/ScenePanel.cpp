@@ -260,7 +260,9 @@ void ScenePanel::addSceneItem(OBSSource source, int row, int col)
 	
 	// 连接信号
 	connect(sceneItem, &SceneListItemWidget::sceneSelected, this, &ScenePanel::onSceneItemClicked);
-	connect(sceneItem, &SceneListItemWidget::sceneChanged, this, &ScenePanel::onSceneChanged);
+	/* Queued：避免在槽内 emit 时同步 refresh→delete 本控件，导致 onDeleteAction/onRenameAction 仍在栈上却 this 已析构 */
+	connect(sceneItem, &SceneListItemWidget::sceneChanged, this, &ScenePanel::onSceneChanged,
+		Qt::QueuedConnection);
 	
 	m_sceneItems.append(sceneItem);
 	m_sceneGridLayout->addWidget(sceneItem, row, col);
