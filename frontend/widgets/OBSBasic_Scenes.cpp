@@ -109,7 +109,8 @@ void OBSBasic::AddScene(OBSSource source)
 
 	QListWidgetItem *item = new QListWidgetItem(QT_UTF8(name));
 	SetOBSRef(item, OBSScene(scene));
-	ui->scenes->insertItem(ui->scenes->currentRow() + 1, item);
+	/* 新场景追加到列表末尾（原逻辑为插在「当前选中」下一行） */
+	ui->scenes->addItem(item);
 
 	obs_hotkey_register_source(
 		source, "OBSBasic.SelectScene", Str("Basic.Hotkeys.SelectScene"),
@@ -650,7 +651,6 @@ void OBSBasic::GridActionClicked()
 
 void OBSBasic::on_actionAddScene_triggered()
 {
-	string name;
 	QString format{QTStr("Basic.Main.DefaultSceneName.Text")};
 
 	int i = 2;
@@ -660,43 +660,26 @@ void OBSBasic::on_actionAddScene_triggered()
 		placeHolderText = format.arg(++i);
 	}
 
-	bool accepted = NameDialog::AskForName(this, QTStr("Basic.Main.AddSceneDlg.Title"),
-					       QTStr("Basic.Main.AddSceneDlg.Text"), name, placeHolderText);
+	const string name = QT_TO_UTF8(placeHolderText);
 
-	if (accepted) {
-		if (name.empty()) {
-			OBSMessageBox::warning(this, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
-			on_actionAddScene_triggered();
-			return;
+	auto undo_fn = [](const std::string &data) {
+		obs_source_t *t = obs_get_source_by_name(data.c_str());
+		if (t) {
+			obs_source_remove(t);
+			obs_source_release(t);
 		}
+	};
 
-		OBSSourceAutoRelease source = obs_get_source_by_name(name.c_str());
-		if (source) {
-			OBSMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
+	auto redo_fn = [this](const std::string &data) {
+		OBSSceneAutoRelease scene = obs_scene_create(data.c_str());
+		obs_source_t *source = obs_scene_get_source(scene);
+		SetCurrentScene(source, true);
+	};
+	undo_s.add_action(QTStr("Undo.Add").arg(QString(name.c_str())), undo_fn, redo_fn, name, name);
 
-			on_actionAddScene_triggered();
-			return;
-		}
-
-		auto undo_fn = [](const std::string &data) {
-			obs_source_t *t = obs_get_source_by_name(data.c_str());
-			if (t) {
-				obs_source_remove(t);
-				obs_source_release(t);
-			}
-		};
-
-		auto redo_fn = [this](const std::string &data) {
-			OBSSceneAutoRelease scene = obs_scene_create(data.c_str());
-			obs_source_t *source = obs_scene_get_source(scene);
-			SetCurrentScene(source, true);
-		};
-		undo_s.add_action(QTStr("Undo.Add").arg(QString(name.c_str())), undo_fn, redo_fn, name, name);
-
-		OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
-		obs_source_t *scene_source = obs_scene_get_source(scene);
-		SetCurrentScene(scene_source);
-	}
+	OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
+	obs_source_t *scene_source = obs_scene_get_source(scene);
+	SetCurrentScene(scene_source);
 }
 
 void OBSBasic::on_actionRemoveScene_triggered()

@@ -12,7 +12,6 @@
 #include <widgets/OBSBasic.hpp>
 #include "SourceListItemWidget.hpp"
 #include "SceneListItemWidget.hpp"
-#include <dialogs/NameDialog.hpp>
 #include <qt-wrappers.hpp>
 #include <string>
 #include "DirectorWidget.hpp"
@@ -287,48 +286,12 @@ void ScenePanel::onBroadcastButtonClicked()
 
 void ScenePanel::onAddSceneButtonClicked()
 {
-    OBSBasic *main = OBSBasic::Get();
-    if (!main) {
-        return;
-    }
-    
-    // 生成默认场景名称
-    std::string name;
-    QString format{QTStr("Basic.Main.DefaultSceneName.Text")};
-    
-    int i = 2;
-    QString placeHolderText = format.arg(i);
-    OBSSourceAutoRelease source = nullptr;
-    while ((source = obs_get_source_by_name(QT_TO_UTF8(placeHolderText)))) {
-        placeHolderText = format.arg(++i);
-    }
-    
-    // 显示名称输入对话框
-    bool accepted = NameDialog::AskForName(this, QTStr("Basic.Main.AddSceneDlg.Title"),
-                                           QTStr("Basic.Main.AddSceneDlg.Text"), name, placeHolderText);
-    
-    if (accepted) {
-        if (name.empty()) {
-            QMessageBox::warning(this, QTStr("NoNameEntered.Title"), QTStr("NoNameEntered.Text"));
-            return;
-        }
-        
-        // 检查名称是否已存在
-        OBSSourceAutoRelease existing = obs_get_source_by_name(name.c_str());
-        if (existing) {
-            QMessageBox::warning(this, QTStr("NameExists.Title"), QTStr("NameExists.Text"));
-            return;
-        }
-        
-        // 创建场景（obs_scene_create 会触发 source_create，OBSBasic::SourceCreated 自动调用 AddScene）
-        OBSSceneAutoRelease scene = obs_scene_create(name.c_str());
-        if (scene) {
-            obs_source_t *scene_source = obs_scene_get_source(scene);
-
-			// 仅设置当前场景，AddScene 由 SourceCreated 回调自动完成
-			main->SetCurrentScene(scene_source);
-        }
-    }
+	OBSBasic *main = OBSBasic::Get();
+	if (!main) {
+		return;
+	}
+	/* 与菜单「添加场景」一致：自动递增名称，不弹窗输入 */
+	main->on_actionAddScene_triggered();
 }
 
 void ScenePanel::onAddSourceButtonClicked()

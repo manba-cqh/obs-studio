@@ -303,26 +303,16 @@ void SceneListItemWidget::onDeleteAction()
 		return;
 	}
 	
-	// 确认删除
-	const char *sceneName = obs_source_get_name(m_source);
-	QString message = QString("确定要删除场景 '%1' 吗？").arg(QString::fromUtf8(sceneName));
-	
-	QMessageBox::StandardButton reply = QMessageBox::question(this, "删除场景", message,
-								  QMessageBox::Yes | QMessageBox::No);
-	if (reply != QMessageBox::Yes) {
+	OBSScene scene = obs_scene_from_source(m_source);
+	if (!scene) {
 		return;
 	}
-	
-	// 设置当前场景为要删除的场景（如果还没有设置）
-	OBSScene scene = obs_scene_from_source(m_source);
-	if (scene) {
-		// 先切换到要删除的场景
-		obs_frontend_set_current_scene(m_source);
-		
-		// 已在本处确认过，跳过 RemoveSelectedScene 内部的二次确认
-		main->RemoveSelectedScene(true);
-		
-		// 通知场景列表变化
-		emit sceneChanged();
+
+	obs_frontend_set_current_scene(m_source);
+	/* 使用 OBS 标准确认框，与主界面删除场景一致 */
+	if (!main->QueryRemoveSource(m_source)) {
+		return;
 	}
+	main->RemoveSelectedScene(true);
+	emit sceneChanged();
 }
